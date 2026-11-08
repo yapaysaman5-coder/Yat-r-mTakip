@@ -38,39 +38,49 @@ geçilince eklenecek.
 
 ## 2. Kütüphaneler
 
-Sürümler 8 Kasım 2026'da npm'den kontrol edilmiştir. Kurulumda `npx expo install` ile SDK 58'e
-uygun sürümlere sabitlenecek.
+Sürümler 8 Kasım 2026'da npm'den kontrol edilmiştir. Yerel modüller `npx expo install` ile SDK
+58'e uygun sürümlere sabitlenir. ✅ işaretliler Faz 1'de kuruldu, diğerleri ilgili fazda eklenecek.
 
 | Amaç | Kütüphane | Sürüm |
 |---|---|---|
-| Çatı | `expo` | 58.0.x |
-| Gezinme (dosya tabanlı, alt bar) | `expo-router` | 58.x |
-| GPU çizim (grafikler) | `@shopify/react-native-skia` | 2.14 |
-| Grafik ölçek ve eğri hesapları | `d3-scale`, `d3-shape` | — |
-| Animasyon (UI iş parçacığında) | `react-native-reanimated` | 4.7 |
-| Dokunma hareketleri, kaydırmalı satır | `react-native-gesture-handler` | 3.5 |
+| Çatı ✅ | `expo` (React Native 0.88, React 19.3) | 58.0.x |
+| Gezinme (dosya tabanlı, alt bar) ✅ | `expo-router` | 58.x |
+| GPU çizim (FinChart, Faz 5) | `@shopify/react-native-skia` | 2.14 |
+| Statik grafikler ve simgeler ✅ | `react-native-svg` | 15.16 |
+| Grafik ölçek ve eğri hesapları | Kendi `monotonePath` yardımcımız ✅, gerekirse `d3-scale` | — |
+| Animasyon (UI iş parçacığında) ✅ | `react-native-reanimated` + `react-native-worklets` | 4.7 / 0.13 |
+| Dokunma hareketleri, kaydırmalı satır ✅ | `react-native-gesture-handler` (v3 kanca API'si) | 3.3 |
 | Yüksek performanslı liste | `@shopify/flash-list` | 2.3 |
-| Alt sayfa (bottom sheet) | `@gorhom/bottom-sheet` | 5.2 |
-| Yerel veritabanı | `expo-sqlite` + `drizzle-orm` | SDK 58 / 0.45 |
-| Uygulama durumu | `zustand` | 5.1 |
+| Alt sayfa (bottom sheet) ✅ | Kendi `Sheet` bileşenimiz (Reanimated + Gesture Handler v3) | — |
+| Degrade ✅ | `expo-linear-gradient` | SDK 58 |
+| Yerel veritabanı | `expo-sqlite` (ayarlar için `kv-store` ✅) + `drizzle-orm` | SDK 58 / 0.45 |
+| Uygulama durumu ✅ | `zustand` (kalıcı ayarlar) | 5.1 |
 | Ağ verisi önbelleği | `@tanstack/react-query` | 5.x |
-| Hassas ondalık hesap | `decimal.js` | — |
+| Hassas ondalık hesap ✅ | `decimal.js` | 10.6 |
 | Tarih | `date-fns` (tr yerel ayarı) | 4.4 |
-| Titreşim | `expo-haptics` | SDK 58 |
+| Titreşim ✅ | `expo-haptics` | SDK 58 |
 | Face ID / parmak izi | `expo-local-authentication` | SDK 58 |
 | Güvenli anahtar deposu | `expo-secure-store` | SDK 58 |
 | Ekran görüntüsü engeli | `expo-screen-capture` | SDK 58 |
 | Bulanıklaştırma | `expo-blur` | SDK 58 |
 | Dosya, paylaşma, belge seçici | `expo-file-system`, `expo-sharing`, `expo-document-picker` | SDK 58 |
-| Yazı tipi | `@expo-google-fonts/inter` | — |
-| Simgeler | `lucide-react-native` | — |
-| Test | `jest`, `jest-expo`, `@testing-library/react-native` | — |
+| Yazı tipi ✅ | `@expo-google-fonts/nunito`, `@expo-google-fonts/nunito-sans` | 0.4 |
+| Simgeler ✅ | `lucide-react-native` | 1.70 |
+| Test ✅ | `jest`, `jest-expo`, `@testing-library/react-native` | 30 / 58 |
+| Kod kalitesi ✅ | `eslint` + `eslint-config-expo`, `prettier` | 9 / 3 |
 
 **Grafik kararı:** Bakiye grafiği uygulamanın imza öğesi olduğu için hazır bir grafik kütüphanesi
 yerine **Skia üzerine kendi grafik bileşenimiz (`FinChart`)** yazılacak. Bunu gerektiren
 özellikler: net yatırılan çizgisi, para akışı işaretleri, iki parmakla ölçüm, şekil dönüşümü
-animasyonu, ölçüt katmanı. Tam kontrol ancak kendi bileşenimizle mümkün. Halka grafik ve ısı
-haritası da aynı altyapıyla çizilecek.
+animasyonu, ölçüt katmanı. Tam kontrol ancak kendi bileşenimizle mümkün.
+
+**Faz 1 notu:** Önizleme ekranlarındaki statik grafikler (alan, çoklu çizgi, mini trend, halka)
+`react-native-svg` ile çizildi. Mini trend ve halka grafik bu haliyle kalır. Ana ekrandaki büyük
+grafik Faz 5'te Skia tabanlı, parmakla gezinilen FinChart ile değiştirilecek.
+
+**Alt sayfa kararı:** `@gorhom/bottom-sheet`'in Gesture Handler v3 ile uyumu belirsiz olduğu için
+alt sayfa kendi bileşenimiz olarak yazıldı. Özellikleri: yay animasyonu, aşağı çekerek kapatma,
+Android geri tuşu desteği.
 
 ## 3. Katmanlı Mimari
 
@@ -96,33 +106,39 @@ haritası da aynı altyapıyla çizilecek.
 
 ## 4. Klasör Yapısı
 
+✅ = Faz 1'de oluşturuldu.
+
 ```
-app/                         expo-router ekranları
-  _layout.tsx                tema, kilit, sağlayıcılar
-  (tabs)/_layout.tsx         alt bar (orta ＋ tuşu)
-  (tabs)/index.tsx           Portföy
-  (tabs)/analiz.tsx          Analiz
-  (tabs)/fon.tsx             Fon (Hesabım)
-  (tabs)/gecmis.tsx          Geçmiş
-  varlik/[id].tsx            Varlık detay
-  islem/yeni.tsx             Al / Sat / Para / Temettü formu
-  islem/[id].tsx             İşlem düzenle
-  ayarlar/                   Ayar alt ekranları
-  kilit.tsx                  Kilit ekranı
-  baslangic/                 İlk açılış akışı
 src/
-  domain/                    hesaplama motoru + __tests__
-  data/db/                   şema, migration, repository
-  data/market/               yahoo · binance · coingecko · tcmb · mock
-  data/catalog/              bist.json, crypto.json (gömülü sembol listeleri)
-  state/                     Zustand store'ları
-  hooks/                     usePortfolio, useQuotes, useSeries ...
-  ui/                        tasarım sistemi bileşenleri
-  ui/chart/                  FinChart, DonutChart, Heatmap, Sparkline
-  theme/                     tokens.ts, themes/{okyanus,gece,gun,kraliyet}.ts
-  i18n/tr.ts                 tüm arayüz metinleri
-  utils/                     format (para, tarih, yüzde), decimal
-docs/                        bu dokümanlar
+  app/                       expo-router ekranları
+    _layout.tsx              yazı tipleri, tema, sağlayıcılar ✅
+    (tabs)/_layout.tsx       yüzen alt bar, orta ＋ tuşu ✅
+    (tabs)/index.tsx         Portföy ✅
+    (tabs)/analiz.tsx        Analiz ✅
+    (tabs)/fon.tsx           Fon (Hesabım) ✅
+    (tabs)/gecmis.tsx        Geçmiş ✅
+    ayarlar/index.tsx        Ayarlar ✅
+    ayarlar/gorunum.tsx      Tema seçimi ✅
+    ayarlar/vitrin.tsx       Tasarım vitrini ✅
+    varlik/[id].tsx          Varlık detay (Faz 6)
+    islem/yeni.tsx           Al / Sat / Para / Temettü formu (Faz 6)
+    kilit.tsx                Kilit ekranı (Faz 10)
+    baslangic/               İlk açılış akışı (Faz 10)
+  components/                uygulamaya özel parçalar ✅
+                             (TabBar, QuickActionSheet, HoldingRow, PreviewNote)
+  ui/                        tasarım sistemi bileşenleri ✅
+  ui/charts/                 AreaChart, LineChart, Sparkline, Donut, path ✅
+  theme/                     types, themes, tokens, ThemeProvider, contrast ✅
+  state/                     Zustand store'ları (settings ✅)
+  lib/                       storage (kalıcı ayarlar), haptics ✅
+  i18n/tr.ts                 arayüz metinleri ✅
+  utils/format.ts            Türkçe biçimlendiriciler ✅
+  demo/data.ts               Faz 1 önizlemesi için örnek veri ✅ (gerçek veri gelince kalkar)
+  domain/                    hesaplama motoru + testler (Faz 2)
+  data/db/                   şema, migration, repository (Faz 3)
+  data/market/               yahoo · binance · coingecko · tcmb · mock (Faz 4)
+  hooks/                     usePortfolio, useQuotes, useSeries (Faz 3–5)
+docs/                        dokümanlar ve önizleme görselleri
 ```
 
 ## 5. Veri Modeli (SQLite)
@@ -238,11 +254,22 @@ veya sağlık kontrolünden geçemezse otomatik olarak yedeğe geçilir.
 | Hesaplama motoru | Jest | Hesaplama Motoru §15'teki tüm senaryolar. `src/domain` için ≥ %95 kod kapsamı |
 | Biçimlendiriciler | Jest | `tr-TR` para, yüzde, tarih ve kısaltma çıktıları |
 | Bileşenler | Testing Library | Form doğrulamaları, kaydırma eylemleri |
+| Tema erişilebilirliği | Jest | Her temada tüm metin/zemin çiftleri ≥ 4,5:1 kontrast (WCAG AA) ✅ |
 | Görsel kontrol | Expo web + Playwright | Her ekranın 4 temada ekran görüntüsü (her faz sonunda paylaşılır) |
 | Cihaz testi | Expo Go | Sizin telefonunuzda gerçek veriyle deneme |
 | Sürekli entegrasyon | GitHub Actions | Her gönderimde tip kontrolü, lint ve testler |
 
 ## 11. Geliştirme, Önizleme ve Dağıtım
+
+**Komutlar:**
+
+| Komut | İş |
+|---|---|
+| `npm start` | Geliştirme sunucusu (Expo Go ile QR) |
+| `npm run android` | Bağlı Android cihaz veya emülatörde aç |
+| `npm run web` | Tarayıcıda önizleme |
+| `npm run check` | Tip kontrolü + lint + testler |
+| `npm run format` | Kodu Prettier ile biçimlendir |
 
 **Telefonda deneme:** İki seçenek var.
 

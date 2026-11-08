@@ -34,22 +34,34 @@
 - [x] Ürün dokümanı, ekranlar, temalar
 - [x] Hesaplama motoru tanımı ve örnek hesaplar
 - [x] Teknik mimari ve veri kaynakları
-- [ ] **Sizin onayınız** ([01-PROJE-DOKUMANI §13](01-PROJE-DOKUMANI.md#13-onayınızı-bekleyen-kararlar) kararları)
+- [x] **Onay** (8 Kasım 2026, [01-PROJE-DOKUMANI §13](01-PROJE-DOKUMANI.md#13-onaylanan-kararlar))
 
-## Faz 1: Proje İskeleti ve Tasarım Sistemi
+## Faz 1: Proje İskeleti ve Tasarım Sistemi ✅
 
-- [ ] Expo SDK 58 + TypeScript (strict) + expo-router kurulumu
-- [ ] ESLint, Prettier, Jest ve GitHub Actions (tip kontrolü + test)
-- [ ] Tasarım jetonları ve 4 tema (Okyanus, Gece, Gün, Kraliyet) + sistem modu
-- [ ] Temel bileşenler:
-  - Metin (eşit genişlikli rakam), Para metni, Değişim rozeti
-  - Kart, Buton, Çip, Bölmeli seçici (segmented control)
-  - Liste satırı, İskelet yükleyici, Alt sayfa, Geri al çubuğu
-- [ ] Alt bar: Portföy · Analiz · ＋ · Fon · Geçmiş. Ekran kabukları
-- [ ] Türkçe biçimlendiriciler (para, yüzde, tarih, kısaltma) ve testleri
+- [x] Expo SDK 58 + TypeScript (strict) + expo-router kurulumu
+- [x] ESLint, Prettier, Jest ve GitHub Actions (tip kontrolü + lint + test + biçim)
+- [x] Tasarım jetonları ve 4 tema (Okyanus, Gece, Gün, Kraliyet) + sistem modu + renk körü modu
+- [x] Temel bileşenler:
+  - Metin, Para metni, Değişim rozeti, Kart, Degrade kart
+  - Buton, Simge butonu, Çip, Bölmeli seçici
+  - Liste satırı, Varlık rozeti, Canlı nokta, Dağılım çubuğu
+  - İskelet yükleyici, Alt sayfa, Bildirim ve Geri al çubuğu, Boş durum
+  - Statik grafikler: alan, çoklu çizgi, mini trend, halka
+- [x] Alt bar: Portföy · Analiz · ＋ · Fon · Geçmiş. ＋ tuşu hızlı işlem sayfasını açar
+- [x] Ekran kabukları (örnek verili tasarım önizlemesi):
+  - Portföy, Analiz (Ya Olsaydı?), Fon (Varlık / Maliyet), Geçmiş
+  - Ayarlar, Tema seçimi, Tasarım vitrini
+- [x] Türkçe biçimlendiriciler (para, yüzde, kısaltma, adet, tarih, giriş ayrıştırma) ve testleri
+- [x] **Ek:** Gizlilik modu (Faz 5'ten öne alındı), titreşim ayarı, ayarların kalıcı saklanması
+- [x] **Ek:** Tüm temalar için otomatik WCAG AA kontrast testi (150 test)
 
 **Bitiş kriteri:** Uygulama açılıyor, sekmeler arasında geziliyor, 4 tema arasında anında
-geçiş yapılıyor. Ekran görüntüleri paylaşıldı.
+geçiş yapılıyor. Ekran görüntüleri paylaşıldı ✅
+([önizleme görselleri](onizleme/faz1/)).
+
+> **Not:** Ekranlardaki tutarlar **örnek veridir** ve ekranda "Tasarım önizlemesi" etiketiyle
+> belirtilir. Gerçek hesaplar Faz 2–4'te bağlanır. Grafikler bu fazda statiktir. Parmakla
+> gezinilen GPU grafiği (FinChart) Faz 5'te gelir.
 
 ## Faz 2: Hesaplama Motoru
 

@@ -1,9 +1,10 @@
 # Yatırım Takip: Proje Dokümanı
 
-> **Sürüm:** 1.0 (taslak, onay bekliyor)
+> **Sürüm:** 1.1 (onaylandı)
 > **Tarih:** 8 Kasım 2026
-> **Platform:** Telefon (iOS + Android), tamamen cihaz üzerinde çalışır
-> **Durum:** Bu doküman onaylandıktan sonra [Yol Haritası](04-YOL-HARITASI.md) sırasıyla geliştirme başlayacak.
+> **Platform:** Android telefon (kod iOS ile de uyumlu), tamamen cihaz üzerinde çalışır
+> **Durum:** Kararlar onaylandı ([Bölüm 13](#13-onaylanan-kararlar)). Geliştirme [Yol Haritası](04-YOL-HARITASI.md) sırasıyla ilerliyor.
+> **Tasarım tonu:** Profesyonel, biraz neşeli, biraz yumuşak.
 
 Diğer dokümanlar:
 
@@ -30,7 +31,7 @@ Diğer dokümanlar:
 10. [Varlık Kapsamı ve Canlı Veri](#10-varlık-kapsamı-ve-canlı-veri)
 11. [Gizlilik ve Güvenlik](#11-gizlilik-ve-güvenlik)
 12. [Kalite Hedefleri](#12-kalite-hedefleri)
-13. [Onayınızı Bekleyen Kararlar](#13-onayınızı-bekleyen-kararlar)
+13. [Onaylanan Kararlar](#13-onaylanan-kararlar)
 14. [Yasal Uyarı](#14-yasal-uyarı)
 
 ---
@@ -175,7 +176,7 @@ Profesyonel uygulamalarda olan ama isteklerinizde geçmeyen özellikler aşağı
 | **Geçmiş** | İşlemler, Gerçekleşen K/Z, Nakit Hareketleri, Aylık Ekstre |
 
 **Ayarlar**, Portföy ekranının sağ üst köşesindeki ⚙ simgesinden açılır. Bu, Revolut ve
-getquin'deki yerleşimle aynıdır ve alt barda yer kazandırır. (Alternatif için bkz. [Bölüm 13](#13-onayınızı-bekleyen-kararlar))
+getquin'deki yerleşimle aynıdır ve alt barda yer kazandırır. Bu yerleşim onaylandı (bkz. [Bölüm 13](#13-onaylanan-kararlar)).
 
 ### Ekran Ağacı
 
@@ -737,26 +738,32 @@ fon bülteni ciddiyetinde bir grafik.
 canlı bakiye, altında portföy. Temalar yalnızca renk, gölge ve vurgu karakterini değiştirir.
 Varsayılan tema **Okyanus**'tur.
 
+**Tasarım tonu:** Profesyonel ama **biraz neşeli, biraz yumuşak**:
+
+- Bakiye kartı canlı bir degrade ile öne çıkar.
+- Köşeler cömert yuvarlaklıktadır, gölgeler dağınık ve yumuşaktır.
+- Simgeler renkli, yumuşak zeminler üzerinde durur.
+- Dokunuşlara hafif yaylanan animasyonlar eşlik eder.
+
 | Renk | 🌊 **Okyanus** (Mavi) | 🌑 **Gece** (OLED) | ☀️ **Gün** (Açık) | 👑 **Kraliyet** |
 |---|---|---|---|---|
-| Karakter | Derin lacivert, kurumsal, güven veren | Saf siyah, minimal, keskin | Ferah, temiz, gündüz okunaklı | Antrasit ve altın, özel bankacılık hissi |
-| Arka plan | `#06142B` | `#000000` | `#F4F6FB` | `#0E0D0B` |
-| Yüzey (kart) | `#0C1F3F` | `#0F0F11` | `#FFFFFF` | `#1A1814` |
-| Yükseltilmiş yüzey | `#12294F` | `#1A1A1D` | `#F0F3F9` | `#24211C` |
-| Kenarlık | `#1C3766` | `#232327` | `#E3E8F0` | `#332E26` |
-| Ana metin | `#EAF2FF` | `#FFFFFF` | `#0B1220` | `#F4EEE2` |
-| İkincil metin | `#8FA6C8` | `#8A8A93` | `#5B6B82` | `#A59C8B` |
-| Vurgu (marka) | `#3B8BFF` | `#00D395` | `#2563EB` | `#D4AF37` |
-| Vurgu 2 | `#38BDF8` | `#7CFFCB` | `#60A5FA` | `#F1D27A` |
-| Yükseliş | `#2EE6A6` | `#00D395` | `#0E9F6E` | `#5BD68A` |
-| Düşüş | `#FF5C7A` | `#FF453A` | `#E0383E` | `#F07167` |
-| Grafik dolgusu | Mavi → şeffaf | Yeşil → şeffaf | Mavi → şeffaf | Altın → şeffaf |
+| Karakter | Derin lacivert, canlı mavi bakiye kartı | Saf siyah, nane yeşili ve lavanta vurgular | Ferah, aydınlık, gündüz okunaklı | Sıcak antrasit ve yumuşak altın |
+| Arka plan | `#0B1830` | `#000000` | `#F3F6FC` | `#13110E` |
+| Yüzey (kart) | `#132544` | `#111214` | `#FFFFFF` | `#1E1B16` |
+| Yükseltilmiş yüzey | `#1A3056` | `#1A1B1F` | `#EEF2FB` | `#27231D` |
+| Ana metin | `#F3F7FF` | `#FFFFFF` | `#15203A` | `#F7F0E3` |
+| İkincil metin | `#A6B8DA` | `#A3A3AE` | `#536180` | `#C2B6A0` |
+| Vurgu | `#6AA6FF` | `#3EE0A1` | `#2F5BE0` | `#E6C15A` |
+| Vurgu 2 | `#7BD8F9` | `#B49CFF` | `#0A719B` | `#F2D995` |
+| Yükseliş | `#4BE0A6` | `#3EE0A1` | `#08794F` | `#72D99C` |
+| Düşüş | `#FF8097` | `#FF6F86` | `#C92A47` | `#F28A7E` |
+| Bakiye kartı | Mavi degrade `#2453E0 → #1A68C2` | Grafit, nane çizgili | Mavi degrade `#2B5BE3 → #1F6BC4` | Altın-kahve degrade |
 
-- **Okyanus** temasında kartlar hafif cam efektli (blur) ve ince parlak kenarlıklıdır. Bakiye alanının arkasında belli belirsiz mavi bir ışıma bulunur.
-- **Renk körü dostu mod** her temada çalışır: yükseliş mavi (`#3B82F6`), düşüş turuncu (`#F59E0B`).
-- **Kontrast:** Tüm metin/zemin çiftleri WCAG AA kontrast oranını (4,5:1) sağlayacak şekilde test edilir.
-- **Tema geçişi** anında uygulanır. Ayarlar ekranında 4 temanın canlı mini önizlemesi gösterilir.
-- **Teknik:** Renkler tek bir "tasarım jetonu" (design token) dosyasından gelir. Yeni tema eklemek tek bir dosyaya renk listesi eklemek kadar kolaydır.
+- **Piyasa renkleri** her temada aynı anlamı taşır: BIST mercan, ABD mavi, Kripto kehribar, Nakit nane.
+- **Renk körü dostu mod** her temada çalışır: yükseliş mavi, düşüş turuncu olur.
+- **Kontrast:** Tüm metin/zemin çiftleri WCAG AA kontrast oranını (4,5:1) sağlar. Bu, her temada otomatik testle doğrulanır (`src/theme/__tests__/themes.test.ts`). Renk körü modu da teste dahildir. Bakiye kartı üzerindeki beyaz yazılar da bu teste girer.
+- **Tema geçişi** anında uygulanır. Ayarlar > Tema ekranında 4 temanın gerçek renkli mini önizlemesi gösterilir.
+- **Teknik:** Renkler tek bir "tasarım jetonu" (design token) dosyasından gelir (`src/theme/themes.ts`). Yeni tema eklemek tek bir dosyaya renk listesi eklemek kadar kolaydır.
 
 ---
 
@@ -764,22 +771,27 @@ Varsayılan tema **Okyanus**'tur.
 
 ### Tipografi
 
-- **Yazı tipi:** Inter. Türkçe karakter desteği tamdır ve finansal arayüzlerde standarttır.
-- **Rakamlar:** Tüm rakamlarda **eşit genişlikli rakam** (tabular numbers) kullanılır. Böylece canlı değişen fiyatlarda rakamlar titremez ve sütunlar hizalı kalır.
+- **Yazı tipi:**
+  - Başlıklar ve tüm tutarlar için **Nunito**. Yuvarlak hatlıdır, istenen yumuşak ve neşeli hissi verir.
+  - Gövde metni için **Nunito Sans**. Aynı ailenin sade kardeşidir, profesyonel okunurluk sağlar.
+  - İki ailede de Türkçe karakterler ve ₺ işareti tamdır.
+- **Rakamlar:** Her iki yazı tipinde rakamlar **varsayılan olarak eşit genişliktedir**. Ayrı bir ayar gerekmeden (Android'de de) canlı değişen fiyatlarda rakamlar titremez, sütunlar hizalı kalır. Bu, yazı tipi dosyaları incelenerek doğrulandı.
 
 | Ölçek | Boyut / Kalınlık | Kullanım |
 |---|---|---|
-| Ekran başlığı | 34 / Bold | Büyük bakiye |
-| Başlık | 22 / Semibold | Bölüm başlıkları |
-| Gövde | 16 / Regular | Liste satırları |
-| Alt bilgi | 13 / Medium | Adet, fiyat, yüzde rozetleri |
-| Etiket | 11 / Semibold, BÜYÜK HARF, geniş aralık | "TOPLAM DEĞER", "CANLI BÜTÇE" |
+| Büyük bakiye | 38 / Nunito Black | Toplam değer |
+| Başlık 1 | 28 / Nunito ExtraBold | Ekran başlıkları |
+| Başlık 2–3 | 22–18 / Nunito | Bölüm ve kart başlıkları |
+| Gövde | 16 / Nunito Sans | Liste satırları |
+| Tutar | 22–13 / Nunito Bold | Değerler, rozetler |
+| Alt bilgi | 13–12 / Nunito Sans | Adet, fiyat, açıklamalar |
+| Etiket | 11 / Nunito Sans Bold, BÜYÜK HARF, geniş aralık | "TOPLAM DEĞER", "CANLI BÜTÇE" |
 
 ### Düzen ve Ritim
 
 - **Boşluk sistemi:** 4 pt tabanlı (4, 8, 12, 16, 24, 32).
 - **Kenar boşluğu:** Ekran kenarlarında 16 pt.
-- **Köşe yuvarlaklığı:** Kartlarda 16, butonlarda 14, rozetlerde 8.
+- **Köşe yuvarlaklığı:** Bakiye kartı 28, kartlar 22, butonlar 12–22, seçiciler ve rozetler tam yuvarlak (hap biçimi).
 - **Dokunma alanı:** En az 44×44 pt.
 
 ### Hareket ve Geri Bildirim
@@ -845,23 +857,23 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 
 ---
 
-## 13. Onayınızı Bekleyen Kararlar
+## 13. Onaylanan Kararlar
 
-Aşağıdaki maddelerde önerimi yazdım. Farklı düşünüyorsanız belirtmeniz yeterli, aksi halde
-öneriyle devam edeceğim.
+8 Kasım 2026'da tüm öneriler onaylandı. Ek olarak telefonun **Android** olduğu ve tasarımın
+**profesyonel, biraz neşeli, biraz yumuşak** olması istendi.
 
-| # | Karar | Önerim | Alternatif |
-|---|---|---|---|
-| 1 | **Telefonunuz** | Hem iOS hem Android'de çalışacak şekilde geliştireceğim. Test için hangi telefonu kullandığınızı bilmem gerekiyor | iPhone ise kurulum için TestFlight veya Expo Go, Android ise doğrudan APK |
-| 2 | **Teknoloji** | Expo (React Native) + TypeScript. Gerekçesi [03-TEKNIK-MIMARI](03-TEKNIK-MIMARI.md)'de | Flutter |
-| 3 | **Alt bar düzeni** | Portföy · Analiz · ＋ · Fon · Geçmiş. Ayarlar sağ üstte ⚙ | Ayarlar 5. sekme olur, Geçmiş Portföy ekranından açılır |
-| 4 | **"Fon" ekranı yorumu** | Portföyün fon gibi sunulduğu Hesabım ekranı (pay değeri, Varlık/Maliyet tuşları) | Farklı bir şey kastettiyseniz lütfen açıklayın |
-| 5 | **Varsayılan tema** | Okyanus (mavi) | Gece / Gün / Kraliyet |
-| 6 | **Maliyet yöntemi** | Ağırlıklı ortalama (aracı kurumlardaki gibi), FIFO ayardan seçilebilir | FIFO varsayılan |
-| 7 | **Nakit takibi** | Otomatik para yatırma açık. Sadece alış/satış girseniz de yatırılan para doğru hesaplanır | Tüm para hareketleri elle girilir |
-| 8 | **BIST veri gecikmesi** | Ücretsiz kaynakla 15 dk gecikmeli başla. Canlı veri gerekirse lisanslı sağlayıcı (aylık ücretli) sonra eklenir | Baştan ücretli gerçek zamanlı kaynak |
-| 9 | **Ek ölçütler** | TÜFE, Euro/TL ve Mevduat eklensin | Sadece sizin listeniz |
-| 10 | **Uygulama adı** | Çalışma adı "Yatırım Takip". Öneriler: *Pusula*, *Kasa*, *Portfolyo*, *Varlık* | Sizin belirleyeceğiniz ad |
+| # | Karar | Sonuç |
+|---|---|---|
+| 1 | **Telefon** | Android. Testler ve kurulum (APK) Android'e göre yapılır. Kod iOS ile de uyumlu kalır |
+| 2 | **Teknoloji** | Expo (React Native) + TypeScript |
+| 3 | **Alt bar düzeni** | Portföy · Analiz · ＋ · Fon · Geçmiş. Ayarlar sağ üstte ⚙ |
+| 4 | **"Fon" ekranı** | Portföyün fon gibi sunulduğu Hesabım ekranı (pay değeri, Varlık/Maliyet tuşları) |
+| 5 | **Varsayılan tema** | Okyanus (mavi) |
+| 6 | **Maliyet yöntemi** | Ağırlıklı ortalama varsayılan, FIFO ayardan seçilebilir |
+| 7 | **Nakit takibi** | Otomatik para yatırma açık |
+| 8 | **BIST verisi** | Ücretsiz kaynakla 15 dk gecikmeli başlanır, lisanslı canlı kaynak sonra eklenebilir |
+| 9 | **Ek ölçütler** | TÜFE, Euro/TL ve Mevduat eklendi |
+| 10 | **Uygulama adı** | Çalışma adı "Yatırım Takip". Kesin ad yayın öncesi seçilecek |
 
 ---
 
