@@ -233,9 +233,10 @@ Yatırım fonlarının kullandığı **birimleştirme (unitization)** yöntemidi
 ```
 Başlangıç: ilk para girişi F₁ → payDeğeri = 1,000000 ; paySayısı = F₁
 
-Her d günü sonunda, o gün F_d kadar dış akış varsa (giriş +, çıkış −):
-  payDeğeri_d = (değer_d − F_d) / paySayısı_(d−1)     ← akış öncesi pay değeri
-  paySayısı_d = paySayısı_(d−1) + F_d / payDeğeri_d
+Her d günü için (giriş_d ≥ 0, çıkış_d ≥ 0):
+  paySayısı'  = paySayısı_(d−1) + giriş_d / payDeğeri_(d−1)     ← giriş günün başında katılır
+  payDeğeri_d = (değer_d + çıkış_d) / paySayısı'                 ← çıkış günün sonunda ayrılır
+  paySayısı_d = paySayısı' − çıkış_d / payDeğeri_d
 
 Akış olmayan günlerde:
   payDeğeri_d = değer_d / paySayısı_(d−1)
@@ -243,7 +244,10 @@ Akış olmayan günlerde:
 TWR[a, b] = payDeğeri_b / payDeğeri_a − 1
 ```
 
-- **Gün sonu varsayımı:** Para akışı gün sonunda girmiş kabul edilir. Günün getirisi eski paylara yazılır. Günlük veriyle standart ve tutarlı bir yaklaşımdır.
+- **Giriş günün başında, çıkış günün sonunda:** Günlük veride paranın gün içinde ne zaman geldiği görünmez, bir varsayım gerekir.
+  - Giren para genelde o gün alım yapmak için yatırılır; çıkan para genelde o günkü satıştan gelir.
+  - Bu kuralla, alım/satım fiyatının kapanıştan farklı olması sonucu en fazla mevcut paranın o günkü hareketi kadar etkiler.
+  - İlk kuralda (giriş de gün sonunda) hata, yatırılan paranın portföye oranıyla büyüyordu. Faz 4'te gerçek fiyatlarla yapılan denemede bulundu. Örnekte büyük bir girişle kapanıştan pahalı yapılan alım, TWR'yi −%47 gösteriyordu; doğrusu +%16,5'ti.
 - **Portföy tamamen boşalırsa** (pay sayısı 0): Sonraki ilk para girişi, son bilinen pay değerinden pay alır. Pay değeri serisi kesintisiz devam eder.
 
 **Örnek:**
@@ -251,8 +255,8 @@ TWR[a, b] = payDeğeri_b / payDeğeri_a − 1
 | Gün | Olay | Değer | Pay Değeri | Pay Sayısı |
 |---|---|---|---|---|
 | 0 | ₺1.000 yatırıldı | 1.000 | 1,000000 | 1.000,00 |
-| 1 | Piyasa %10 yükseldi, gün sonu ₺500 yatırıldı | 1.600 | (1.600 − 500) / 1.000 = 1,100000 | 1.000 + 500/1,1 = 1.454,55 |
-| 2 | Piyasa düştü | 1.500 | 1.500 / 1.454,55 = 1,031250 | 1.454,55 |
+| 1 | Piyasa %10 yükseldi | 1.100 | 1.100 / 1.000 = 1,100000 | 1.000,00 |
+| 2 | Sabah ₺500 yatırıldı, sonra piyasa %6,25 düştü | 1.500 | 1.500 / (1.000 + 500/1,1) = 1,031250 | 1.454,55 |
 
 - **TWR** = 1,03125 / 1 − 1 = **%3,13**. Yatırımın kendisi önce %10 kazandı, sonra %6,25 kaybetti.
 - **Basit getiri** = (1.500 − 1.500) / 1.500 = **%0**. Para girişinin zamanlaması kullanıcının aleyhine oldu.
@@ -476,8 +480,8 @@ uyumsuzluk görülürse varlık detayında uyarı gösterilir.
 3. Bölünme toplam maliyeti değiştirmez.
 4. Otomatik para yatırma açıkken nakit hiçbir zaman negatif olmaz.
 5. **Tek varlıklı portföy kuralı:** Portföy her an %100 tek bir ölçütten oluşuyorsa (ör. yalnız XU100 fonu, komisyonsuz) iki şey geçerlidir:
-   - Portföyün TWR'si ölçütün getirisine eşittir.
-   - "Ya Olsaydı?" o ölçüt için portföyle aynı değeri verir.
+   - Portföyün TWR'si ölçütün getirisine eşittir (girişler günün açılışında, yani önceki kapanıştan alıma dönüşüyorsa; çıkışlar kapanıştan satıştan geliyorsa).
+   - "Ya Olsaydı?" o ölçüt için portföyle aynı değeri verir (alımlar o günün kapanışından yapılıyorsa).
 
    Bu, iki motorun birbirini doğruladığı en güçlü testtir.
 

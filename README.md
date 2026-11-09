@@ -4,12 +4,12 @@ BIST, ABD borsaları ve kripto paraları tek yerde takip eden, profesyonel yatı
 (TWR, XIRR, Alpha, risk) kişisel portföye uygulayan, tamamen telefonda çalışan portföy takip
 uygulaması.
 
-> **Durum:** Faz 1 (tasarım), Faz 2 (hesaplama motoru) ve Faz 3 (veritabanı) tamamlandı.
-> Kayıtlar telefonda kalıcı olarak saklanıyor, yedeklenip geri yüklenebiliyor. Kendi portföyüne
-> para girişi ve çıkışı eklenebiliyor; örnek portföy tüm özellikleri gösteriyor. Sıradaki adım:
-> Faz 4 (piyasa verisi: gerçek fiyatlar). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
+> **Durum:** Faz 1–4 tamamlandı: tasarım, hesaplama motoru, veritabanı ve piyasa verisi.
+> BIST, ABD, kripto, döviz ve altın fiyatları canlı geliyor; internet yokken son fiyatlarla
+> çalışıyor. Kendi portföyün için "Ya Olsaydı?" gerçek fiyatlarla hesaplanıyor. Sıradaki adım:
+> Faz 5 (ana ekran) ve Faz 6 (alış/satış formları). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
 > test raporları: [Faz 2](docs/test-raporu/faz2-hesaplama-motoru.md),
-> [Faz 3](docs/test-raporu/faz3-veritabani.md).
+> [Faz 3](docs/test-raporu/faz3-veritabani.md), [Faz 4](docs/test-raporu/faz4-piyasa-verisi.md).
 
 ![Dört tema](docs/onizleme/faz1/1-temalar-ana-ekran.jpg)
 
@@ -42,6 +42,7 @@ uygulaması.
 - **Temalar:** 4 tema: Okyanus (mavi), Gece, Gün, Kraliyet. Hepsi WCAG AA kontrast testinden geçer
 - **Gizlilik:** Veriler telefonda kalır (SQLite), gizlilik modu, parmak izi kilidi (Faz 10)
 - **Yedekleme:** Tek dosya JSON yedek, paylaş menüsüyle Drive'a veya e-postaya; denetimli geri yükleme
+- **Piyasa verisi:** Yahoo, Binance, CoinGecko, İş Yatırım ve TCMB; anahtar gerekmez, istekler doğrudan telefondan gider. Kaynak hata verirse yedeğe geçer
 
 ## Geliştirme
 
@@ -53,6 +54,7 @@ npm start          # Expo Go ile QR kodu okutarak telefonda aç
 npm run android    # Bağlı Android cihazda / emülatörde aç
 npm run web        # Tarayıcıda önizleme
 npm run check      # Tip kontrolü + lint + testler
+npm run test:live  # Piyasa kaynaklarını gerçek isteklerle dener (internet gerekir)
 ```
 
 ### Android telefonda kurulum

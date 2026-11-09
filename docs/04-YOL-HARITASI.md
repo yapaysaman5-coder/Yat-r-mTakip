@@ -16,7 +16,7 @@
 | 1 | Proje iskeleti ve tasarım sistemi ✅ | 4 temalı, alt barlı, gezilebilir uygulama kabuğu |
 | 2 | Hesaplama motoru ✅ | Tüm formüllerin test raporu |
 | 3 | Veritabanı ve kalıcılık ✅ | İşlemler kaydediliyor, uygulama kapanınca kaybolmuyor. Örnek portföy |
-| 4 | Piyasa verisi | Telefonda gerçek ve canlı fiyatlar |
+| 4 | Piyasa verisi ✅ | Telefonda gerçek ve canlı fiyatlar |
 | 5 | Portföy (ana ekran) | Canlı bakiye, grafik, canlı bütçe, kaydırmalı liste |
 | 6 | İşlem ekranları ve varlık detayı | Al/Sat, para yatır/çek, varlık detay |
 | 7 | Geçmiş | 4 alt sekmeli geçmiş ekranı |
@@ -127,17 +127,30 @@ birebir aynı sonucu veriyor ✅ ([faz3-veritabani.md](test-raporu/faz3-veritaba
 > çıkışı eklenebiliyor; tüm kayıt türleri örnek portföyde görülebiliyor. Gerçek fiyatlar ve
 > "Ya Olsaydı?" ölçütleri Faz 4'te (piyasa verisi) gelecek.
 
-## Faz 4: Piyasa Verisi
+## Faz 4: Piyasa Verisi ✅ (9 Kasım 2026)
 
-- [ ] Sağlayıcı arayüzü ve sahte (mock) sağlayıcı
-- [ ] Adaptörler: Yahoo (BIST, ABD, döviz, emtia, endeks), Binance (REST + WebSocket), CoinGecko, TCMB
-- [ ] Sembol katalogları (BIST, kripto) ve arama
-- [ ] Canlı güncelleme zamanlayıcısı, seans takvimi, piyasa durumu
-- [ ] Önbellek, çevrimdışı mod, yedeğe geçiş
-- [ ] Bölünme ve temettü olaylarının alınması
+- [x] Sağlayıcı arayüzü, sahte (mock) sağlayıcı (web önizlemesi ve testler)
+- [x] Adaptörler, hepsi gerçek isteklerle denendi:
+  - Yahoo: BIST, ABD, endeks, döviz, vadeli altın/gümüş
+  - Binance: kripto, USDT/TRY, PAXG altın
+  - CoinGecko (kripto yedeği)
+  - İş Yatırım: BIST kapanış, BIST 100, USD/TRY yedeği
+  - TCMB: resmi kur, son yedek
+- [x] Yedeğe geçiş, hatalı kaynağı dinlendirme, türetilmiş fiyatlar (gram altın, Euro/TL, TL'ye çevrilmiş endeksler)
+- [x] Sembol katalogları ve çevrimdışı arama: 629 BIST şirketi, 248 kripto, popüler ABD hisse/fonları
+- [x] Canlı güncelleme zamanlayıcısı, seans takvimi (BIST, NYSE, yaz saati, 2026–2027 tatilleri), piyasa durumu
+- [x] Önbellek (şema 2: canlı fiyat, indirme durumu), çevrimdışı mod, arka planda durma
+- [x] Bölünme olaylarının alınması (Yahoo; İş Yatırım'dan öneri)
+- [x] Eksik geçmişin indirilmesi; kendi portföyün için gerçek ölçütlerle "Ya Olsaydı?"
+- [x] **Ek:** Piyasalar ekranı (izleme listesi, arama, ayrıntı), ana ekranda piyasa şeridi, Ayarlar › Veri kaynakları
+- [x] **Düzeltme:** TWR'de para girişi günün başında, çıkışı günün sonunda sayılıyor (Hesaplama Motoru §8)
 
-**Bitiş kriteri:** Telefonda BIST, ABD ve kripto fiyatları geliyor. İnternet kesilince son
-fiyatlarla çalışmaya devam ediyor.
+**Bitiş kriteri:** BIST, ABD ve kripto fiyatları geliyor ✅ (gerçek kaynaklarla denendi; telefonda
+APK ile doğrulanacak). İnternet kesilince son fiyatlarla çalışmaya devam ediyor ✅
+([faz4-piyasa-verisi.md](test-raporu/faz4-piyasa-verisi.md)).
+
+> **Not:** Kripto için canlı akış (WebSocket) Faz 5'e kaldı; şimdilik 15 saniyede bir sorgu
+> yapılıyor. TÜFE ve mevduat ölçütleri Faz 9'da gömülü tabloyla gelecek.
 
 ## Faz 5: Portföy (Ana Ekran)
 

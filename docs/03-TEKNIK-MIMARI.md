@@ -127,6 +127,8 @@ src/
     ayarlar/gorunum.tsx      Tema seçimi ✅
     ayarlar/vitrin.tsx       Tasarım vitrini ✅
     ayarlar/veri.tsx         Veri ve Yedekleme ✅
+    ayarlar/kaynaklar.tsx    Veri Kaynakları ✅
+    piyasalar.tsx            Piyasalar (izleme listesi, arama) ✅
     varlik/[id].tsx          Varlık detay (Faz 6)
     islem/nakit.tsx          Para Yatır / Para Çek formu ✅ (Faz 3'te öne alındı)
     islem/yeni.tsx           Al / Sat / Temettü formu (Faz 6)
@@ -138,7 +140,8 @@ src/
   ui/                        tasarım sistemi bileşenleri ✅
   ui/charts/                 AreaChart, LineChart, Sparkline, Donut, path ✅
   theme/                     types, themes, tokens, ThemeProvider, contrast ✅
-  state/                     Zustand store'ları (settings ✅, portfolio ✅: aktif portföy görünümü)
+  state/                     Zustand store'ları (settings ✅, portfolio ✅: aktif portföy görünümü,
+                             market ✅: canlı döngü, izleme listesi, çevrimdışı durumu)
   lib/                       storage (kalıcı ayarlar), haptics, backupFile (paylaş/seç) ✅
   i18n/tr.ts                 arayüz metinleri ✅ (rejections.ts: reddedilen değişikliklerin açıklaması)
   utils/format.ts            Türkçe biçimlendiriciler ✅
@@ -152,15 +155,18 @@ src/
                              yedek · bakım (istatistik, tümünü sil, hız testi)
     demo/                    örnek portföy: kurgusal piyasa, geçmiş, ölçütler, yazma
     view/                    ekran modeli (saf): özet, varlıklar, geçmiş, grafik, analiz
-  data/market/               yahoo · binance · coingecko · tcmb · mock (Faz 4)
+  data/market/               piyasa verisi ✅ (Faz 4): providers/ (yahoo · binance · coingecko ·
+                             isyatirim · tcmb · mock) · instruments · router · session ·
+                             search + catalog/ (BIST, kripto, ABD) · http
   hooks/                     useQuotes (Faz 4–5)
 docs/                        dokümanlar ve önizleme görselleri
 ```
 
 ## 5. Veri Modeli (SQLite)
 
-> **Durum (Faz 3 ✅):** Şema sürüm 1 kodlandı (`src/data/db/migrations.ts`). Aşağıdaki tablolar
-> kullanılıyor; diğerleri ilgili fazda yeni migration'la eklenecek.
+> **Durum (Faz 4 ✅):** Şema sürüm 2 (`src/data/db/migrations.ts`). Sürüm 1'den 2'ye geçiş,
+> mevcut veriye dokunmadan otomatik yapılır (testle doğrulandı). İşaretsiz tablolar ilgili fazda
+> yeni migration'la eklenecek.
 
 **Saklama kuralları:**
 
@@ -176,11 +182,13 @@ docs/                        dokümanlar ve önizleme görselleri
 | `txn` ✅ | id, portfolio_id, asset_id, type, ts, quantity, price, fee, fx_rate, amount, tax, split_ratio, withdraw_proceeds, note, created_at, updated_at | Yalnızca elle girilen kayıtlar. İndeks: (portfolio_id, ts), (asset_id, ts). Portföy silinince kayıtları da silinir |
 | `price_daily` ✅ | asset_id, date, close | Günlük kapanış (varlıklar, kurlar, ölçütler). Faz 4'te açılış/yüksek/düşük eklenecek |
 | `portfolio_snapshot` ✅ | portfolio_id, date, value, cash, net_invested, flow | Günlük değer önbelleği. TWR'nin iç birim değerleri buradan anında hesaplanır, ayrıca saklanmaz |
-| `quote` | provider_symbol, price, prev_close, change_pct, market_state, ts | Canlı fiyat önbelleği (Faz 4) |
+| `quote` ✅ | asset_id, price, prev_close, time, source, delay_minutes, end_of_day, fetched_at | Son canlı fiyat ve nereden/ne zaman geldiği (şema 2) |
+| `price_sync` ✅ | asset_id, first_date, last_date, source, synced_at, error | Hangi tarih aralığının indirildiği; sadece eksik kısım istenir (şema 2) |
+| `watchlist` ✅ | asset_id, sort_order | Piyasalar ekranındaki liste (şema 2, varsayılan 10 enstrüman) |
 | `price_intraday` | provider_symbol, ts, close | 1G/1H için, süreli önbellek (Faz 4) |
-| `corporate_action` | provider_symbol, date, type, ratio, amount | Bölünme tespiti (Faz 4) |
+| `corporate_action` ✅ | asset_id, date, type, value, source | Kaynağın bildirdiği bölünmeler (şema 2) |
 | `inflation_monthly` | yyyymm, index | TÜFE (Faz 9) |
-| `watchlist`, `alert` | | İzleme listesi, fiyat alarmı (sonraki sürümler) |
+| `alert` | | Fiyat alarmı (sonraki sürümler) |
 
 - **Şema değişiklikleri:** Numaralı migration'larla yapılır. Veritabanı son uygulananı `PRAGMA user_version` ile bilir; açılışta eksik olanlar sırayla, her biri kendi işleminde (transaction) uygulanır. Yarıda kalan bir migration tamamen geri alınır. Uygulamanın daha yeni bir sürümüyle yazılmış veritabanı açılmaz (veri bozulmasın diye).
 - **Ayarlar:** Görünüm ayarları ve aktif portföy `kv-store`'da (küçük anahtar-değer deposu) kalır.
@@ -196,68 +204,88 @@ docs/                        dokümanlar ve önizleme görselleri
 
 ## 6. Piyasa Veri Kaynakları
 
+> **Durum (Faz 4 ✅, 9 Kasım 2026):** Tüm kaynaklar gerçek isteklerle denendi. Testlerdeki
+> örnek yanıtların hepsi bu kaynaklardan kaydedildi (`src/data/market/__tests__/fixtures`).
+
 ### 6.1 Sağlayıcı Arayüzü
 
 ```ts
-interface MarketDataProvider {
-  id: string;
-  supports(market: Market): boolean;
-  quotes(symbols: string[]): Promise<Quote[]>;
-  history(symbol: string, range: Range, interval: Interval): Promise<Bar[]>;
-  search(query: string, market?: Market): Promise<SymbolInfo[]>;
-  corporateActions?(symbol: string, from: Date): Promise<CorporateAction[]>;
-  stream?(symbols: string[], onTick: (t: Tick) => void): Unsubscribe;
+interface MarketSource {
+  id: 'yahoo' | 'binance' | 'coingecko' | 'isyatirim' | 'tcmb' | 'mock';
+  quotes(refs: string[], http: Http): Promise<Map<string, SourceQuote>>;
+  history(ref: string, from: string, to: string, http: Http): Promise<SourceHistory>;
 }
+// SourceQuote: fiyat, önceki kapanış, zaman, gecikme (dk), gün sonu mu
+// SourceHistory: günlük kapanışlar (İstanbul günleri), bölünmeler, temettüler
 ```
 
-Her pazar için öncelik sıralı bir sağlayıcı listesi tutulur. Birincil sağlayıcı hata verirse
-veya sağlık kontrolünden geçemezse otomatik olarak yedeğe geçilir.
+- **Enstrüman tanımı** (`instruments.ts`): her varlık için kaynaklar tercih sırasıyla listelenir. Bir kaynak değeri ölçeklenebilir (ons → gram) veya başka bir enstrümanın fiyatıyla çarpılabilir (EUR/USDT × USD/TRY).
+- **Yönlendirici** (`router.ts`):
+  - İstekleri kaynağa göre toplu yapar.
+  - Hata veren veya sembolü bilmeyen kaynakta sıradakine geçer.
+  - Hata veren kaynağı **dinlendirir**: 30 sn, her hatada iki katı, en çok 15 dk.
+  - Bütün istekler bağlantı hatasıyla düşerse durumu "çevrimdışı" olarak bildirir.
+- **Aynı tür kapanış:** Yahoo'nun bölünmeye göre düzeltilmiş kapanışları, işlem gören fiyatlara geri çevrilir (NVDA 10:1 bölünmesiyle doğrulandı). İş Yatırım'ın düzeltilmemiş kapanışı kullanılır. Böylece her kaynak aynı tür fiyat yazar; kullanıcının kendi bölünme kayıtları defteri doğru tutar.
 
 ### 6.2 Kaynak Tablosu
 
-| Veri | Birincil | Yedek | Canlılık | Anahtar |
+| Veri | Birincil | Yedekler | Canlılık | Doğrulama |
 |---|---|---|---|---|
-| **BIST hisse ve endeks** (`THYAO.IS`, `XU100.IS`, `XU030.IS`) | Yahoo Finance grafik uç noktası (`/v8/finance/chart`) | İş Yatırım geçmiş veri uç noktası *(doğrulanacak)* | 15 dk gecikmeli | Yok |
-| **ABD hisse, ETF ve endeks** (`AAPL`, `^GSPC`, `^NDX`, `^IXIC`, `^RUT`) | Yahoo Finance | Finnhub veya Twelve Data (ücretsiz katman) | Neredeyse gerçek zamanlı | Yedekler için kullanıcı anahtarı |
-| **Kripto canlı** | Binance WebSocket (`miniTicker`) | CoinGecko Demo API | Gerçek zamanlı | Yok / CoinGecko anahtarı |
-| **Kripto geçmiş** | Binance REST (`/api/v3/klines`) | Yahoo (`BTC-USD`), CoinGecko (1 yıl) | — | Yok |
-| **Döviz** (`USDTRY=X`, `EURTRY=X`) | Yahoo Finance | TCMB günlük kur XML'i (`/kurlar/today.xml`, arşiv) | 15–60 sn / günlük | Yok |
-| **Altın ve gümüş (ons)** | Yahoo (spot veya vadeli sembol, doğrulanacak) | — | 15–60 sn | Yok |
-| **TÜFE** | TCMB EVDS 3 | Uygulamaya gömülü aylık tablo (güncellemeyle yenilenir) | Aylık | EVDS anahtarı (kullanıcı) |
-| **Sembol arama** | BIST ve kripto için gömülü katalog, ABD için Yahoo arama | — | — | Yok |
-| **Bölünme ve temettü olayları** | Yahoo grafik uç noktası (`events=split,div`) | — | — | Yok |
+| **BIST hisseleri** | Yahoo (`THYAO.IS`) | İş Yatırım günlük kapanış | 15 dk gecikmeli / gün sonu | ✅ İkisi de |
+| **BIST 100** | Yahoo (`XU100.IS`) | İş Yatırım (her hisse satırındaki endeks değeri) | 15 dk / gün sonu | ✅ |
+| **BIST 30** | Yahoo (`XU030.IS`) | — | 15 dk | ✅ |
+| **ABD hisse, ETF, endeks** | Yahoo (`AAPL`, `^GSPC`, `^NDX`, `^RUT`) | — | Anlık | ✅ |
+| **Kripto** | Binance (`BTCUSDT`, İstanbul gününe göre `timeZone=3`) | CoinGecko | Anlık, 7/24 | ✅ İkisi de |
+| **Dolar/TL** | Yahoo (`USDTRY=X`) | Binance `USDTTRY` → İş Yatırım → TCMB | Anlık / gün sonu | ✅ Hepsi |
+| **Euro/TL** | Yahoo (`EURTRY=X`) | Binance `EURUSDT` × Dolar/TL → TCMB | Anlık | ✅ |
+| **Gram altın** | Binance `PAXGTRY` ÷ 31,1035 | Yahoo `GC=F` × Dolar/TL ÷ 31,1035 | Anlık, 7/24 | ✅ |
+| **Gram gümüş** | Yahoo `SI=F` × Dolar/TL ÷ 31,1035 | — | Anlık | ✅ (biçim) |
+| **TÜFE, mevduat** | Gömülü aylık tablo *(Faz 9)* | — | Aylık | — |
+| **Sembol arama** | Telefondaki katalog: 629 BIST şirketi (İş Yatırım listesi), 248 kripto (CoinGecko + Binance), 88 popüler ABD hisse/fonu | Katalogda olmayan sembol de eklenebilir; kaynak doğrular | — | ✅ |
+| **Bölünmeler** | Yahoo olayları | İş Yatırım düzeltilmiş/düzeltilmemiş fiyat oranı (öneri) | — | ✅ |
+
+**Denemede çıkan önemli bulgular:**
+
+- `api.binance.com` bazı bölgelerde **451** (yasal engel) döndürüyor. Bu yüzden birincil adres, Binance'in yalnız piyasa verisi sunan ve her yerden çalışan `data-api.binance.vision` adresi; diğeri yedek.
+- **Stooq** artık tarayıcı doğrulaması (JavaScript bulmacası) istiyor. Bu tür bir korumayı aşmak doğru olmadığı için kaynak listesinden çıkarıldı.
+- **İş Yatırım** bir istekte en fazla yaklaşık bir yıllık veriyi eksiksiz veriyor. Uzun geçmiş takvim yılı yılı istenir.
+- **Yahoo**, uygulamanın normal istemcisine yanıt veriyor; komut satırı araçlarına zaman zaman "çok fazla istek" (429) diyor. Uygulama hiçbir kimlik taklidi yapmaz. Yahoo yanıt vermezse yedekler devreye girer.
+- **Anahtar gerekmez:** Hiçbir kaynak kullanıcı anahtarı istemez. İstekler doğrudan telefondan gider; araya sunucu girmez.
 
 ### 6.3 Riskler ve Önlemler
 
 | Risk | Önlem |
 |---|---|
-| Yahoo resmi bir API sunmuyor. Uç nokta değişebilir veya sınırlanabilir | Sağlayıcı soyutlaması, otomatik yedeğe geçiş, agresif önbellek. İstekler her kullanıcının kendi telefonundan gider, hacim düşük kalır |
-| Ücretsiz BIST verisi 15 dk gecikmeli | Gecikme rozetle açıkça gösterilir. Gerçek zamanlı veri için lisanslı bir veri dağıtıcısı (ücretli) ileride adaptör olarak eklenebilir |
-| Uygulama mağazada ticari olarak dağıtılırsa veri lisansı gerekir | Kişisel kullanım için sorun yok. Ticari yayında lisanslı sağlayıcıya ve anahtarları saklayan küçük bir ara sunucuya geçilir *(P2)* |
-| Bedelli ve bedelsiz düzeltmelerinin kaynakta farklı işlenmesi | Bölünme tespiti ve uyarı mekanizması (Hesaplama Motoru §13), bilinen BIST örnekleriyle test |
-| Web önizlemede tarayıcı CORS engeli | Geliştirme sırasında web önizlemesi sahte (mock) sağlayıcıyla çalışır. Telefonda CORS engeli yoktur |
+| Yahoo resmi bir API sunmuyor. Uç nokta değişebilir veya sınırlanabilir | Yedek kaynaklar (BIST için İş Yatırım, kripto ve kurlar için Binance, TCMB), kaynak dinlendirme, yerel fiyat deposu. İstekler her kullanıcının kendi telefonundan gider, hacim düşük kalır |
+| ABD hisseleri ve BIST 30 için doğrulanmış ikinci kaynak yok | Fiyat gelmezse son kaydedilen fiyat gösterilir ve "çevrimdışı/son güncelleme" belirtilir. Anahtarlı yedekler (Finnhub, Twelve Data) ileride eklenebilir |
+| Ücretsiz BIST verisi 15 dk gecikmeli | Gecikme her satırda yazılır ("15 dk gecikme"). Gerçek zamanlı veri için lisanslı bir dağıtıcı ileride adaptör olarak eklenebilir |
+| Uygulama mağazada ticari olarak dağıtılırsa veri lisansı gerekir | Kişisel kullanım için sorun yok. Ticari yayında lisanslı sağlayıcıya geçilir *(P2)* |
+| Bedelli ve bedelsiz düzeltmelerinin kaynakta farklı işlenmesi | Tüm kaynaklar düzeltilmemiş fiyat yazar. Bölünmeler ayrı saklanır ve kayıt dışı bölünme önerisinde kullanılır (Hesaplama Motoru §13) |
+| Web önizlemede tarayıcı CORS engeli | Web önizlemesi kurgusal fiyatlarla çalışır ve bunu ekranda açıkça yazar. Telefonda CORS engeli yoktur |
+| Seans takvimi hatası (tatil listesi) | Takvim yalnızca yenileme sıklığını ve "Açık/Kapalı" yazısını etkiler; fiyatın kendisini değil. 2026–2027 BIST ve NYSE tatilleri gömülü, yıllık güncellenir |
 
-> Bu geliştirme ortamının internet erişimi piyasa veri sitelerine kapalı. Bu yüzden uç noktaların
-> güncel davranışı (yanıt biçimi, sınırlar) Faz 4'te telefonda test edilerek doğrulanacak. O
-> zamana kadar geliştirme sahte veriyle ilerler.
+**Canlı deneme:** `npm run test:live`, internete erişimi olan bir bilgisayardan tüm kaynakları
+gerçek isteklerle dener (CI'da çalışmaz; kaynakların sınırlarına takılmamak için).
 
-## 7. Canlı Güncelleme Mekanizması
+## 7. Canlı Güncelleme Mekanizması (Faz 4 ✅)
 
 | Pazar | Seans içinde | Seans dışında |
 |---|---|---|
-| Kripto | WebSocket akışı (anlık) | — (7/24) |
-| ABD | 15 sn'de bir toplu sorgu | 5 dk (seans öncesi/sonrası fiyatlar) |
-| BIST | 60 sn (veri zaten gecikmeli) | Sorgu yok |
-| Döviz ve emtia | 30 sn | 5 dk |
+| Kripto | 15 sn'de bir toplu sorgu (WebSocket akışı Faz 5'te, ana ekrandaki fiyat tik efektiyle) | — (7/24) |
+| ABD | 15 sn | 5 dk |
+| BIST | 60 sn (veri zaten 15 dk gecikmeli) | Kapanıştan 20 dk sonra bir kez (son kapanış için), sonra sorgu yok |
+| Döviz ve emtia | 30 sn | 5 dk (hafta sonu) |
 
-- **Arka plan:** Uygulama arka plana geçince tüm sorgular ve akışlar durur, öne gelince anında yenilenir.
-- **Yalnızca gerekenler:** Sadece portföydeki ve ekranda görünen semboller sorgulanır. Sorgular toplu yapılır.
+- **Açılış:** Ekran önce telefonda kayıtlı son fiyatlarla çizilir. Ardından eksik geçmiş indirilir ve canlı fiyatlar alınır.
+- **Arka plan:** Uygulama arka plana geçince sorgular durur, öne gelince vadesi gelenler hemen yenilenir.
+- **Yalnızca gerekenler:** Sorgulananlar şunlar: kendi portföylerindeki varlıklar, onların para birimleri ve izleme listesi. Ölçütlerin yalnızca geçmişi indirilir. Örnek portföy hiçbir zaman piyasa verisine dokunmaz.
+- **Tek fiyat kaynağı:** Canlı fiyat aynı zamanda o günün kapanışı olarak saklanır. Grafik, günlük değer önbelleği ve "bugün" aynı fiyatları okur. Fiyat değişince etkilenen portföylerin önbelleği o günden itibaren yeniden hesaplanır.
+- **Geçmiş:** Sadece eksik kısım indirilir. Son birkaç gün 6 saatte bir tazelenir; hata olursa 10 dk sonra yeniden denenir.
 - **Seans takvimi:**
-  - BIST: hafta içi 10:00–18:00, Europe/Istanbul.
-  - NYSE/Nasdaq: 09:30–16:00, America/New_York. Yaz saati geçişleri otomatik hesaplanır.
-  - Tatiller sağlayıcının piyasa durumu bilgisinden alınır.
-- **Hata durumunda:** Üstel geri çekilme (exponential backoff) uygulanır, yedek sağlayıcıya geçilir ve "eski veri" rozeti gösterilir.
-- **Mobil veri:** Ayarlarda kapatılırsa mobil veride canlı akış yerine 1 dk sorgu kullanılır.
+  - BIST hafta içi 10:00–18:00 (arife günleri 12:30'a kadar). NYSE 09:30–16:00 New York saati; yaz saati geçişleri hesaplanır.
+  - 2026–2027 tatilleri gömülü.
+- **Hata durumunda:** Kaynak dinlendirilir, yedek kaynağa geçilir. İnternet yoksa "ÇEVRİMDIŞI" rozeti ve son güncelleme saati gösterilir.
+- **Mobil veri ayarı:** Ayarlar › Veri ve bağlantı'da (Faz 10).
 
 ## 8. Performans Stratejisi
 
@@ -281,6 +309,7 @@ veya sağlık kontrolünden geçemezse otomatik olarak yedeğe geçilir.
 | Katman | Araç | Hedef |
 |---|---|---|
 | Hesaplama motoru | Jest | Hesaplama Motoru §15'teki tüm senaryolar. `src/domain` için ≥ %95 kod kapsamı ✅ |
+| Piyasa verisi | Jest + kaydedilmiş gerçek yanıtlar; `npm run test:live` ile canlı deneme | Her kaynağın ayrıştırıcısı, yedeğe geçiş, dinlendirme, seans takvimi, eşitleme ✅ |
 | Veri katmanı | Jest + Node'un yerleşik SQLite'ı | Migration, kayıt kuralları, artımlı önbellek = baştan hesap, yedek → geri yükleme = birebir aynı. `src/data` için ≥ %90 satır kapsamı ✅ |
 | Biçimlendiriciler | Jest | `tr-TR` para, yüzde, tarih ve kısaltma çıktıları |
 | Bileşenler | Testing Library | Form doğrulamaları, kaydırma eylemleri |

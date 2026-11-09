@@ -6,7 +6,15 @@ import { migrate } from '../../db/migrations';
 import { openNodeDriver } from '../../db/nodeDriver';
 import { seedDemo } from '../../demo/seed';
 import { upsertAssets } from '../../repo/assets';
-import { loadQuotes, loadSyncStates } from '../../repo/market';
+import {
+  addToWatchlist,
+  loadQuotes,
+  loadSplits,
+  loadSyncStates,
+  loadWatchlist,
+  removeFromWatchlist,
+  upsertSplits,
+} from '../../repo/market';
 import { getPortfolio, insertPortfolio } from '../../repo/portfolios';
 import { latestCloses, loadCloses } from '../../repo/prices';
 import { loadPortfolioData } from '../../service/load';
@@ -252,5 +260,31 @@ describe('live quotes', () => {
     const r = await refreshQuotes(db, offline, [needs.instruments.get('US:AAPL')!], { now: NOW });
     expect(r.offline).toBe(true);
     expect((await loadQuotes(db)).get('US:AAPL')?.price).toBe(252.5);
+  });
+});
+
+describe('watchlist and corporate actions', () => {
+  it('adds at the end, ignores duplicates and removes', async () => {
+    const db = openNodeDriver();
+    await migrate(db);
+    const before = await loadWatchlist(db);
+    expect(before[0]).toBe('INDEX:XU100');
+    await addToWatchlist(db, 'BIST:THYAO');
+    await addToWatchlist(db, 'BIST:THYAO');
+    expect((await loadWatchlist(db)).slice(-1)).toEqual(['BIST:THYAO']);
+    expect(await loadWatchlist(db)).toHaveLength(before.length + 1);
+    await removeFromWatchlist(db, 'INDEX:XU100');
+    expect(await loadWatchlist(db)).not.toContain('INDEX:XU100');
+  });
+
+  it('stores the splits a source reports', async () => {
+    const db = openNodeDriver();
+    await migrate(db);
+    await upsertSplits(db, 'US:NVDA', [{ date: '2024-06-10', ratio: '10' }], 'yahoo');
+    await upsertSplits(db, 'US:NVDA', [{ date: '2024-06-10', ratio: '10' }], 'yahoo');
+    expect(await loadSplits(db, ['US:NVDA', 'US:AAPL'])).toEqual([
+      { assetId: 'US:NVDA', date: '2024-06-10', ratio: '10' },
+    ]);
+    expect(await loadSplits(db, [])).toEqual([]);
   });
 });

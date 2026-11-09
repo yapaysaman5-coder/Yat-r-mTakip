@@ -74,6 +74,7 @@
       "!src/data/types.ts",
       "!src/data/db/expoDriver.ts",
       "!src/data/database.ts",
+      "!src/data/market/index.ts",
       "!src/data/db/nodeSqlite.d.ts",
       "!src/**/__tests__/**"
     ],

@@ -896,6 +896,17 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 18 | **Otomatik kayıtlar** | Saklanmaz, her seferinde türetilir. Elle silinemez ve düzenlenemez. Bağlı olduğu alış veya satış değişince kendiliğinden güncellenir |
 | 19 | **Silme** | Onay penceresi yerine anında silme ve 5 saniye **GERİ AL**. Toplu ve geri dönüşsüz işlemlerde (tüm verileri silme, yedekten geri yükleme) ise açık onay istenir |
 
+### 9 Kasım 2026: Faz 4'te verilen kararlar
+
+| # | Konu | Karar |
+|---|---|---|
+| 20 | **Veri kaynakları** | Anahtarsız, gerçek isteklerle denenmiş kaynaklar: Yahoo, Binance, CoinGecko, İş Yatırım, TCMB. Bot korumalı kaynaklar (Stooq) kullanılmaz; uygulama kimlik taklidi yapmaz |
+| 21 | **Gram altın** | 7/24 ve anlık olduğu için birincil kaynak Binance PAXG/TRY ÷ 31,1035; yedek Yahoo vadeli altın × Dolar/TL |
+| 22 | **"Ya Olsaydı?" ölçütleri** | Kendi portföyün için ilk kayıttan bugüne gerçek günlük fiyatlar indirilir. ABD endeksleri her günün kuruyla TL'ye çevrilir (Türkiye'den yatıran birinin göreceği değer). TÜFE ve mevduat Faz 9'da |
+| 23 | **Piyasalar ekranı** | İzleme listesi (varsayılan: BIST 100, Dolar/TL, Euro/TL, gram altın, Bitcoin, S&P 500, Nasdaq 100, gram gümüş, BIST 30, Ethereum), arama ile ekleme |
+| 24 | **TWR kuralı** | Para girişi günün başında, çıkışı günün sonunda sayılır. Büyük girişlerde sonucu bozabilen eski "gün sonu" kuralının yerine geçti |
+| 25 | **Web önizlemesi** | Tarayıcılar bu kaynakları engellediği için web önizlemesi kurgusal fiyat kullanır ve bunu ekranda açıkça yazar |
+
 ---
 
 ## 14. Yasal Uyarı
