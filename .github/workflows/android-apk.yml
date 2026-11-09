@@ -54,16 +54,22 @@ jobs:
       - name: Generate native Android project
         run: |
           npx expo prebuild --platform android --no-install
-          # The default 10 s download timeout for the Gradle distribution is too tight on CI.
-          sed -i 's/^networkTimeout=.*/networkTimeout=120000/' android/gradle/wrapper/gradle-wrapper.properties
-          cat android/gradle/wrapper/gradle-wrapper.properties
+          props=android/gradle/wrapper/gradle-wrapper.properties
+          # services.gradle.org only redirects to Gradle's CDN and has returned 504s on CI;
+          # download from the CDN directly, with a longer timeout than the 10 s default.
+          sed -i 's#services.gradle.org/distributions#downloads.gradle.org/distributions#' "$props"
+          sed -i 's/^networkTimeout=.*/networkTimeout=120000/' "$props"
+          cat "$props"
 
       - name: Build APK (arm64)
         working-directory: android
         run: |
-          build() { ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace; }
-          # One retry protects against transient network failures (dependency / wrapper downloads).
-          build || { echo "Build failed, retrying once in 30 s..."; sleep 30; build; }
+          args="assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace"
+          if ! ./gradlew $args; then
+            # If the wrapper still can't fetch its distribution, use the runner's own Gradle.
+            echo "Wrapper build failed; retrying with $(gradle --version | grep '^Gradle')"
+            gradle $args
+          fi
 
       - name: Collect APK
         run: |
