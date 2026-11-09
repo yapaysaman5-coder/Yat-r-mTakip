@@ -13,28 +13,27 @@ import { formatDateTime, formatMoney, formatPrice, formatQuantity } from '@/util
 
 import { txnVisual } from './txnVisual';
 
-/** A record's details with edit and delete (undo for 5 seconds). */
-export function TxnDetailSheet({
-  item,
-  onClose,
-}: {
-  item: HistoryItem | null;
-  onClose: () => void;
-}) {
-  const colors = useColors();
+/** Edit (opens the right form) and delete with 5 seconds to undo, for a manual record. */
+export function useTxnActions() {
   const router = useRouter();
   const remove = usePortfolioStore((s) => s.remove);
   const save = usePortfolioStore((s) => s.save);
   const history = usePortfolioStore((s) => s.view?.history ?? []);
 
-  const t = item?.source;
-  const v = item ? txnVisual(item.type, colors) : null;
-  const linked = item?.linkedTo ? history.find((h) => h.id === item.linkedTo) : undefined;
-  const cashEditable = t && (t.type === 'DEPOSIT' || t.type === 'WITHDRAW');
+  const edit = (item: HistoryItem) => {
+    const t = item.source;
+    if (!t) return;
+    if (t.type === 'DEPOSIT' || t.type === 'WITHDRAW')
+      router.push({ pathname: '/islem/nakit', params: { type: t.type, id: t.id } });
+    else if (t.type === 'BUY' || t.type === 'SELL')
+      router.push({ pathname: '/islem/al-sat', params: { side: t.type, id: t.id } });
+    else if (t.type === 'DIVIDEND')
+      router.push({ pathname: '/islem/temettu', params: { id: t.id } });
+    else if (t.type === 'SPLIT') router.push({ pathname: '/islem/bolunme', params: { id: t.id } });
+    else toast.show({ message: 'Hesap ücreti düzenleme Ayarlar fazında geliyor' });
+  };
 
-  const onDelete = async () => {
-    if (!item) return;
-    onClose();
+  const del = async (item: HistoryItem) => {
     const result = await remove(item.id);
     if (!result.ok) {
       toast.show({ message: rejectionText(result.rejection, history), tone: 'danger' });
@@ -51,16 +50,35 @@ export function TxnDetailSheet({
     });
   };
 
-  const onEdit = () => {
-    if (!t) return;
+  return { edit, remove: del };
+}
+
+/** A record's details with edit and delete (undo for 5 seconds). */
+export function TxnDetailSheet({
+  item,
+  onClose,
+}: {
+  item: HistoryItem | null;
+  onClose: () => void;
+}) {
+  const colors = useColors();
+  const actions = useTxnActions();
+  const history = usePortfolioStore((s) => s.view?.history ?? []);
+
+  const t = item?.source;
+  const v = item ? txnVisual(item.type, colors) : null;
+  const linked = item?.linkedTo ? history.find((h) => h.id === item.linkedTo) : undefined;
+
+  const onDelete = () => {
+    if (!item) return;
     onClose();
-    if (cashEditable) router.push({ pathname: '/islem/nakit', params: { type: t.type, id: t.id } });
-    else if (t.type === 'BUY' || t.type === 'SELL')
-      router.push({ pathname: '/islem/al-sat', params: { side: t.type, id: t.id } });
-    else if (t.type === 'DIVIDEND')
-      router.push({ pathname: '/islem/temettu', params: { id: t.id } });
-    else if (t.type === 'SPLIT') router.push({ pathname: '/islem/bolunme', params: { id: t.id } });
-    else toast.show({ message: 'Hesap ücreti düzenleme Ayarlar fazında geliyor' });
+    void actions.remove(item);
+  };
+
+  const onEdit = () => {
+    if (!item) return;
+    onClose();
+    actions.edit(item);
   };
 
   const rows: [string, string][] = [];

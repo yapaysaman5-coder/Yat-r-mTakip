@@ -929,6 +929,15 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 36 | **Katalog dışı coin** | Önce Binance paritesi, yoksa CoinGecko'da arama; aynı sembollü coinler ad, sıra ve fiyatla listelenir, kişi seçer. Seçim varlık kaydında saklanır |
 | 37 | **Fiyatı olmayan varlık** | Sessizce son işlem fiyatıyla değerlenmez: satırda "fiyat yok", detayda uyarı ve sonradan "Coini eşleştir" |
 
+### 9 Kasım 2026: Faz 7'de verilen kararlar
+
+| # | Konu | Karar |
+|---|---|---|
+| 38 | **Aylık getiri** | Zaman ağırlıklı (ay içindeki para giriş/çıkışı getiriyi bozmaz); yıl getirisi ayların bileşiği |
+| 39 | **Piyasa K/Z (ekstre)** | Ay sonu − ay başı − (giren − çıkan). Temettü ve hesap ücretleri bunun içinde; ay detayında ayrıca gösterilir |
+| 40 | **Elde tutma süresi** | Satılan adetlerin, maliyet ağırlıklı ortalama süresi (önce en eski alışlar) |
+| 41 | **Otomatik kayıtlar** | Geçmişte kaydırılamaz; bağlı oldukları kayıtla birlikte değişir |
+
 ---
 
 ## 14. Yasal Uyarı

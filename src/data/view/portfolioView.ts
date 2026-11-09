@@ -99,6 +99,11 @@ export interface HistoryItem {
   amountTRY: number;
   /** Sales: realized P/L ÷ cost basis. */
   realizedRatio?: number;
+  /** Sales: what was realized, TRY (cost at the purchase rates). */
+  realized?: { pnlTRY: number; costTRY: number; proceedsTRY: number; holdingDays: number };
+  /** Commission of a trade and withholding tax of a dividend, TRY. */
+  feeTRY?: number;
+  taxTRY?: number;
   /** Created automatically for another record. */
   isAuto?: boolean;
   linkedTo?: string;
@@ -251,6 +256,19 @@ export function buildPortfolioView(data: PortfolioData): PortfolioView {
         amountTRY: cashEffectTRY(t),
         realizedRatio:
           r && r.costBasisTRY.gt(0) ? r.pnlTRY.div(r.costBasisTRY).toNumber() : undefined,
+        realized: r
+          ? {
+              pnlTRY: r.pnlTRY.toNumber(),
+              costTRY: r.costBasisTRY.toNumber(),
+              proceedsTRY: r.proceedsTRY.toNumber(),
+              holdingDays: r.holdingDays,
+            }
+          : undefined,
+        feeTRY:
+          (t.type === 'BUY' || t.type === 'SELL') && t.fee
+            ? Number(t.fee) * Number(t.fxRate ?? 1)
+            : undefined,
+        taxTRY: t.type === 'DIVIDEND' && t.tax ? Number(t.tax) * Number(t.fxRate ?? 1) : undefined,
         isAuto: t.isAuto,
         linkedTo: t.linkedTo,
         note: t.note,

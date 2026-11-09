@@ -206,12 +206,21 @@ doğrulanacak.
 
 > **Not:** Mum grafik ve grafikteki işarete dokununca detay açılması Faz 5'teki FinChart ile gelecek.
 
-## Faz 7: Geçmiş
+## Faz 7: Geçmiş ✅ (9 Kasım 2026)
 
-- [ ] İşlemler: aylara göre gruplama, filtre, arama, kaydırma hareketleri
-- [ ] Gerçekleşen K/Z (elde tutma süresi, kazanan/kaybeden oranı)
-- [ ] Nakit Hareketleri
-- [ ] Aylık Ekstre ve ay detayı
+- [x] İşlemler:
+  - Aylara göre gruplama, her ayın nakde etkisi
+  - Tür çipleri (Alış, Satış, Para, Temettü, Diğer), arama (sembol, işlem türü, not)
+  - Filtre: piyasa ve tarih (bu ay, son 3 ay, bu yıl, geçen yıl, özel aralık)
+  - Sağa çek: Düzenle. Sola çek: Sil (geri al ile)
+- [x] Gerçekleşen K/Z: maliyet, satış tutarı, K/Z, %, elde tutma süresi; yıllık toplam, kazanan/kaybeden oranı, ortalama elde tutma
+- [x] Nakit Hareketleri: yatırılan (otomatik payı), çekilen, net temettü ve stopaj, komisyon, hesap ücreti; net yatırılan grafiği, yıllara göre tablo
+- [x] Aylık Ekstre: ay başı, giren, çıkan, piyasa K/Z, ay sonu, zaman ağırlıklı aylık getiri; yıl getirisi; ay detayı ve ayın kayıtları
+
+**Bitiş kriteri:** Geçmişin dört görünümü tutarlı ✅. Ekstrenin toplamları Canlı Bütçe ve Net
+K/Z ile birebir aynı ([faz7-gecmis.md](test-raporu/faz7-gecmis.md)).
+
+> **Sonraya kalanlar:** Ekstreyi PDF paylaşma (P2), hesap ücreti düzenleme formu (Faz 10).
 
 ## Faz 8: Fon (Hesabım)
 

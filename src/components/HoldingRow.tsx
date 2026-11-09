@@ -1,4 +1,4 @@
-import { Pencil, ShoppingCart, Trash2, TrendingDown, type LucideIcon } from 'lucide-react-native';
+import { Pencil, ShoppingCart, Trash2, TrendingDown } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import ReanimatedSwipeable, {
@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { Holding } from '@/data/view/portfolioView';
+import { SwipeAction } from '@/components/SwipeAction';
 import { haptics } from '@/lib/haptics';
 import { useSettings } from '@/state/settings';
 import { useColors } from '@/theme/ThemeProvider';
@@ -81,14 +82,14 @@ export function HoldingRow({ holding, actions }: { holding: Holding; actions: Ho
       onSwipeableWillOpen={() => haptics.selection()}
       renderLeftActions={() => (
         <View style={{ flexDirection: 'row' }}>
-          <Action
+          <SwipeAction
             icon={Pencil}
             label="Düzenle"
             color={colors.accent}
             bg={colors.accentSoft}
             onPress={run(actions.onDetail)}
           />
-          <Action
+          <SwipeAction
             icon={ShoppingCart}
             label="Al"
             color={colors.up}
@@ -99,14 +100,14 @@ export function HoldingRow({ holding, actions }: { holding: Holding; actions: Ho
       )}
       renderRightActions={() => (
         <View style={{ flexDirection: 'row' }}>
-          <Action
+          <SwipeAction
             icon={TrendingDown}
             label="Sat"
             color={colors.down}
             bg={colors.downSoft}
             onPress={run(actions.onSell)}
           />
-          <Action
+          <SwipeAction
             icon={Trash2}
             label="Sil"
             color={colors.textOnAccent}
@@ -184,39 +185,5 @@ export function HoldingRow({ holding, actions }: { holding: Holding; actions: Ho
         </View>
       </PressableScale>
     </ReanimatedSwipeable>
-  );
-}
-
-function Action({
-  icon: Icon,
-  label,
-  color,
-  bg,
-  onPress,
-}: {
-  icon: LucideIcon;
-  label: string;
-  color: string;
-  bg: string;
-  onPress: () => void;
-}) {
-  return (
-    <PressableScale
-      onPress={onPress}
-      haptic="light"
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={{
-        width: 72,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 4,
-        backgroundColor: bg,
-      }}>
-      <Icon size={20} color={color} strokeWidth={2.4} />
-      <Text variant="caption" color={color}>
-        {label}
-      </Text>
-    </PressableScale>
   );
 }
