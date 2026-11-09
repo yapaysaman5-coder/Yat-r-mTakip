@@ -145,3 +145,55 @@ export function deleteTransaction(
     return checkAndWrite(tx, portfolioId, { before: existing.txn }, opts);
   });
 }
+
+export type BatchResult =
+  { ok: true; txns: Transaction[] } | { ok: false; rejection: ChangeRejection };
+
+/**
+ * Deletes several records at once (e.g. every record of an asset), checked as one change:
+ * the history without them must still be consistent. Returns them for undo.
+ */
+export function deleteTransactions(
+  db: SqlDriver,
+  portfolioId: string,
+  ids: readonly string[],
+  opts: ChangeOptions = {},
+): Promise<BatchResult> {
+  return db.transaction(async (tx) => {
+    const engine = opts.engine ?? DEFAULT_ENGINE;
+    const current = await txnRepo.listTransactions(tx, portfolioId);
+    const remove = new Set(ids);
+    const removed = current.filter((t) => remove.has(t.id));
+    if (removed.length !== remove.size) return { ok: false, rejection: { code: 'NOT_FOUND' } };
+    const next = current.filter((t) => !remove.has(t.id));
+    const rejection = rejectionFor(newLedgerIssues(current, next, engine));
+    if (rejection) return { ok: false, rejection };
+    for (const t of removed) await txnRepo.deleteTransaction(tx, t.id);
+    await markSeriesDirty(tx, portfolioId, removed.map((t) => trDay(t.ts)).sort()[0]);
+    return { ok: true, txns: removed };
+  });
+}
+
+/** Puts back records removed together (undo), checked as one change. */
+export function restoreTransactions(
+  db: SqlDriver,
+  portfolioId: string,
+  txns: readonly Transaction[],
+  opts: ChangeOptions = {},
+): Promise<BatchResult> {
+  return db.transaction(async (tx) => {
+    const engine = opts.engine ?? DEFAULT_ENGINE;
+    const current = await txnRepo.listTransactions(tx, portfolioId);
+    const next = [...current, ...txns.map(clean)];
+    const rejection = rejectionFor(newLedgerIssues(current, next, engine));
+    if (rejection) return { ok: false, rejection };
+    await txnRepo.insertTransactions(
+      tx,
+      portfolioId,
+      txns.map(clean),
+      (opts.now ?? new Date()).toISOString(),
+    );
+    await markSeriesDirty(tx, portfolioId, txns.map((t) => trDay(t.ts)).sort()[0]);
+    return { ok: true, txns: [...txns] };
+  });
+}

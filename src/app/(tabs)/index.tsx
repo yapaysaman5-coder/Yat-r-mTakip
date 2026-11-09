@@ -15,21 +15,23 @@ import {
 } from 'lucide-react-native';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { EmptyPortfolio } from '@/components/EmptyPortfolio';
+import { HoldingMenu, useHoldingActions } from '@/components/HoldingMenu';
 import { HoldingRow } from '@/components/HoldingRow';
 import { MarketTicker } from '@/components/MarketTicker';
 import { PortfolioSheet } from '@/components/PortfolioSheet';
 import { PreviewNote } from '@/components/PreviewNote';
 import { customChart, homeChart, type HomeRange } from '@/data/view/chart';
-import type { Summary } from '@/data/view/portfolioView';
+import type { Holding, Summary } from '@/data/view/portfolioView';
 import { tr } from '@/i18n/tr';
 import { useMarketStore } from '@/state/market';
 import { CustomRangeSheet, ReadOut } from '@/components/HeroParts';
 import { useAnimatedNumber } from '@/lib/useAnimatedNumber';
 import { usePortfolioStore, usePortfolioView } from '@/state/portfolio';
 import { FinChart, type FinChartSelection } from '@/ui/charts/FinChart';
-import { useSettings } from '@/state/settings';
+import { useSettings, type HoldingSort } from '@/state/settings';
 import { useTheme } from '@/theme/ThemeProvider';
 import { GUTTER, radius, space } from '@/theme/tokens';
 import {
@@ -64,6 +66,15 @@ const RANGE_LABEL: Record<HomeRange, string> = {
 
 type MarketFilter = 'all' | 'bist' | 'us' | 'crypto';
 
+const dailyRatio = (h: Holding) => (h.prevClose > 0 ? h.price / h.prevClose - 1 : 0);
+const totalRatio = (h: Holding) => (h.costTRY > 0 ? h.valueTRY / h.costTRY - 1 : 0);
+const SORTERS: Record<HoldingSort, (a: Holding, b: Holding) => number> = {
+  value: (a, b) => b.valueTRY - a.valueTRY,
+  dailyPercent: (a, b) => dailyRatio(b) - dailyRatio(a),
+  totalPercent: (a, b) => totalRatio(b) - totalRatio(a),
+  name: (a, b) => a.symbol.localeCompare(b.symbol, 'tr'),
+};
+
 export default function PortfolioScreen() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -72,6 +83,10 @@ export default function PortfolioScreen() {
   const [range, setRange] = useState<HomeRange>('1A');
   const [filter, setFilter] = useState<MarketFilter>('all');
   const [picker, setPicker] = useState(false);
+  const [menuFor, setMenuFor] = useState<Holding | null>(null);
+  const holdingActions = useHoldingActions();
+  const holdingSort = useSettings((s) => s.holdingSort);
+  const cycleSort = useSettings((s) => s.cycleHoldingSort);
 
   const view = usePortfolioView();
   const { summary } = view;
@@ -94,7 +109,7 @@ export default function PortfolioScreen() {
     : RANGE_LABEL[range];
   const holdings = view.holdings
     .filter((h) => filter === 'all' || h.market === filter)
-    .sort((a, b) => b.valueTRY - a.valueTRY);
+    .sort(SORTERS[holdingSort]);
 
   const soon = (what: string) => toast.show({ message: `${what} yakında geliyor ✨` });
 
@@ -179,6 +194,7 @@ export default function PortfolioScreen() {
         </View>
       }>
       <PortfolioSheet visible={picker} onClose={() => setPicker(false)} />
+      <HoldingMenu holding={menuFor} onClose={() => setMenuFor(null)} />
       <CustomRangeSheet
         visible={customOpen}
         onClose={() => setCustomOpen(false)}
@@ -364,8 +380,9 @@ export default function PortfolioScreen() {
                 />
                 <Chip
                   icon={ArrowUpDown}
-                  label={tr.home.sortByValue}
-                  onPress={() => soon('Sıralama seçenekleri')}
+                  label={tr.home.sort[holdingSort]}
+                  onPress={cycleSort}
+                  accessibilityLabel={`Sıralama: ${tr.home.sort[holdingSort]}. Değiştirmek için dokun`}
                 />
                 <View style={{ width: GUTTER - space.sm }} />
               </ScrollView>
@@ -377,7 +394,13 @@ export default function PortfolioScreen() {
                     ) : null}
                     <HoldingRow
                       holding={h}
-                      onPress={() => router.push(`/varlik/${encodeURIComponent(h.assetId)}`)}
+                      actions={{
+                        onDetail: () => holdingActions.detail(h),
+                        onBuy: () => holdingActions.buy(h),
+                        onSell: () => holdingActions.sell(h),
+                        onDelete: () => void holdingActions.remove(h),
+                        onMenu: () => setMenuFor(h),
+                      }}
                     />
                   </View>
                 ))}
@@ -433,6 +456,7 @@ function HeroRangeChip({
 
 function BudgetCard({ summary }: { summary: Summary }) {
   const { colors } = useTheme();
+  const [open, setOpen] = useState(false);
   const tiles: { label: string; value: number; icon: LucideIcon; color: string; bg: string }[] = [
     {
       label: tr.home.deposited,
@@ -518,6 +542,74 @@ function BudgetCard({ summary }: { summary: Summary }) {
           ) : null}
         </View>
       </View>
+      <PressableScale
+        onPress={() => setOpen((o) => !o)}
+        haptic="selection"
+        scaleTo={0.98}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={`Net K/Z ayrıntıları, ${open ? 'gizle' : 'göster'}`}
+        style={{
+          marginTop: space.sm,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+          paddingVertical: space.xs,
+        }}>
+        <Text variant="caption" tone="secondary">
+          {tr.home.budgetDetail}
+        </Text>
+        <ChevronDown
+          size={15}
+          color={colors.textSecondary}
+          strokeWidth={2.4}
+          style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}
+        />
+      </PressableScale>
+      {open ? <BudgetBreakdown summary={summary} /> : null}
     </Card>
+  );
+}
+
+/** Where the net P/L comes from (docs/02-HESAPLAMA-MOTORU.md §6). */
+function BudgetBreakdown({ summary }: { summary: Summary }) {
+  const { colors } = useTheme();
+  const rows: { label: string; value: number; note?: string }[] = [
+    { label: tr.home.unrealized, value: summary.unrealized },
+    { label: tr.home.realized, value: summary.realized },
+    { label: tr.home.dividends, value: summary.dividends },
+    { label: tr.home.accountFees, value: -summary.accountFees },
+  ];
+  return (
+    <Animated.View entering={FadeIn.duration(220)} style={{ marginTop: space.xs, gap: space.sm }}>
+      {rows.map((r) => (
+        <View
+          key={r.label}
+          style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text variant="body" tone="secondary">
+            {r.label}
+          </Text>
+          <Money value={r.value} variant="numS" colorize sign="always" />
+        </View>
+      ))}
+      <View style={{ height: 1, backgroundColor: colors.border }} />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text variant="bodyStrong">= {tr.home.netPnl}</Text>
+        <Money value={summary.netPnl} variant="numS" colorize sign="always" />
+      </View>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: space.xs,
+        }}>
+        <Text variant="caption" tone="tertiary">
+          {tr.home.commissions} (maliyete dahil)
+        </Text>
+        <Money value={summary.commissions} variant="numS" tone="tertiary" />
+      </View>
+    </Animated.View>
   );
 }

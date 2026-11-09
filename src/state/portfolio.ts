@@ -4,7 +4,14 @@ import { ensureStarterData, getDatabase } from '@/data/database';
 import { DEFAULT_ENGINE } from '@/data/engine';
 import { listPortfolios } from '@/data/repo/portfolios';
 import { loadPortfolioData } from '@/data/service/load';
-import { deleteTransaction, saveTransaction, type ChangeResult } from '@/data/service/transactions';
+import {
+  deleteTransaction,
+  deleteTransactions,
+  restoreTransactions,
+  saveTransaction,
+  type BatchResult,
+  type ChangeResult,
+} from '@/data/service/transactions';
 import type { Portfolio } from '@/data/types';
 import { buildAnalysis, type AnalysisView } from '@/data/view/analysisView';
 import { buildPortfolioView, type PortfolioView } from '@/data/view/portfolioView';
@@ -29,6 +36,9 @@ interface PortfolioState {
   select: (id: string) => Promise<void>;
   save: (txn: Transaction) => Promise<ChangeResult>;
   remove: (id: string) => Promise<ChangeResult>;
+  /** Several records as one change (e.g. all of an asset's), and putting them back. */
+  removeMany: (ids: string[]) => Promise<BatchResult>;
+  restoreMany: (txns: Transaction[]) => Promise<BatchResult>;
 }
 
 let loading: Promise<void> | null = null;
@@ -85,6 +95,22 @@ export const usePortfolioStore = create<PortfolioState>()((set, get) => ({
     const view = get().view;
     if (!view) return { ok: false, rejection: { code: 'NOT_FOUND' } };
     const result = await saveTransaction(await getDatabase(), view.portfolio.id, txn);
+    if (result.ok) await get().reload();
+    return result;
+  },
+
+  removeMany: async (ids) => {
+    const view = get().view;
+    if (!view) return { ok: false, rejection: { code: 'NOT_FOUND' } };
+    const result = await deleteTransactions(await getDatabase(), view.portfolio.id, ids);
+    if (result.ok) await get().reload();
+    return result;
+  },
+
+  restoreMany: async (txns) => {
+    const view = get().view;
+    if (!view) return { ok: false, rejection: { code: 'NOT_FOUND' } };
+    const result = await restoreTransactions(await getDatabase(), view.portfolio.id, txns);
     if (result.ok) await get().reload();
     return result;
   },

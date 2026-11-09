@@ -11,7 +11,12 @@ import { upsertCloses } from '../repo/prices';
 import { loadSnapshots } from '../repo/snapshots';
 import { listTransactions } from '../repo/transactions';
 import { refreshSeries } from '../service/series';
-import { deleteTransaction, saveTransaction } from '../service/transactions';
+import {
+  deleteTransaction,
+  deleteTransactions,
+  restoreTransactions,
+  saveTransaction,
+} from '../service/transactions';
 
 const NOW = new Date('2026-03-01T12:00:00Z');
 /** 10:00 Istanbul. */
@@ -322,5 +327,39 @@ describe('daily value cache', () => {
     expect(r.points.at(-1)?.date).toBe('2026-03-02');
 
     expect((await refreshSeries(db, 'nope', { today })).points).toEqual([]);
+  });
+});
+
+describe('deleting all records of an asset', () => {
+  it('removes them as one change, refuses when the rest would break, and restores (undo)', async () => {
+    const { db, save, opts } = await setup();
+    await save({ type: 'DEPOSIT', ts: at('2026-01-05'), amount: '10000' });
+    const b = await save({
+      type: 'BUY',
+      ts: at('2026-01-06'),
+      assetId: 'BIST:THYAO',
+      quantity: '10',
+      price: '300',
+    });
+    const s = await save({
+      type: 'SELL',
+      ts: at('2026-02-06'),
+      assetId: 'BIST:THYAO',
+      quantity: '10',
+      price: '400',
+    });
+    const w = await save({ type: 'WITHDRAW', ts: at('2026-02-07'), amount: '10500' });
+    const ids = [b, s].map((r) => (r.ok ? r.txn.id : ''));
+    // Without the sale's proceeds the later withdrawal has no cash: refused, nothing deleted.
+    const refused = await deleteTransactions(db, 'p1', ids, opts);
+    expect(!refused.ok && refused.rejection.code).toBe('NEGATIVE_CASH');
+    expect(await listTransactions(db, 'p1')).toHaveLength(4);
+    if (w.ok) await deleteTransaction(db, 'p1', w.txn.id, opts);
+    const done = await deleteTransactions(db, 'p1', ids, opts);
+    expect(done.ok && done.txns.map((t) => t.type)).toEqual(['BUY', 'SELL']);
+    expect((await listTransactions(db, 'p1')).map((t) => t.type)).toEqual(['DEPOSIT']);
+    if (done.ok) expect((await restoreTransactions(db, 'p1', done.txns, opts)).ok).toBe(true);
+    expect(await listTransactions(db, 'p1')).toHaveLength(3);
+    expect((await deleteTransactions(db, 'p1', ['nope'], opts)).ok).toBe(false);
   });
 });
