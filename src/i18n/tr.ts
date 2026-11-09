@@ -52,6 +52,8 @@ export const tr = {
     DEPOSIT: 'Para Yatırma',
     WITHDRAW: 'Para Çekme',
     DIVIDEND: 'Temettü',
+    FEE: 'Hesap Ücreti',
+    auto: 'otomatik',
   },
   privacy: {
     show: 'Tutarları göster',

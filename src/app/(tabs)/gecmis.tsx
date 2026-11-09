@@ -3,6 +3,7 @@ import {
   ArrowUpFromLine,
   CalendarDays,
   HandCoins,
+  Receipt,
   ReceiptText,
   Search,
   ShoppingCart,
@@ -193,13 +194,16 @@ function txnVisual(
       return { icon: ArrowUpFromLine, color: c.warning, bg: c.warningSoft };
     case 'DIVIDEND':
       return { icon: HandCoins, color: c.accent2, bg: c.accent2Soft };
+    case 'FEE':
+      return { icon: Receipt, color: c.textSecondary, bg: c.neutralSoft };
   }
 }
 
 function TxnRow({ txn }: { txn: DemoTxn }) {
   const { colors } = useTheme();
   const v = txnVisual(txn.type, colors);
-  const title = txn.symbol ? `${tr.txn[txn.type]} · ${txn.symbol}` : tr.txn[txn.type];
+  const label = txn.isAuto ? `${tr.txn[txn.type]} (${tr.txn.auto})` : tr.txn[txn.type];
+  const title = txn.symbol ? `${label} · ${txn.symbol}` : label;
   const detail =
     txn.quantity !== undefined && txn.price !== undefined
       ? `${formatQuantity(txn.quantity)} × ${formatPrice(txn.price, txn.currency)} · `

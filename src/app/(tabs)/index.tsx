@@ -221,6 +221,7 @@ export default function PortfolioScreen() {
               value: summary.allocation.crypto,
               color: colors.market.crypto,
             },
+            { key: 'cash', label: tr.markets.cash, value: summary.cash, color: colors.market.cash },
           ]}
         />
       </Card>

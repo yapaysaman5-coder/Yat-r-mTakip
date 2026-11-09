@@ -37,7 +37,8 @@ export default function AccountScreen() {
 
   const metric = (h: DemoHolding) => (mode === 'value' ? holdingValueTRY(h) : holdingCostTRY(h));
   const holdings = [...DEMO_HOLDINGS].sort((a, b) => metric(b) - metric(a));
-  const total = holdings.reduce((s, h) => s + metric(h), 0);
+  // Cash counts the same in both views (its cost is itself), so the ring adds up to the account.
+  const total = holdings.reduce((s, h) => s + metric(h), 0) + summary.cash;
   const totalCost = DEMO_HOLDINGS.reduce((s, h) => s + holdingCostTRY(h), 0);
   const byMarket = (m: DemoHolding['market']) =>
     holdings.filter((h) => h.market === m).reduce((s, h) => s + metric(h), 0);
@@ -50,6 +51,9 @@ export default function AccountScreen() {
       value: byMarket('crypto'),
       color: colors.market.crypto,
     },
+    ...(summary.cash > 0
+      ? [{ key: 'cash', label: tr.markets.cash, value: summary.cash, color: colors.market.cash }]
+      : []),
   ];
   const top5 = holdings.slice(0, 5).reduce((s, h) => s + holdingValueTRY(h), 0) / summary.positions;
   // Account-level cost = what the open positions cost + cash on hand.
@@ -76,7 +80,7 @@ export default function AccountScreen() {
               pozisyonlar + nakit
             </Text>
           </Stat>
-          <Stat label="Kâr / Zarar">
+          <Stat label="Açık K/Z">
             <Money value={unrealized} variant="numM" decimals={0} colorize sign="always" />
             <ChangeBadge value={unrealized / accountCost} />
           </Stat>
@@ -173,6 +177,7 @@ export default function AccountScreen() {
             <FundRow holding={h} mode={mode} total={total} />
           </View>
         ))}
+        {summary.cash > 0 ? <CashRow amount={summary.cash} total={total} /> : null}
       </Card>
 
       <Card>
@@ -304,6 +309,48 @@ function FundRow({ holding, mode, total }: { holding: DemoHolding; mode: Mode; t
         <Text variant="caption" tone="secondary">
           {formatPercent(weight, { decimals: 1 })}
         </Text>
+      </View>
+    </View>
+  );
+}
+
+function CashRow({ amount, total }: { amount: number; total: number }) {
+  const { colors } = useTheme();
+  return (
+    <View>
+      <View style={{ height: 1, backgroundColor: colors.border }} />
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: space.md,
+          paddingVertical: space.md,
+        }}>
+        <View
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 13,
+            backgroundColor: colors.upSoft,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text variant="numS" color={colors.market.cash}>
+            ₺
+          </Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text variant="bodyStrong">{tr.markets.cash}</Text>
+          <Text variant="caption" tone="secondary">
+            Yatırıma hazır
+          </Text>
+        </View>
+        <View style={{ alignItems: 'flex-end', gap: 2 }}>
+          <Money value={amount} variant="numM" />
+          <Text variant="caption" tone="secondary">
+            {formatPercent(amount / total, { decimals: 1 })}
+          </Text>
+        </View>
       </View>
     </View>
   );
