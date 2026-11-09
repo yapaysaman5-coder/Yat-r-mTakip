@@ -46,8 +46,8 @@ const DEMO_IDS: Record<string, string> = {
 const REAL_IDS: Record<string, string | undefined> = {
   gold: 'COMMODITY:GAU',
   btc: 'CRYPTO:BTC',
-  deposit: undefined, // needs the deposit-rate table (Phase 9)
-  cpi: undefined, // needs the CPI table (Phase 9)
+  deposit: undefined, // computed from the rate set in Analiz (service/load.ts)
+  cpi: 'MACRO:CPI',
   ndx: 'INDEX:NDX',
   spx: 'INDEX:SPX',
   xu030: 'INDEX:XU030',

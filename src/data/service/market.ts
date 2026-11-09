@@ -170,7 +170,10 @@ export async function syncHistory(
     } else {
       if (from < s.firstDate) ranges.push([from, addDays(s.firstDate, -1)]);
       const stale = t - s.syncedAt > (s.error ? RETRY_MS : REFRESH_MS) || s.lastDate < today;
-      if (stale) ranges.push([addDays(s.lastDate < today ? s.lastDate : today, -5), today]);
+      if (stale) {
+        const back = inst.refreshDays ?? 5;
+        ranges.push([addDays(s.lastDate < today ? s.lastDate : today, -back), today]);
+      }
     }
     if (ranges.length === 0) {
       report.skipped++;

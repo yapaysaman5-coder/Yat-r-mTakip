@@ -7,6 +7,7 @@ import { coingecko } from './providers/coingecko';
 import { isyatirim } from './providers/isyatirim';
 import { mock } from './providers/mock';
 import { tcmb } from './providers/tcmb';
+import { tcmbCpi } from './providers/tcmbCpi';
 import { yahoo } from './providers/yahoo';
 import { MarketRouter } from './router';
 
@@ -20,10 +21,20 @@ export function getMarketRouter(): MarketRouter {
   router ??=
     Platform.OS === 'web'
       ? new MarketRouter(
-          { yahoo: mock, binance: mock, coingecko: mock, isyatirim: mock, tcmb: mock },
+          {
+            yahoo: mock,
+            binance: mock,
+            coingecko: mock,
+            isyatirim: mock,
+            tcmb: mock,
+            tcmbcpi: mock,
+          },
           createHttp(),
         )
-      : new MarketRouter({ yahoo, binance, coingecko, isyatirim, tcmb }, createHttp());
+      : new MarketRouter(
+          { yahoo, binance, coingecko, isyatirim, tcmb, tcmbcpi: tcmbCpi },
+          createHttp(),
+        );
   return router;
 }
 

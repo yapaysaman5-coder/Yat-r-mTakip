@@ -10,6 +10,20 @@ import { latestCloses, loadCloses } from '../repo/prices';
 import type { BenchmarkSeries, PortfolioData } from '../view/portfolioView';
 import { refreshSeries } from './series';
 
+/** Default yearly net deposit rate; the person sets their own in Analiz › Ya Olsaydı. */
+export const DEFAULT_DEPOSIT_RATE = 0.4;
+
+/**
+ * A deposit account at a yearly net rate, compounded daily: 1 on the first day.
+ * (Real deposits pay at term; daily compounding is the smooth equivalent.)
+ */
+export function depositPrices(dates: readonly string[], yearlyRate: number): number[] {
+  if (dates.length === 0) return [];
+  const daily = (1 + yearlyRate) ** (1 / 365);
+  const t0 = Date.parse(`${dates[0]}T00:00:00Z`);
+  return dates.map((d) => daily ** Math.round((Date.parse(`${d}T00:00:00Z`) - t0) / 86_400_000));
+}
+
 /**
  * Reads everything a portfolio's screens need: records (with derived automatic ones), the
  * daily value cache (refreshed from the first stale day), today's prices and benchmarks.
@@ -21,7 +35,16 @@ import { refreshSeries } from './series';
 export async function loadPortfolioData(
   db: SqlDriver,
   portfolioId: string,
-  { now = new Date(), engine = DEFAULT_ENGINE }: { now?: Date; engine?: EngineOptions } = {},
+  {
+    now = new Date(),
+    engine = DEFAULT_ENGINE,
+    depositRate = DEFAULT_DEPOSIT_RATE,
+  }: {
+    now?: Date;
+    engine?: EngineOptions;
+    /** Yearly net deposit rate for the "Mevduat" comparison (own portfolios). */
+    depositRate?: number;
+  } = {},
 ): Promise<PortfolioData | null> {
   const portfolio = await getPortfolio(db, portfolioId);
   if (!portfolio) return null;
@@ -92,6 +115,7 @@ export async function loadPortfolioData(
       return dates.map((d) => (last = byDay[d] ?? last));
     };
     for (const w of wanted) {
+      if (w.key === 'deposit' && portfolio.kind !== 'demo') continue;
       const prices = align(closes[w.id] ?? {});
       if (!prices) continue;
       const currency = benchAssets.get(w.id)?.currency ?? 'TRY';
@@ -103,6 +127,15 @@ export async function loadPortfolioData(
       } else {
         benchmarks.push({ key: w.key, name: w.name, prices });
       }
+    }
+    if (portfolio.kind !== 'demo') {
+      const def = BENCHMARKS.find((b) => b.key === 'deposit');
+      if (def)
+        benchmarks.push({
+          key: def.key,
+          name: def.name,
+          prices: depositPrices(dates, depositRate),
+        });
     }
   }
 

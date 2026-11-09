@@ -34,5 +34,6 @@ export const SOURCE_NAME: Record<string, string> = {
   coingecko: 'CoinGecko',
   isyatirim: 'İş Yatırım',
   tcmb: 'TCMB',
+  tcmbcpi: 'TCMB (TÜFE)',
   mock: 'Örnek (web önizleme)',
 };

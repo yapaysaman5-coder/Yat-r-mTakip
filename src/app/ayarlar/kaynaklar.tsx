@@ -22,6 +22,11 @@ const SOURCES: { id: string; what: string; note: string }[] = [
   { id: 'coingecko', what: 'Kripto (yedek)', note: 'Dakikada birkaç istek sınırı' },
   { id: 'isyatirim', what: 'BIST günlük kapanışlar, BIST 100, USD/TRY (yedek)', note: 'Gün sonu' },
   { id: 'tcmb', what: 'Resmi döviz kurları (son yedek)', note: 'Günde bir kez' },
+  {
+    id: 'tcmbcpi',
+    what: 'TÜFE (TÜİK aylık değişimleri, 2005’ten beri)',
+    note: 'Ayda bir yayımlanır',
+  },
 ];
 
 const STREAM_LABEL: Record<StreamStatus, string> = {

@@ -126,7 +126,8 @@ async function setup() {
     PAXGTRY: 206000,
     USDTTRY: 50,
   });
-  const router = new MarketRouter({ yahoo, binance }, fakeHttp([]), () => NOW.getTime());
+  const tcmbcpi = flatSource('tcmbcpi', { TUFE: 2100 });
+  const router = new MarketRouter({ yahoo, binance, tcmbcpi }, fakeHttp([]), () => NOW.getTime());
   return { db, router, yahoo, binance };
 }
 
@@ -246,7 +247,11 @@ describe('live quotes', () => {
     expect(keys).toEqual(
       expect.arrayContaining(['me', 'gold', 'btc', 'spx', 'xu100', 'usd', 'eur']),
     );
-    expect(keys).not.toContain('cpi');
+    // TÜFE from its source; the deposit from the default yearly rate (%40, compounded daily).
+    expect(keys).toEqual(expect.arrayContaining(['cpi', 'deposit']));
+    const dep = analysis.series.find((s) => s.key === 'deposit')!;
+    const days = analysis.dates.length - 1;
+    expect(dep.prices.at(-1)! / dep.prices[0]).toBeCloseTo(1.4 ** (days / 365), 10);
     const spx = analysis.series.find((s) => s.key === 'spx')!;
     expect(spx.prices[0]).toBeCloseTo(6800 * 50, 6);
   });

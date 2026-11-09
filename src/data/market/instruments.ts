@@ -26,6 +26,8 @@ export interface Instrument {
   /** Currency the price is in. */
   currency: Currency;
   sources: readonly SourceRef[];
+  /** Days of recent history fetched again on each refresh (default 5). */
+  refreshDays?: number;
 }
 
 const GRAM = 1 / 31.1034768; // troy ounce → gram
@@ -117,6 +119,17 @@ export const FIXED_INSTRUMENTS: readonly Instrument[] = [
     market: 'COMMODITY',
     currency: 'TRY',
     sources: [{ source: 'yahoo', ref: 'SI=F', scale: GRAM, times: 'FX:USDTRY' }],
+  },
+  {
+    id: 'MACRO:CPI',
+    symbol: 'TÜFE',
+    name: 'TÜFE (enflasyon)',
+    market: 'INDEX',
+    currency: 'TRY',
+    sources: [{ source: 'tcmbcpi', ref: 'TUFE' }],
+    // A month's change is published early the next month: the days held flat until then
+    // are fetched again.
+    refreshDays: 62,
   },
 ];
 

@@ -13,7 +13,12 @@ import {
   type ChangeResult,
 } from '@/data/service/transactions';
 import type { Portfolio } from '@/data/types';
-import { buildAnalysis, type AnalysisView } from '@/data/view/analysisView';
+import {
+  buildAnalysis,
+  DEFAULT_ANALYSIS,
+  type AnalysisOptions,
+  type AnalysisView,
+} from '@/data/view/analysisView';
 import { buildPortfolioView, type PortfolioView } from '@/data/view/portfolioView';
 import type { Transaction } from '@/domain';
 
@@ -53,7 +58,12 @@ async function load(set: (s: Partial<PortfolioState>) => void) {
     portfolios.find((p) => p.id === wanted) ??
     portfolios.find((p) => p.kind === 'demo') ??
     portfolios[0];
-  const data = active ? await loadPortfolioData(db, active.id, { engine: DEFAULT_ENGINE }) : null;
+  const data = active
+    ? await loadPortfolioData(db, active.id, {
+        engine: DEFAULT_ENGINE,
+        depositRate: useSettings.getState().depositRate,
+      })
+    : null;
   set({
     status: 'ready',
     error: null,
@@ -131,14 +141,28 @@ export function usePortfolioView(): PortfolioView {
   return view;
 }
 
-/** Analiz figures for the active portfolio, computed once per loaded view. */
-const analysisCache = new WeakMap<PortfolioView, AnalysisView>();
-export function useAnalysis(): AnalysisView {
-  const view = usePortfolioView();
-  let a = analysisCache.get(view);
+/** Analiz figures for the active portfolio (TL, money in/out), computed once per loaded view. */
+const analysisCache = new WeakMap<PortfolioView, Map<string, AnalysisView>>();
+function analysisFor(view: PortfolioView, options: AnalysisOptions): AnalysisView {
+  const key = `${options.currency}:${options.basis}`;
+  let byKey = analysisCache.get(view);
+  if (!byKey) analysisCache.set(view, (byKey = new Map()));
+  let a = byKey.get(key);
   if (!a) {
-    a = buildAnalysis(view);
-    analysisCache.set(view, a);
+    a = buildAnalysis(view, options);
+    byKey.set(key, a);
   }
   return a;
+}
+
+export function useAnalysis(): AnalysisView {
+  return analysisFor(usePortfolioView(), DEFAULT_ANALYSIS);
+}
+
+/** "Ya Olsaydı?" with the person's choices (TL/USD, money in/out or buys/sells). */
+export function useWhatIfAnalysis(): AnalysisView {
+  const view = usePortfolioView();
+  const currency = useSettings((s) => s.whatIfCurrency);
+  const basis = useSettings((s) => s.whatIfBasis);
+  return analysisFor(view, { currency, basis });
 }

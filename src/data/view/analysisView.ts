@@ -12,6 +12,8 @@ import {
   simulateWhatIf,
   sortino,
   stepReturns,
+  trDay,
+  unitize,
   volatility,
   xirr,
   type CashFlow,
@@ -55,7 +57,19 @@ export interface Metrics {
   months: MonthReturn[];
 }
 
+export interface AnalysisOptions {
+  /** Replay in TL, or in US dollars (every amount at that day's rate). */
+  currency: 'TRY' | 'USD';
+  /** Replay the money put in and taken out, or the buys and sells (positions only). */
+  basis: 'flows' | 'trades';
+}
+
+export const DEFAULT_ANALYSIS: AnalysisOptions = { currency: 'TRY', basis: 'flows' };
+
 export interface AnalysisView {
+  options: AnalysisOptions;
+  /** USD is possible only with a Dolar/TL series. */
+  usdAvailable: boolean;
   dates: string[];
   netInvested: number[];
   periodStart: Record<AnalysisPeriod, number>;
@@ -68,20 +82,54 @@ export interface AnalysisView {
 
 const RISK_FREE = 0; // Ayarlar › Hesaplama (Phase 10)
 
-export function buildAnalysis(view: PortfolioView): AnalysisView {
-  const { dates, values, netInvested, flows, unitValues } = view.series;
+export function buildAnalysis(
+  view: PortfolioView,
+  options: AnalysisOptions = DEFAULT_ANALYSIS,
+): AnalysisView {
+  const { dates } = view.series;
   const n = dates.length;
+  const usdSeries = view.data.benchmarks.find((b) => b.key === 'usd' && b.prices.length === n);
+  const usdAvailable = !!usdSeries && usdSeries.prices.every((p) => p > 0);
+  const currency = options.currency === 'USD' && usdAvailable ? 'USD' : 'TRY';
+  const rate = (i: number) => (currency === 'USD' ? usdSeries!.prices[i] : 1);
+
+  // What the replay invests: money in/out, or the buys and sells.
+  let rawFlows = view.series.flows;
+  let rawValues = view.series.values;
+  if (options.basis === 'trades') {
+    const index = new Map(dates.map((d, i) => [d, i]));
+    rawFlows = dates.map(() => 0);
+    for (const h of view.history) {
+      if (h.type !== 'BUY' && h.type !== 'SELL') continue;
+      const i = index.get(trDay(h.ts));
+      if (i !== undefined) rawFlows[i] += -h.amountTRY; // a buy puts money in (+)
+    }
+    rawValues = view.series.values.map((v, i) => v - view.series.cash[i]);
+  }
+  const flows = rawFlows.map((f, i) => f / rate(i));
+  const values = rawValues.map((v, i) => v / rate(i));
+  let running = 0;
+  const netInvested = flows.map((f) => (running += f));
+  const unitValues =
+    currency === 'TRY' && options.basis === 'flows'
+      ? view.series.unitValues
+      : unitize(dates.map((date, i) => ({ date, value: values[i], flow: flows[i] }))).map(
+          (u) => u.unitValue,
+        );
   const indexedFlows = flows.flatMap((amount, index) => (amount !== 0 ? [{ index, amount }] : []));
 
   const me: ComparedSeries = { key: 'me', name: 'Portföyüm', values, prices: unitValues };
   const benchmarks: ComparedSeries[] = view.data.benchmarks
     .filter((b) => b.prices.length === n && n > 0)
-    .map((b) => ({
-      key: b.key,
-      name: b.name,
-      prices: b.prices,
-      values: simulateWhatIf(b.prices, indexedFlows).values,
-    }));
+    .map((b) => {
+      const prices = b.prices.map((p, i) => p / rate(i));
+      return {
+        key: b.key,
+        name: b.name,
+        prices,
+        values: simulateWhatIf(prices, indexedFlows).values,
+      };
+    });
   const main = benchmarks.find((b) => b.key === MAIN_BENCHMARK) ?? null;
 
   const periodStart = Object.fromEntries(
@@ -89,6 +137,8 @@ export function buildAnalysis(view: PortfolioView): AnalysisView {
   ) as Record<AnalysisPeriod, number>;
 
   return {
+    options: { currency, basis: options.basis },
+    usdAvailable,
     dates,
     netInvested,
     periodStart,

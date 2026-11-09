@@ -13,6 +13,7 @@ import { binance } from '../providers/binance';
 import { coingecko } from '../providers/coingecko';
 import { isyatirim } from '../providers/isyatirim';
 import { tcmb } from '../providers/tcmb';
+import { tcmbCpi } from '../providers/tcmbCpi';
 import { yahoo } from '../providers/yahoo';
 import { lookupCoins } from '../lookup';
 import { MarketRouter } from '../router';
@@ -33,7 +34,7 @@ const live = process.env.LIVE === '1' ? describe : describe.skip;
 live('real sources', () => {
   it('prices the watchlist and downloads history', async () => {
     const router = new MarketRouter(
-      { yahoo, binance, coingecko, isyatirim, tcmb },
+      { yahoo, binance, coingecko, isyatirim, tcmb, tcmbcpi: tcmbCpi },
       createHttp(fetch, 20_000),
     );
     const ids = [
@@ -86,7 +87,7 @@ live('real sources', () => {
 
   it('runs the phone’s whole flow on real prices', async () => {
     const router = new MarketRouter(
-      { yahoo, binance, coingecko, isyatirim, tcmb },
+      { yahoo, binance, coingecko, isyatirim, tcmb, tcmbcpi: tcmbCpi },
       createHttp(fetch, 20_000),
     );
     const db = openNodeDriver();
@@ -264,7 +265,10 @@ live('real sources', () => {
       },
       { now },
     );
-    const router = new MarketRouter({ yahoo, binance, coingecko, isyatirim, tcmb }, http);
+    const router = new MarketRouter(
+      { yahoo, binance, coingecko, isyatirim, tcmb, tcmbcpi: tcmbCpi },
+      http,
+    );
     const needs = await marketNeeds(db, now);
     const sync = await syncHistory(db, router, needs, { now });
     const live = await refreshQuotes(

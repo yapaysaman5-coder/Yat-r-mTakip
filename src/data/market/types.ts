@@ -3,7 +3,8 @@
  * response format into these shapes; nothing outside src/data/market knows a source's format.
  */
 
-export type SourceId = 'yahoo' | 'binance' | 'coingecko' | 'isyatirim' | 'tcmb' | 'mock';
+export type SourceId =
+  'yahoo' | 'binance' | 'coingecko' | 'isyatirim' | 'tcmb' | 'tcmbcpi' | 'mock';
 
 /** A live (or latest) price as a source reports it, in the instrument's own unit. */
 export interface SourceQuote {

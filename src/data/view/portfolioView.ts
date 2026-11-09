@@ -117,6 +117,8 @@ export interface DailySeries {
   values: number[];
   netInvested: number[];
   flows: number[];
+  /** Cash on each day (the rest of the value is positions). */
+  cash: number[];
   /** Internal unit values (time-weighted return); never shown as such. */
   unitValues: number[];
 }
@@ -313,6 +315,7 @@ export function buildPortfolioView(data: PortfolioData): PortfolioView {
       values: series.map((p) => p.value),
       netInvested: series.map((p) => p.netInvested),
       flows: series.map((p) => p.flow),
+      cash: series.map((p) => p.cash),
       unitValues,
     },
     periodReturns: periodReturns(units, end),
