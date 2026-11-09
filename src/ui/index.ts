@@ -5,7 +5,6 @@ export { Card, GradientCard } from './Card';
 export { ChangeBadge } from './ChangeBadge';
 export { AreaChart } from './charts/AreaChart';
 export { Donut, type DonutSegment } from './charts/Donut';
-export { LineChart, type LineSeries } from './charts/LineChart';
 export { Sparkline } from './charts/Sparkline';
 export { Chip } from './Chip';
 export { EmptyState } from './EmptyState';

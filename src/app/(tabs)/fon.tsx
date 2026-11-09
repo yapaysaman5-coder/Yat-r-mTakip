@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { PreviewNote } from '@/components/PreviewNote';
 import {
-  DEMO_FUND,
+  DEMO_ACCOUNT,
   DEMO_HOLDINGS,
   demoSummary,
   holdingCostTRY,
@@ -26,11 +26,11 @@ import {
   TabHeader,
   Text,
 } from '@/ui';
-import { formatMoney, formatNumber, formatPercent, formatPrice } from '@/utils/format';
+import { formatMoney, formatPercent, formatPrice } from '@/utils/format';
 
 type Mode = 'value' | 'cost';
 
-export default function FundScreen() {
+export default function AccountScreen() {
   const { colors } = useTheme();
   const [mode, setMode] = useState<Mode>('value');
   const summary = demoSummary();
@@ -52,35 +52,40 @@ export default function FundScreen() {
     },
   ];
   const top5 = holdings.slice(0, 5).reduce((s, h) => s + holdingValueTRY(h), 0) / summary.positions;
+  // Account-level cost = what the open positions cost + cash on hand.
+  const accountCost = totalCost + summary.cash;
+  const unrealized = summary.totalValue - accountCost;
 
   return (
-    <Screen withTabBar header={<TabHeader title="Hesabım" subtitle="ANA PORTFÖY FONU" />}>
+    <Screen withTabBar header={<TabHeader title="Hesabım" subtitle="ANA PORTFÖY" />}>
       <PreviewNote />
 
       <Card elevated>
         <View
           style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text variant="overline" tone="tertiary">
-            FON BÜYÜKLÜĞÜ
+            TOPLAM VARLIK
           </Text>
           <LiveDot status="live" />
         </View>
         <Money value={summary.totalValue} variant="title1" style={{ marginTop: space.xs }} />
         <View style={{ flexDirection: 'row', gap: space.sm, marginTop: space.lg }}>
-          <Stat label="Pay Değeri">
-            <Text variant="numM">
-              ₺{formatNumber(DEMO_FUND.unitPrice, { minDecimals: 6, maxDecimals: 6 })}
-            </Text>
-            <ChangeBadge value={DEMO_FUND.unitPriceDailyRatio} />
-          </Stat>
-          <Stat label="Pay Sayısı">
-            <Text variant="numM">{formatNumber(DEMO_FUND.units, { minDecimals: 2 })}</Text>
+          <Stat label="Maliyet">
+            <Money value={accountCost} variant="numM" decimals={0} />
             <Text variant="caption" tone="tertiary">
-              ilk pay ₺1,000000
+              pozisyonlar + nakit
             </Text>
+          </Stat>
+          <Stat label="Kâr / Zarar">
+            <Money value={unrealized} variant="numM" decimals={0} colorize sign="always" />
+            <ChangeBadge value={unrealized / accountCost} />
+          </Stat>
+          <Stat label="Bugün">
+            <Money value={summary.dailyChange} variant="numM" decimals={0} colorize sign="always" />
+            <ChangeBadge value={summary.dailyChangeRatio} />
           </Stat>
         </View>
-        <RiskMeter level={DEMO_FUND.riskLevel} />
+        <RiskMeter level={DEMO_ACCOUNT.riskLevel} />
       </Card>
 
       <SegmentedControl
@@ -171,9 +176,12 @@ export default function FundScreen() {
       </Card>
 
       <Card>
-        <SectionHeader title="GETİRİ TABLOSU · PAY DEĞERİ" style={{ marginBottom: space.md }} />
+        <SectionHeader title="DÖNEMSEL GETİRİ" style={{ marginBottom: space.xs }} />
+        <Text variant="caption" tone="tertiary" style={{ marginBottom: space.md }}>
+          Para yatırma ve çekmelerin etkisi çıkarılmış getiri (TWR)
+        </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
-          {DEMO_FUND.returns.map((r) => (
+          {DEMO_ACCOUNT.returns.map((r) => (
             <View
               key={r.label}
               style={{
@@ -241,13 +249,13 @@ function RiskMeter({ level }: { level: number }) {
     <View style={{ marginTop: space.lg, gap: space.sm }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Text variant="caption" tone="secondary">
-          Risk Değeri
+          Risk Seviyesi
         </Text>
         <Text variant="numS">{level} / 7</Text>
       </View>
       <View
         style={{ flexDirection: 'row', gap: 4 }}
-        accessibilityLabel={`Risk değeri 7 üzerinden ${level}`}>
+        accessibilityLabel={`Risk seviyesi 7 üzerinden ${level}`}>
         {steps.map((i) => (
           <View
             key={i}

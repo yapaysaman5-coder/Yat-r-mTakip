@@ -3,7 +3,18 @@
  * Real values come from the calculation engine (Phase 2), the database (Phase 3)
  * and market data (Phase 4). Everything here is fictional.
  */
+import { rebasePercent } from '@/ui/charts/scale';
 import type { MarketKey } from '@/theme/types';
+
+import {
+  DEMO_DAYS,
+  DEMO_METRICS,
+  DEMO_NET_INVESTED,
+  DEMO_VALUES,
+  PERIOD_START,
+  periodReturn,
+  type PeriodKey,
+} from './analysis';
 import type { CurrencyCode } from '@/utils/format';
 
 export const DEMO_USDTRY = 42.5;
@@ -165,23 +176,25 @@ function mulberry32(seed: number) {
 
 export type DemoRange = '1G' | '1H' | '1A' | '3A' | '6A' | '1Y' | 'YB' | 'Tümü';
 
-const RANGE_POINTS: Record<
-  DemoRange,
-  { points: number; drift: number; vol: number; seed: number }
-> = {
-  '1G': { points: 60, drift: 0.00016, vol: 0.0016, seed: 11 },
-  '1H': { points: 56, drift: 0.0004, vol: 0.004, seed: 7 },
-  '1A': { points: 31, drift: 0.0012, vol: 0.009, seed: 3 },
-  '3A': { points: 64, drift: 0.0014, vol: 0.011, seed: 5 },
-  '6A': { points: 90, drift: 0.0013, vol: 0.012, seed: 9 },
-  '1Y': { points: 120, drift: 0.0016, vol: 0.013, seed: 2 },
-  YB: { points: 110, drift: 0.0016, vol: 0.013, seed: 4 },
-  Tümü: { points: 150, drift: 0.0019, vol: 0.014, seed: 8 },
-};
+/** Intraday preview for "1G": 5-minute points across the session. */
+const INTRADAY = { points: 60, drift: 0.00016, vol: 0.0016, seed: 11 };
 
 /** Demo value series ending at today's value, plus the stepped "net invested" line. */
 export function demoSeries(range: DemoRange) {
-  const { points, drift, vol, seed } = RANGE_POINTS[range];
+  if (range !== '1G') {
+    // Daily history (same data as the Analiz screen): value and net invested.
+    const start = range === '1H' ? DEMO_DAYS - 8 : PERIOD_START[range];
+    const values = DEMO_VALUES.me.slice(start);
+    const showBaseline = range !== '1H' && range !== '1A';
+    const ratios = rebasePercent(DEMO_VALUES.me, DEMO_NET_INVESTED, start);
+    return {
+      values,
+      baseline: showBaseline ? DEMO_NET_INVESTED.slice(start) : undefined,
+      changeRatio: ratios[ratios.length - 1],
+    };
+  }
+  // Intraday preview for "1G" (5-minute points).
+  const { points, drift, vol, seed } = INTRADAY;
   const rand = mulberry32(seed);
   const raw: number[] = [1];
   for (let i = 1; i < points; i++) {
@@ -190,25 +203,7 @@ export function demoSeries(range: DemoRange) {
   }
   const scale = DEMO_TOTAL_VALUE / raw[raw.length - 1];
   const values = raw.map((v) => v * scale);
-  const netInvested = DEMO_DEPOSITED - DEMO_WITHDRAWN;
-  // Net invested only makes sense to draw on longer ranges, where deposits happened.
-  const long = range === '6A' || range === '1Y' || range === 'YB' || range === 'Tümü';
-  const start = Math.min(values[0] * 0.97, netInvested);
-  const baseline = long
-    ? values.map((_, i) => {
-        const t = i / (points - 1);
-        if (t < 0.34) return start;
-        if (t < 0.68) return start + (netInvested - start) * 0.55;
-        return netInvested;
-      })
-    : undefined;
-  const first = values[0];
-  return {
-    values,
-    baseline,
-    change: DEMO_TOTAL_VALUE - first,
-    changeRatio: DEMO_TOTAL_VALUE / first - 1,
-  };
+  return { values, baseline: undefined, changeRatio: DEMO_TOTAL_VALUE / values[0] - 1 };
 }
 
 export type DemoTxnType = 'BUY' | 'SELL' | 'DEPOSIT' | 'WITHDRAW' | 'DIVIDEND';
@@ -288,58 +283,10 @@ export const DEMO_TXNS: DemoTxn[] = [
   },
 ];
 
-export interface DemoBenchmark {
-  key: string;
-  name: string;
-  value: number;
-  isPortfolio?: boolean;
-}
+const ACCOUNT_PERIODS: PeriodKey[] = ['1A', '3A', '6A', 'YB', '1Y', 'Tümü'];
 
-/** "Ya Olsaydı?" preview — same cash flows applied to each benchmark (fictional numbers). */
-export const DEMO_BENCHMARKS: DemoBenchmark[] = [
-  { key: 'gold', name: 'Gram Altın', value: 1_412_300 },
-  { key: 'btc', name: 'Bitcoin', value: 1_398_120 },
-  { key: 'me', name: 'Portföyüm', value: DEMO_TOTAL_VALUE, isPortfolio: true },
-  { key: 'ndx', name: 'Nasdaq 100', value: 1_261_400 },
-  { key: 'spx', name: 'S&P 500', value: 1_240_110 },
-  { key: 'deposit', name: 'Mevduat', value: 1_236_400 },
-  { key: 'cpi', name: 'TÜFE (enflasyon)', value: 1_221_800 },
-  { key: 'xu030', name: 'BIST 30', value: 1_198_700 },
-  { key: 'xu100', name: 'BIST 100', value: 1_187_240 },
-  { key: 'silver', name: 'Gram Gümüş', value: 1_176_800 },
-  { key: 'eur', name: 'Euro/TL', value: 1_171_300 },
-  { key: 'rut', name: 'Russell 2000', value: 1_160_300 },
-  { key: 'usd', name: 'Dolar/TL', value: 1_150_900 },
-];
-
-export const DEMO_FUND = {
-  unitPrice: 1.200762,
-  unitPriceDailyRatio: 0.0098,
-  units: 1_069_789.12,
-  riskLevel: 5,
-  returns: [
-    { label: '1A', ratio: 0.031 },
-    { label: '3A', ratio: 0.094 },
-    { label: '6A', ratio: 0.14 },
-    { label: 'YB', ratio: 0.182 },
-    { label: '1Y', ratio: 0.225 },
-    { label: 'Tümü', ratio: 0.2008 },
-  ],
+/** Account-level figures for the Fon (Hesabım) screen, computed from the demo history. */
+export const DEMO_ACCOUNT = {
+  riskLevel: DEMO_METRICS.riskLevel,
+  returns: ACCOUNT_PERIODS.map((label) => ({ label, ratio: periodReturn('me', label) })),
 };
-
-/** Value-over-time preview lines for the "Ya Olsaydı?" chart (fictional). */
-export function demoComparison(keys: string[]) {
-  const n = 60;
-  const deposits = Array.from({ length: n }, (_, i) =>
-    i < 15 ? 600_000 : i < 35 ? 900_000 : i < 48 ? 1_150_000 : DEMO_DEPOSITED - DEMO_WITHDRAWN,
-  );
-  return keys.map((key, k) => {
-    const target = DEMO_BENCHMARKS.find((b) => b.key === key)?.value ?? DEMO_TOTAL_VALUE;
-    const rand = mulberry32(20 + k * 7);
-    const growth = [1];
-    for (let i = 1; i < n; i++) growth.push(growth[i - 1] * (1 + (rand() - 0.5) * 0.035));
-    const factor = target / deposits[n - 1] / growth[n - 1];
-    const values = deposits.map((d, i) => d * growth[i] * Math.pow(factor, i / (n - 1)));
-    return { key, values };
-  });
-}
