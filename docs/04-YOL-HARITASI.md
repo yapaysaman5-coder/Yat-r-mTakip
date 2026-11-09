@@ -233,19 +233,25 @@ K/Z ile birebir aynı ([faz7-gecmis.md](test-raporu/faz7-gecmis.md)).
 
 **Bitiş kriteri:** Hesap özeti gerçek veriyle ✅ ([faz8-hesabim.md](test-raporu/faz8-hesabim.md)).
 
-## Faz 9: Analiz
+## Faz 9: Analiz ✅ (9 Kasım 2026)
 
-- [ ] Ölçüt verileri:
+- [x] Ölçüt verileri:
   - BIST 100, BIST 30, gram altın, gram gümüş
   - S&P 500, Nasdaq 100, Russell 2000, Bitcoin
-  - Dolar/TL, Euro/TL, TÜFE, mevduat
-- [ ] Ya Olsaydı:
+  - Dolar/TL, Euro/TL
+  - **TÜFE:** TCMB'nin yayımladığı TÜİK aylık değişimleri (2005'ten beri)
+  - **Mevduat:** Kişinin girdiği yıllık net faizle
+- [x] Ya Olsaydı:
   - Çoklu grafik, lig tablosu, ölçüt detay kartı
   - Otomatik içgörü cümleleri
-  - TL/USD seçimi, dönem seçimi, karşılaştırma bazı
-- [ ] Performans: TWR, XIRR, dönemsel tablo, aylık ısı haritası, en iyi ve en kötüler
-- [ ] Risk: düşüş grafiği, volatilite, Sharpe, Sortino, Beta, yoğunlaşma uyarısı
-- [ ] Dağılım: piyasa, para birimi, sektör, ısı haritası
+  - TL/USD seçimi, dönem seçimi, karşılaştırma bazı (para giriş/çıkışı veya alım/satımlar)
+- [x] Performans: TWR, XIRR, dönemsel tablo, aylık ısı haritası (aya dokununca döküm), en çok kazandıran ve kaybettirenler, Net K/Z'nin kaynakları
+- [x] Risk: düşüş grafiği, volatilite, Sharpe, Sortino, Beta, yoğunlaşma uyarısı
+- [x] Dağılım: piyasa, para birimi, sektör, ısı haritası (bugünkü veya toplam değişim)
+
+**Bitiş kriteri:** 12 ölçüt gerçek veriyle, analizler tutarlı ✅ ([faz9-analiz.md](test-raporu/faz9-analiz.md)).
+
+> **Sonraya kalanlar:** Temettü dahil endeks serileri (kaynak yok); vadeli/değişken mevduat faizi.
 
 ## Faz 10: Ayarlar, Güvenlik ve Cila
 

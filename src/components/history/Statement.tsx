@@ -116,7 +116,13 @@ function flowLine(m: MonthStatement): string {
   return parts.join(' · ');
 }
 
-function MonthSheet({ month, onClose }: { month: MonthStatement | null; onClose: () => void }) {
+export function MonthSheet({
+  month,
+  onClose,
+}: {
+  month: MonthStatement | null;
+  onClose: () => void;
+}) {
   const { colors } = useTheme();
   const view = usePortfolioView();
   if (!month) return <Sheet visible={false} onClose={onClose} />;

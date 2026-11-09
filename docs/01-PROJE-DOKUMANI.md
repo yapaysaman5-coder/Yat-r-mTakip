@@ -938,6 +938,16 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 40 | **Elde tutma süresi** | Satılan adetlerin, maliyet ağırlıklı ortalama süresi (önce en eski alışlar) |
 | 41 | **Otomatik kayıtlar** | Geçmişte kaydırılamaz; bağlı oldukları kayıtla birlikte değişir |
 
+### 9 Kasım 2026: Faz 9'da verilen kararlar
+
+| # | Konu | Karar |
+|---|---|---|
+| 42 | **TÜFE kaynağı** | TCMB sayfasındaki resmi TÜİK aylık değişimleri; uydurma veya tahmini rakam kullanılmaz. Yayımlanmamış ay sabit tutulur |
+| 43 | **Mevduat** | Kişinin girdiği yıllık net faiz, günlük bileşik; varsayılan %40, Ya Olsaydı'dan değiştirilir |
+| 44 | **Dolar ile karşılaştırma** | Her tutar o günün Dolar/TL kuruyla çevrilir; reel (TÜFE) getiri cümlesi yalnız TL'de gösterilir |
+| 45 | **Yoğunlaşma uyarısı** | Tek varlık hesabın %25'ini veya en büyük 3 varlık %60'ını geçince |
+| 46 | **Sektör** | BIST: İş Yatırım listesi; ABD: GICS sektörleri (katalogdaki hisseler), ETF'ler türüne göre |
+
 ---
 
 ## 14. Yasal Uyarı

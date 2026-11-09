@@ -1,7 +1,16 @@
-import { BarChart3, PieChart, Sparkles } from 'lucide-react-native';
+import { BarChart3, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { Allocation } from '@/components/analysis/Allocation';
+import { BenchmarkSheet } from '@/components/analysis/BenchmarkSheet';
+import {
+  AssetResultsCard,
+  ConcentrationCard,
+  DrawdownCard,
+} from '@/components/analysis/PerformanceExtras';
+import { WhatIfOptions } from '@/components/analysis/WhatIfOptions';
+import { MonthSheet } from '@/components/history/Statement';
 import { MetricInfoSheet, MetricTile } from '@/components/MetricTile';
 import type { MetricKey } from '@/components/metricInfo';
 import { EmptyPortfolio } from '@/components/EmptyPortfolio';
@@ -10,10 +19,12 @@ import {
   ANALYSIS_PERIODS,
   periodReturn,
   type AnalysisPeriod,
+  type ComparedSeries,
   type MonthReturn,
 } from '@/data/view/analysisView';
+import { buildStatement, type MonthStatement } from '@/data/view/historyView';
 import { useMarketStore } from '@/state/market';
-import { useAnalysis, usePortfolioView } from '@/state/portfolio';
+import { useAnalysis, usePortfolioView, useWhatIfAnalysis } from '@/state/portfolio';
 import { seriesColor } from '@/theme/chartColors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
@@ -23,6 +34,7 @@ import {
   Chip,
   EmptyState,
   Money,
+  PressableScale,
   Screen,
   SectionHeader,
   SegmentedControl,
@@ -87,13 +99,7 @@ export default function AnalysisScreen() {
       />
       {section === 'whatif' ? <WhatIf /> : null}
       {section === 'performance' ? <Performance onInfo={open} /> : null}
-      {section === 'allocation' ? (
-        <EmptyState
-          icon={PieChart}
-          title="Dağılım"
-          message="Piyasa, para birimi ve sektör dağılımı ile portföy ısı haritası burada olacak. (Faz 9)"
-        />
-      ) : null}
+      {section === 'allocation' ? <Allocation /> : null}
       <MetricInfoSheet
         metric={info?.key ?? null}
         value={info?.value}
@@ -169,7 +175,7 @@ function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
 /* ───────────────────────── Ya Olsaydı? ───────────────────────── */
 
 function WhatIf() {
-  const analysis = useAnalysis();
+  const analysis = useWhatIfAnalysis();
   const syncing = useMarketStore((s) => s.syncing);
   const online = useMarketStore((s) => s.online);
   if (analysis.series.length < 2) {
@@ -190,7 +196,10 @@ function WhatIf() {
 
 function WhatIfBody() {
   const { colors, dark } = useTheme();
-  const analysis = useAnalysis();
+  const analysis = useWhatIfAnalysis();
+  const ccy = analysis.options.currency;
+  const sym = ccy === 'USD' ? '$' : '₺';
+  const [detail, setDetail] = useState<ComparedSeries | null>(null);
   const BENCHMARKS = analysis.series;
   const VALUES = Object.fromEntries(BENCHMARKS.map((b) => [b.key, b.values]));
   const NET_INVESTED = analysis.netInvested;
@@ -227,17 +236,17 @@ function WhatIfBody() {
   const netInvested = NET_INVESTED[last];
   const beaten = BENCHMARKS.filter((b) => b.key !== 'me' && VALUES[b.key][last] < me).length;
   const best = ranked.find((b) => b.key !== 'me')!;
-  const realReturn = VALUES.cpi ? me / VALUES.cpi[last] - 1 : null;
+  // Real return only makes sense against TL inflation.
+  const realReturn = VALUES.cpi && ccy === 'TRY' ? me / VALUES.cpi[last] - 1 : null;
 
   return (
     <View style={{ gap: space.lg }}>
       <Card padding={0} style={{ paddingVertical: space.lg }}>
         <View style={{ paddingHorizontal: space.lg, gap: space.xs }}>
           <Text variant="title3">Aynı parayı başka yere yatırsaydın?</Text>
-          <Text variant="footnote" tone="secondary">
-            Her para girişin ve çıkışın, aynı gün ve aynı tutarla bu seçeneklere yapılmış gibi
-            hesaplanır.
-          </Text>
+        </View>
+        <View style={{ paddingHorizontal: space.lg, marginTop: space.md }}>
+          <WhatIfOptions analysis={analysis} />
         </View>
 
         <View
@@ -267,7 +276,7 @@ function WhatIfBody() {
           onChange={setMode}
           style={{ marginHorizontal: space.lg, marginTop: space.md }}
           options={[
-            { key: 'value', label: '₺ Değer' },
+            { key: 'value', label: `${sym} Değer` },
             { key: 'percent', label: '% Getiri' },
           ]}
         />
@@ -283,11 +292,13 @@ function WhatIfBody() {
             }
             zeroLine={mode === 'percent'}
             formatAxis={(v) =>
-              mode === 'value' ? formatCompact(v) : formatPercent(v, { decimals: 0 })
+              mode === 'value'
+                ? `${ccy === 'USD' ? '$' : ''}${formatCompact(v)}`
+                : formatPercent(v, { decimals: 0 })
             }
             formatValue={(v) =>
               mode === 'value'
-                ? formatMoney(v, { decimals: 0 })
+                ? formatMoney(v, { decimals: 0, currency: ccy })
                 : formatPercent(v, { decimals: 1, sign: 'always' })
             }
             height={250}
@@ -355,8 +366,13 @@ function WhatIfBody() {
           const value = VALUES[b.key][last];
           const isMe = b.key === 'me';
           return (
-            <View
+            <PressableScale
               key={b.key}
+              onPress={() => setDetail(b)}
+              haptic="selection"
+              scaleTo={0.985}
+              accessibilityRole="button"
+              accessibilityLabel={`${b.name} ayrıntısı`}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -394,19 +410,31 @@ function WhatIfBody() {
                 </Text>
               </View>
               <View style={{ alignItems: 'flex-end', gap: 3 }}>
-                <Money value={value} variant="numM" decimals={0} />
+                <Money value={value} variant="numM" decimals={0} currency={ccy} />
                 {isMe ? (
                   <Text variant="caption" tone="accent">
                     SEN
                   </Text>
                 ) : (
-                  <ChangeBadge value={value - me} kind="money" variant="plain" decimals={0} />
+                  <ChangeBadge
+                    value={value - me}
+                    kind="money"
+                    variant="plain"
+                    decimals={0}
+                    currency={ccy}
+                  />
                 )}
               </View>
-            </View>
+            </PressableScale>
           );
         })}
       </Card>
+      <BenchmarkSheet
+        series={detail}
+        analysis={analysis}
+        period={range}
+        onClose={() => setDetail(null)}
+      />
 
       <Card variant="alt">
         <View
@@ -426,8 +454,8 @@ function WhatIfBody() {
           <Insight
             text={
               VALUES[best.key][last] > me
-                ? `En iyi seçenek ${best.name} olurdu: bugün ${formatMoney(VALUES[best.key][last] - me, { decimals: 0 })} daha fazla.`
-                : `Tüm seçeneklerden iyi gittin: en yakın ${best.name}, ${formatMoney(me - VALUES[best.key][last], { decimals: 0 })} geride.`
+                ? `En iyi seçenek ${best.name} olurdu: bugün ${formatMoney(VALUES[best.key][last] - me, { decimals: 0, currency: ccy })} daha fazla.`
+                : `Tüm seçeneklerden iyi gittin: en yakın ${best.name}, ${formatMoney(me - VALUES[best.key][last], { decimals: 0, currency: ccy })} geride.`
             }
           />
           {realReturn !== null ? (
@@ -600,6 +628,9 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
         })}
       </Card>
 
+      <DrawdownCard />
+      <AssetResultsCard />
+      <ConcentrationCard />
       <MonthlyHeatmap months={m.months} />
     </View>
   );
@@ -607,6 +638,9 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
 
 function MonthlyHeatmap({ months }: { months: MonthReturn[] }) {
   const { colors } = useTheme();
+  const view = usePortfolioView();
+  const [open, setOpen] = useState<MonthStatement | null>(null);
+  const statement = buildStatement(view);
   const years = [...new Set(months.map((x) => x.month.slice(0, 4)))];
   const max = Math.max(1e-9, ...months.map((x) => Math.abs(x.ratio)));
   const SHORT = ['O', 'Ş', 'M', 'N', 'M', 'H', 'T', 'A', 'E', 'E', 'K', 'A'];
@@ -637,9 +671,15 @@ function MonthlyHeatmap({ months }: { months: MonthReturn[] }) {
             const cell = months.find((x) => x.month === key);
             const strength = cell ? 0.18 + 0.7 * Math.min(1, Math.abs(cell.ratio) / max) : 0;
             const base = cell && cell.ratio < 0 ? colors.down : colors.up;
+            const month = statement.find((s) => s.month === key);
             return (
-              <View
+              <PressableScale
                 key={key}
+                disabled={!month}
+                onPress={() => setOpen(month ?? null)}
+                haptic="selection"
+                scaleTo={0.9}
+                accessibilityRole={month ? 'button' : undefined}
                 accessibilityLabel={cell ? `${monthLabel(key)} ${pct(cell.ratio)}` : undefined}
                 style={{
                   flex: 1,
@@ -658,9 +698,10 @@ function MonthlyHeatmap({ months }: { months: MonthReturn[] }) {
           Koyu renk = büyük hareket
         </Text>
         <Text variant="caption" tone="tertiary">
-          Dokun: ay detayı (Faz 9)
+          Dokun: ay dökümü
         </Text>
       </View>
+      <MonthSheet month={open} onClose={() => setOpen(null)} />
     </Card>
   );
 }

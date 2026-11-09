@@ -297,6 +297,16 @@ bıraktıktan 0,6 sn sonra) iki kaynağa sorulur:
 - **İnternet yoksa:** Arama yapılamadığı söylenir. Sembol yine eklenebilir, fiyatı internet gelince Binance'te aranır.
 - **İstek sınırı:** CoinGecko'nun ücretsiz sürümü dakikada yaklaşık 5–15 istek kabul ediyor. Sınır aşılırsa kaynak kısa süre dinlendirilir, fiyat bir sonraki turda gelir.
 
+### 6.5 TÜFE ve Mevduat (Faz 9)
+
+- **TÜFE:** Kaynak `www.tcmb.gov.tr` "Tüketici Fiyatları" sayfası. Sayfadaki tabloda TÜİK'in aylık ve yıllık
+  değişimleri Ocak 2005'ten beri yer alır. Aylık değişimler zincirlenerek bir endeks kurulur (Ocak 2005 başı = 100).
+  Her ayın değişimi o ayın günlerine geometrik olarak yayılır. Henüz yayımlanmamış ayın günleri son seviyede
+  sabit tutulur. Bu enstrümanın (`MACRO:CPI`) son 62 günü her yenilemede yeniden indirilir: ay başındaki yeni
+  yayın, sabit tutulan günlerin yerine geçer. Tablo yoksa veya bir ay eksikse veri kabul edilmez.
+- **Mevduat:** Fiyat kaynağı yok. Kişinin Analiz › Ya Olsaydı'da girdiği yıllık net faizle (varsayılan %40)
+  günlük bileşik seri olarak, portföy yüklenirken hesaplanır. Faiz değişince yeniden hesaplanır.
+
 ## 7. Canlı Güncelleme Mekanizması (Faz 4 ✅)
 
 | Pazar | Seans içinde | Seans dışında |

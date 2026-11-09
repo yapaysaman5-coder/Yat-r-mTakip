@@ -96,3 +96,67 @@ export const US_CATALOG: readonly (readonly [
   ['XLE', 'Energy Select Sector SPDR', 'ETF'],
   ['IBIT', 'iShares Bitcoin Trust ETF', 'ETF'],
 ];
+
+/** Sector of the catalog's US stocks (GICS sectors, in Turkish) and the kind of each ETF. */
+export const US_SECTOR: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(
+    [
+      'AAPL',
+      'MSFT',
+      'NVDA',
+      'AVGO',
+      'ORCL',
+      'CRM',
+      'ADBE',
+      'AMD',
+      'INTC',
+      'QCOM',
+      'TXN',
+      'MU',
+      'ASML',
+      'TSM',
+      'ARM',
+      'PLTR',
+      'SHOP',
+      'IBM',
+      'CSCO',
+    ].map((s) => [s, 'Teknoloji']),
+  ),
+  ...Object.fromEntries(
+    ['GOOGL', 'GOOG', 'META', 'NFLX', 'DIS', 'T', 'VZ'].map((s) => [s, 'İletişim']),
+  ),
+  ...Object.fromEntries(
+    ['AMZN', 'TSLA', 'HD', 'MCD', 'SBUX', 'NKE', 'ABNB', 'F', 'GM', 'BABA'].map((s) => [
+      s,
+      'Tüketim (döngüsel)',
+    ]),
+  ),
+  ...Object.fromEntries(['COST', 'WMT', 'PG', 'KO', 'PEP'].map((s) => [s, 'Temel tüketim'])),
+  ...Object.fromEntries(
+    ['BRK-B', 'JPM', 'V', 'MA', 'PYPL', 'COIN', 'BAC', 'WFC', 'GS', 'MS', 'C'].map((s) => [
+      s,
+      'Finans',
+    ]),
+  ),
+  ...Object.fromEntries(
+    ['LLY', 'UNH', 'JNJ', 'PFE', 'MRK', 'ABBV', 'NVO'].map((s) => [s, 'Sağlık']),
+  ),
+  ...Object.fromEntries(['XOM'].map((s) => [s, 'Enerji'])),
+  ...Object.fromEntries(['BA', 'CAT', 'GE', 'LMT', 'UBER'].map((s) => [s, 'Sanayi'])),
+  MSTR: 'Teknoloji',
+  ...Object.fromEntries(
+    ['SPY', 'VOO', 'IVV', 'QQQ', 'VTI', 'VT', 'IWM', 'DIA', 'SCHD', 'VEA', 'VWO', 'ARKK'].map(
+      (s) => [s, 'Endeks fonu (ETF)'],
+    ),
+  ),
+  SMH: 'Teknoloji',
+  XLK: 'Teknoloji',
+  XLF: 'Finans',
+  XLE: 'Enerji',
+  VNQ: 'Gayrimenkul',
+  GLD: 'Emtia',
+  SLV: 'Emtia',
+  TLT: 'Tahvil',
+  BND: 'Tahvil',
+  IBIT: 'Kripto',
+};
