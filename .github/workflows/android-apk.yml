@@ -44,6 +44,10 @@ jobs:
           java-version: 17
 
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          # Save the Gradle distribution and dependency caches on this branch too, so later
+          # builds don't depend on Gradle's download servers.
+          cache-read-only: false
 
       - name: Install dependencies
         run: npm ci
@@ -55,21 +59,24 @@ jobs:
         run: |
           npx expo prebuild --platform android --no-install
           props=android/gradle/wrapper/gradle-wrapper.properties
-          # services.gradle.org only redirects to Gradle's CDN and has returned 504s on CI;
-          # download from the CDN directly, with a longer timeout than the 10 s default.
-          sed -i 's#services.gradle.org/distributions#downloads.gradle.org/distributions#' "$props"
+          # A longer download timeout than the 10 s default.
           sed -i 's/^networkTimeout=.*/networkTimeout=120000/' "$props"
           cat "$props"
 
-      - name: Build APK (arm64)
+      - name: Download Gradle (with retries)
         working-directory: android
         run: |
-          args="assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace"
-          if ! ./gradlew $args; then
-            # If the wrapper still can't fetch its distribution, use the runner's own Gradle.
-            echo "Wrapper build failed; retrying with $(gradle --version | grep '^Gradle')"
-            gradle $args
-          fi
+          # Gradle's download servers have returned 504s; wait them out instead of failing.
+          for attempt in 1 2 3 4 5 6; do
+            if ./gradlew --version; then exit 0; fi
+            echo "Gradle download failed (attempt $attempt/6); retrying in $((attempt * 30)) s..."
+            sleep $((attempt * 30))
+          done
+          exit 1
+
+      - name: Build APK (arm64)
+        working-directory: android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
 
       - name: Collect APK
         run: |
