@@ -125,7 +125,7 @@ export function HoldingRow({ holding, actions }: { holding: Holding; actions: Ho
         haptic="selection"
         scaleTo={0.985}
         accessibilityRole="button"
-        accessibilityLabel={`${holding.symbol}, ${holding.name}`}
+        accessibilityLabel={`${holding.symbol}, ${holding.name}${holding.stale ? ', fiyat bulunamadı' : ''}`}
         accessibilityHint="Ayrıntı için dokun, işlemler için basılı tut veya yana kaydır"
         style={{
           flexDirection: 'row',
@@ -153,9 +153,16 @@ export function HoldingRow({ holding, actions }: { holding: Holding; actions: Ho
           <Text variant="bodyStrong" numberOfLines={1}>
             {holding.symbol}
           </Text>
-          <Text variant="caption" tone="secondary" numberOfLines={1}>
-            {subtitle}
-          </Text>
+          {holding.stale ? (
+            <Text variant="caption" color={colors.warning} numberOfLines={1}>
+              {formatQuantity(holding.quantity, 6)}
+              {unit} · fiyat yok
+            </Text>
+          ) : (
+            <Text variant="caption" tone="secondary" numberOfLines={1}>
+              {subtitle}
+            </Text>
+          )}
         </View>
         <Sparkline values={holding.spark} color={trendColor} width={52} height={26} />
         <View style={{ alignItems: 'flex-end', gap: 4, minWidth: 108 }}>

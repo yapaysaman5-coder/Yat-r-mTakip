@@ -1,0 +1,258 @@
+{
+  "coins": [
+    {
+      "id": "bob-build-on-bitcoin",
+      "name": "BOB (Build on Bitcoin)",
+      "api_symbol": "bob-build-on-bitcoin",
+      "symbol": "BOB",
+      "market_cap_rank": 853,
+      "thumb": "https://coin-images.coingecko.com/coins/images/54720/thumb/BOB_symbol_colour.png",
+      "large": "https://coin-images.coingecko.com/coins/images/54720/large/BOB_symbol_colour.png"
+    },
+    {
+      "id": "capybobo",
+      "name": "Capybobo",
+      "api_symbol": "capybobo",
+      "symbol": "PYBOBO",
+      "market_cap_rank": 1009,
+      "thumb": "https://coin-images.coingecko.com/coins/images/70731/thumb/pybobo.png",
+      "large": "https://coin-images.coingecko.com/coins/images/70731/large/pybobo.png"
+    },
+    {
+      "id": "boba-network",
+      "name": "Boba Network",
+      "api_symbol": "boba-network",
+      "symbol": "BOBA",
+      "market_cap_rank": 1356,
+      "thumb": "https://coin-images.coingecko.com/coins/images/20285/thumb/Boba-200x200---white.png",
+      "large": "https://coin-images.coingecko.com/coins/images/20285/large/Boba-200x200---white.png"
+    },
+    {
+      "id": "bobo-coin-2",
+      "name": "Bobo",
+      "api_symbol": "bobo-coin-2",
+      "symbol": "BOBO",
+      "market_cap_rank": 1624,
+      "thumb": "https://coin-images.coingecko.com/coins/images/102173144/thumb/bobologo_testing123_123.png",
+      "large": "https://coin-images.coingecko.com/coins/images/102173144/large/bobologo_testing123_123.png"
+    },
+    {
+      "id": "build-on-bnb",
+      "name": "Build On BNB",
+      "api_symbol": "build-on-bnb",
+      "symbol": "BOB",
+      "market_cap_rank": 2189,
+      "thumb": "https://coin-images.coingecko.com/coins/images/51822/thumb/photo_2024-11-17_10-22-49.jpg",
+      "large": "https://coin-images.coingecko.com/coins/images/51822/large/photo_2024-11-17_10-22-49.jpg"
+    },
+    {
+      "id": "bob-3",
+      "name": "BOB",
+      "api_symbol": "bob-3",
+      "symbol": "BOB",
+      "market_cap_rank": 3042,
+      "thumb": "https://coin-images.coingecko.com/coins/images/50202/thumb/bob-128.png",
+      "large": "https://coin-images.coingecko.com/coins/images/50202/large/bob-128.png"
+    },
+    {
+      "id": "bob-token",
+      "name": "BOB Token",
+      "api_symbol": "bob-token",
+      "symbol": "BOB",
+      "market_cap_rank": 3930,
+      "thumb": "https://coin-images.coingecko.com/coins/images/29929/thumb/bob.png",
+      "large": "https://coin-images.coingecko.com/coins/images/29929/large/bob.png"
+    },
+    {
+      "id": "bob",
+      "name": "BOB",
+      "api_symbol": "bob",
+      "symbol": "BOB",
+      "market_cap_rank": 4271,
+      "thumb": "https://coin-images.coingecko.com/coins/images/27266/thumb/Bob-logo.png",
+      "large": "https://coin-images.coingecko.com/coins/images/27266/large/Bob-logo.png"
+    },
+    {
+      "id": "bobacat",
+      "name": "Boba Cat",
+      "api_symbol": "bobacat",
+      "symbol": "BOBA",
+      "market_cap_rank": 4495,
+      "thumb": "https://coin-images.coingecko.com/coins/images/31777/thumb/bobalogo200x200.png",
+      "large": "https://coin-images.coingecko.com/coins/images/31777/large/bobalogo200x200.png"
+    },
+    {
+      "id": "bober",
+      "name": "BOBER",
+      "api_symbol": "bober",
+      "symbol": "BOBER",
+      "market_cap_rank": 4619,
+      "thumb": "https://coin-images.coingecko.com/coins/images/36362/thumb/Bober_Token.png",
+      "large": "https://coin-images.coingecko.com/coins/images/36362/large/Bober_Token.png"
+    },
+    {
+      "id": "brain-on-bnb-ai",
+      "name": "Brain On BNB AI",
+      "api_symbol": "brain-on-bnb-ai",
+      "symbol": "BOBAI",
+      "market_cap_rank": 4990,
+      "thumb": "https://coin-images.coingecko.com/coins/images/102173108/thumb/logo-256x256.png",
+      "large": "https://coin-images.coingecko.com/coins/images/102173108/large/logo-256x256.png"
+    },
+    {
+      "id": "bobo-coin",
+      "name": "BOBO [OLD]",
+      "api_symbol": "bobo-coin",
+      "symbol": "BOBO",
+      "market_cap_rank": 5376,
+      "thumb": "https://coin-images.coingecko.com/coins/images/30388/thumb/bobologo_200x200.png",
+      "large": "https://coin-images.coingecko.com/coins/images/30388/large/bobologo_200x200.png"
+    },
+    {
+      "id": "bobo",
+      "name": "Bobo",
+      "api_symbol": "bobo",
+      "symbol": "BOBO",
+      "market_cap_rank": 5656,
+      "thumb": "https://coin-images.coingecko.com/coins/images/29875/thumb/BOBO_200.png",
+      "large": "https://coin-images.coingecko.com/coins/images/29875/large/BOBO_200.png"
+    },
+    {
+      "id": "bob-6",
+      "name": "Bob",
+      "api_symbol": "bob-6",
+      "symbol": "BOB",
+      "market_cap_rank": 7832,
+      "thumb": "https://coin-images.coingecko.com/coins/images/102173014/thumb/main_mascot.png",
+      "large": "https://coin-images.coingecko.com/coins/images/102173014/large/main_mascot.png"
+    },
+    {
+      "id": "bobina",
+      "name": "Bobina",
+      "api_symbol": "bobina",
+      "symbol": "BOBINA",
+      "market_cap_rank": 7972,
+      "thumb": "https://coin-images.coingecko.com/coins/images/102173361/thumb/logo.webp",
+      "large": "https://coin-images.coingecko.com/coins/images/102173361/large/logo.webp"
+    },
+    {
+      "id": "boba-oppa",
+      "name": "Boba Oppa",
+      "api_symbol": "boba-oppa",
+      "symbol": "BOBAOPPA",
+      "market_cap_rank": 8499,
+      "thumb": "https://coin-images.coingecko.com/coins/images/36548/thumb/photo_2024-03-30_13.26.25.jpeg",
+      "large": "https://coin-images.coingecko.com/coins/images/36548/large/photo_2024-03-30_13.26.25.jpeg"
+    },
+    {
+      "id": "bobisdead",
+      "name": "BobIsDead",
+      "api_symbol": "bobisdead",
+      "symbol": "DEAD",
+      "market_cap_rank": 8899,
+      "thumb": "https://coin-images.coingecko.com/coins/images/102172723/thumb/WhatsApp_Image_2026-03-31_at_05.14.07.jpeg",
+      "large": "https://coin-images.coingecko.com/coins/images/102172723/large/WhatsApp_Image_2026-03-31_at_05.14.07.jpeg"
+    },
+    {
+      "id": "bobuki-neko",
+      "name": "Bobuki Neko",
+      "api_symbol": "bobuki-neko",
+      "symbol": "BOBUKI",
+      "market_cap_rank": 9090,
+      "thumb": "https://coin-images.coingecko.com/coins/images/37846/thumb/bobuki.png",
+      "large": "https://coin-images.coingecko.com/coins/images/37846/large/bobuki.png"
+    },
+    {
+      "id": "bitcoin-bob",
+      "name": "Bitcoin Bob",
+      "api_symbol": "bitcoin-bob",
+      "symbol": "BOB",
+      "market_cap_rank": 10263,
+      "thumb": "https://coin-images.coingecko.com/coins/images/52713/thumb/Bobonsol.png",
+      "large": "https://coin-images.coingecko.com/coins/images/52713/large/Bobonsol.png"
+    },
+    {
+      "id": "boblles",
+      "name": "Boblles",
+      "api_symbol": "boblles",
+      "symbol": "BOBLS",
+      "market_cap_rank": 10267,
+      "thumb": "https://coin-images.coingecko.com/coins/images/52288/thumb/IMG_3856.jpeg",
+      "large": "https://coin-images.coingecko.com/coins/images/52288/large/IMG_3856.jpeg"
+    },
+    {
+      "id": "babybuilder",
+      "name": "BabyBuilder",
+      "api_symbol": "babybuilder",
+      "symbol": "BBOB",
+      "market_cap_rank": 10641,
+      "thumb": "https://coin-images.coingecko.com/coins/images/66300/thumb/bbob200_200.png",
+      "large": "https://coin-images.coingecko.com/coins/images/66300/large/bbob200_200.png"
+    },
+    {
+      "id": "breakout-bro-by-virtuals",
+      "name": "Breakout Bro by Virtuals",
+      "api_symbol": "breakout-bro-by-virtuals",
+      "symbol": "BOB",
+      "market_cap_rank": 10805,
+      "thumb": "https://coin-images.coingecko.com/coins/images/52905/thumb/bob-pfp.png",
+      "large": "https://coin-images.coingecko.com/coins/images/52905/large/bob-pfp.png"
+    },
+    {
+      "id": "bobz",
+      "name": "BOBz",
+      "api_symbol": "bobz",
+      "symbol": "BOBZ",
+      "market_cap_rank": 11171,
+      "thumb": "https://coin-images.coingecko.com/coins/images/68673/thumb/Bobzlogo.png",
+      "large": "https://coin-images.coingecko.com/coins/images/68673/large/Bobzlogo.png"
+    },
+    {
+      "id": "bobby",
+      "name": "Bobby",
+      "api_symbol": "bobby",
+      "symbol": "BOBBY",
+      "market_cap_rank": 11219,
+      "thumb": "https://coin-images.coingecko.com/coins/images/38957/thumb/photo_2024-06-26_21-34-13.jpg",
+      "large": "https://coin-images.coingecko.com/coins/images/38957/large/photo_2024-06-26_21-34-13.jpg"
+    },
+    {
+      "id": "book-of-billionaires",
+      "name": "BOOK OF BILLIONAIRES",
+      "api_symbol": "book-of-billionaires",
+      "symbol": "BOBE",
+      "market_cap_rank": 11298,
+      "thumb": "https://coin-images.coingecko.com/coins/images/37451/thumb/BOOK_OF_BILLIONAIRES.png",
+      "large": "https://coin-images.coingecko.com/coins/images/37451/large/BOOK_OF_BILLIONAIRES.png"
+    }
+  ],
+  "exchanges": [
+    {
+      "id": "oku-trade-bob-network",
+      "name": "Oku Trade (BOB Network)",
+      "market_type": "spot",
+      "thumb": "https://coin-images.coingecko.com/markets/images/11740/thumb/oku_trade.png",
+      "large": "https://coin-images.coingecko.com/markets/images/11740/large/oku_trade.png"
+    }
+  ],
+  "icos": [],
+  "categories": [
+    { "id": "boba-bnb-ecosystem", "name": "Boba BNB Ecosystem" },
+    { "id": "bob-network-ecosystem", "name": "BOB Network Ecosystem" },
+    { "id": "boba-network-ecosystem", "name": "Boba Network Ecosystem" }
+  ],
+  "nfts": [
+    {
+      "id": "hal-froggy-bobblehead",
+      "name": "Hal Froggy Bobblehead",
+      "symbol": "FROGGY",
+      "thumb": "missing_thumb.png"
+    },
+    {
+      "id": "bobu-the-bean-farmer",
+      "name": "Bobu, the Bean Farmer",
+      "symbol": "BOBU-THE-BEAN-FARMER",
+      "thumb": "https://coin-images.coingecko.com/nft_contracts/images/318/thumb/bobu-the-bean-farmer.gif"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "bob-build-on-bitcoin": {
+    "usd": 0.00391565,
+    "usd_24h_change": 2.979133464825873,
+    "last_updated_at": 1794253950
+  },
+  "build-on-bnb": {
+    "usd": 5.785e-9,
+    "usd_24h_change": -4.6345997904571945,
+    "last_updated_at": 1794253958
+  },
+  "bob-3": {
+    "usd": 0.04599663,
+    "usd_24h_change": -0.22584666447820764,
+    "last_updated_at": 1794253958
+  },
+  "bob-token": {
+    "usd": 6.38434e-7,
+    "usd_24h_change": -4.760849177445594,
+    "last_updated_at": 1794253950
+  },
+  "bob": { "usd": 0.997919, "usd_24h_change": 0.25334324948114567, "last_updated_at": 1794253958 }
+}

@@ -253,7 +253,7 @@ interface MarketSource {
 | **Gram altın** | Binance `PAXGTRY` ÷ 31,1035 | Yahoo `GC=F` × Dolar/TL ÷ 31,1035 | Anlık, 7/24 | ✅ |
 | **Gram gümüş** | Yahoo `SI=F` × Dolar/TL ÷ 31,1035 | — | Anlık | ✅ (biçim) |
 | **TÜFE, mevduat** | Gömülü aylık tablo *(Faz 9)* | — | Aylık | — |
-| **Sembol arama** | Telefondaki katalog: 629 BIST şirketi (İş Yatırım listesi), 248 kripto (CoinGecko + Binance), 88 popüler ABD hisse/fonu | Katalogda olmayan sembol de eklenebilir; kaynak doğrular | — | ✅ |
+| **Sembol arama** | Telefondaki katalog: 629 BIST şirketi (İş Yatırım listesi), 248 kripto (CoinGecko + Binance), 88 popüler ABD hisse/fonu | Katalogda olmayan sembol de eklenebilir; kripto için Binance ve CoinGecko'da çevrimiçi arama (§6.4) | — | ✅ |
 | **Bölünmeler** | Yahoo olayları | İş Yatırım düzeltilmiş/düzeltilmemiş fiyat oranı (öneri) | — | ✅ |
 
 **Denemede çıkan önemli bulgular:**
@@ -278,6 +278,24 @@ interface MarketSource {
 
 **Canlı deneme:** `npm run test:live`, internete erişimi olan bir bilgisayardan tüm kaynakları
 gerçek isteklerle dener (CI'da çalışmaz; kaynakların sınırlarına takılmamak için).
+
+### 6.4 Katalogda Olmayan Coinler
+
+Telefondaki kripto kataloğu 248 coin içerir. Listede olmayan bir sembol yazılınca (yazmayı
+bıraktıktan 0,6 sn sonra) iki kaynağa sorulur:
+
+| Kaynak | İstek | Sonuç |
+|---|---|---|
+| Binance | `GET /api/v3/ticker/price?symbol=<SEMBOL>USDT` | Parite varsa coin katalogdakiler gibi fiyatlanır: canlı akış, sorgu, geçmiş |
+| CoinGecko | `GET /api/v3/search?query=…`, ardından tek istekte `simple/price` | Sembolü veya adı eşleşen en fazla 8 coin; önce sembolü tam tutanlar (piyasa değeri sırasına göre). Katalogdakiler tekrar gösterilmez |
+
+- **Aynı sembol, farklı coin:** Örneğin "BOB" sembolünü 8 ayrı coin kullanıyor (9 Kasım 2026). Liste ad, CoinGecko sırası ve fiyatla gösterilir; doğru olanı kişi seçer.
+- **Seçimin saklanması:** CoinGecko'dan seçilen coin varlık kaydında `provider_symbol = "coingecko:<id>"` olarak tutulur. Böylece yedeğe girer, uygulama açılınca okunur. Bu varlık yalnızca CoinGecko'dan fiyatlanır: 15 sn'de bir sorgu, en fazla 1 yıllık geçmiş.
+- **Çakışma:** Bir sembol kayıtlı bir coine aitse, aynı sembollü başka bir coin seçilemez. İstisna: kayıtlı varlığın hiç fiyat kaynağı yoksa (Binance'te paritesi olmayan eski bir kayıt) yeni seçimle eşleştirilebilir.
+- **Kaynak değişince:** Eski kaynaktan gelen fiyatlar, canlı fiyat ve indirme durumu silinir; geçmiş yeni kaynaktan baştan indirilir, portföyün değer önbelleği ilk kayıt gününden yenilenir.
+- **Hiçbir kaynakta yoksa:** "Fiyatsız ekle" ile eklenebilir. Fiyat elle girilir, varlık son işlem fiyatıyla değerlenir. Satırda "fiyat yok" etiketi, detayda uyarı ve "Coini eşleştir" düğmesi görünür.
+- **İnternet yoksa:** Arama yapılamadığı söylenir. Sembol yine eklenebilir, fiyatı internet gelince Binance'te aranır.
+- **İstek sınırı:** CoinGecko'nun ücretsiz sürümü dakikada yaklaşık 5–15 istek kabul ediyor. Sınır aşılırsa kaynak kısa süre dinlendirilir, fiyat bir sonraki turda gelir.
 
 ## 7. Canlı Güncelleme Mekanizması (Faz 4 ✅)
 

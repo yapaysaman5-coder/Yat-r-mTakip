@@ -38,7 +38,7 @@ function hash(text: string): number {
   return h >>> 0;
 }
 
-const levelOf = (ref: string) => LEVEL[ref] ?? 10 + (hash(ref) % 990);
+export const levelOf = (ref: string) => LEVEL[ref] ?? 10 + (hash(ref) % 990);
 
 /** Closes for the 800 days up to `today`, ending at the reference's level. */
 function walk(ref: string, today: string): Map<string, number> {

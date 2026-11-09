@@ -171,6 +171,7 @@ APK ile doğrulanacak). İnternet kesilince son fiyatlarla çalışmaya devam ed
   - Sil, varlığın tüm kayıtlarını tek değişiklik olarak siler; 5 saniye "GERİ AL"
 - [x] Portföy seçici, gizlilik modu, aşağı çekip yenileme
 - [x] **Faz 4'ten:** Kripto için canlı akış (Binance WebSocket); kesilirse sorguyla devam
+- [x] **Ek:** Katalogda olmayan coinler: Binance ve CoinGecko'da arama, aynı sembollü coinler arasından seçim, fiyatı bulunamayan varlık için uyarı ve sonradan eşleştirme
 
 **Bitiş kriteri:** Ana ekran örnek ve gerçek veriyle çalışıyor ✅ (tarayıcı önizlemesinde ve
 gerçek kaynaklarla denendi). Ekran görüntüleri 4 temada ✅

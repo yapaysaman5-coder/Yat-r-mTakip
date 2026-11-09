@@ -1,21 +1,24 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Scissors, Star } from 'lucide-react-native';
+import { CircleAlert, Scissors, Star } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { changeRatio, formatInstrumentPrice, quoteStatus } from '@/components/marketFormat';
+import { AssetPicker } from '@/components/form/AssetPicker';
 import { TxnDetailSheet } from '@/components/TxnDetailSheet';
 import { txnVisual } from '@/components/txnVisual';
 import { getDatabase } from '@/data/database';
 import { instrumentFor, type Instrument } from '@/data/market/instruments';
 import { loadQuotes, loadSplits, type StoredQuote } from '@/data/repo/market';
+import { ensureAsset } from '@/data/service/trade';
+import type { StoredAsset } from '@/data/types';
 import { loadCloses } from '@/data/repo/prices';
 import { rangeStartIndex, type ChartRange, type HistoryItem } from '@/data/view/portfolioView';
 import { buildLedger, suggestMissingSplits, trDay, type SplitEvent } from '@/domain';
 import { tr } from '@/i18n/tr';
 import { useNow } from '@/lib/useNow';
 import { useMarketStore } from '@/state/market';
-import { usePortfolioView } from '@/state/portfolio';
+import { usePortfolioStore, usePortfolioView } from '@/state/portfolio';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
 import {
@@ -70,6 +73,9 @@ export default function AssetScreen() {
   const [tab, setTab] = useState<RecordTab>('all');
   const [selected, setSelected] = useState<HistoryItem | null>(null);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [matching, setMatching] = useState(false);
+  const refreshMarket = useMarketStore((s) => s.refreshNow);
+  const reloadPortfolio = usePortfolioStore((s) => s.reload);
 
   const stored = view.data.assets.get(id);
   const inst: Instrument | null =
@@ -206,6 +212,35 @@ export default function AssetScreen() {
         <Text variant="title1">{price !== null ? formatInstrumentPrice(inst, price) : '—'}</Text>
         {ratio !== null ? <ChangeBadge value={ratio} size="md" /> : null}
       </View>
+
+      {holding?.stale && !view.isDemo ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: space.md,
+            alignItems: 'center',
+            padding: space.md,
+            borderRadius: radius.md,
+            backgroundColor: colors.warningSoft,
+          }}>
+          <CircleAlert size={18} color={colors.warning} strokeWidth={2.4} />
+          <Text variant="footnote" style={{ flex: 1 }}>
+            Fiyat bulunamadı
+            {inst.market === 'CRYPTO' && inst.sources[0]?.source === 'binance'
+              ? ' (Binance’te bu sembol yok)'
+              : ''}
+            . Değeri son işlem fiyatınla hesaplanıyor, K/Z görünmez.
+          </Text>
+          {inst.market === 'CRYPTO' && inst.sources[0]?.source === 'binance' ? (
+            <Button
+              label="Coini eşleştir"
+              size="sm"
+              variant="secondary"
+              onPress={() => setMatching(true)}
+            />
+          ) : null}
+        </View>
+      ) : null}
 
       <Card padding={0} style={{ paddingVertical: space.md }}>
         {values.length > 1 ? (
@@ -404,6 +439,26 @@ export default function AssetScreen() {
         </View>
       ) : null}
 
+      {matching ? (
+        <AssetPicker
+          visible
+          initialQuery={inst.symbol}
+          initialTab="CRYPTO"
+          onClose={() => setMatching(false)}
+          onPick={async (a: StoredAsset) => {
+            if (a.id !== id) {
+              toast.show({ message: `Bu varlık ${inst.symbol}; aynı sembollü bir coin seç.` });
+              return;
+            }
+            await ensureAsset(await getDatabase(), a);
+            toast.show({
+              message: `${inst.symbol}: fiyatlar ${a.providerSymbol?.startsWith('coingecko:') ? 'CoinGecko' : 'Binance'}’ten alınacak`,
+            });
+            await refreshMarket();
+            await reloadPortfolio();
+          }}
+        />
+      ) : null}
       <TxnDetailSheet item={selected} onClose={() => setSelected(null)} />
     </Screen>
   );

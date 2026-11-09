@@ -1,6 +1,12 @@
 import { parseJson } from '../http';
 import { trDay } from '../time';
-import { EMPTY_HISTORY, MarketError, type MarketSource, type SourceQuote } from '../types';
+import {
+  EMPTY_HISTORY,
+  MarketError,
+  type Http,
+  type MarketSource,
+  type SourceQuote,
+} from '../types';
 
 /**
  * CoinGecko public API (no key; about 5–15 requests a minute). The fallback for crypto:
@@ -45,6 +51,38 @@ export function parseMarketChart(text: string): { date: string; close: number }[
     byDay.set(ms % DAY === 0 ? trDay(ms - 3 * 3_600_000 - 1) : trDay(ms), price);
   }
   return [...byDay.entries()].map(([date, close]) => ({ date, close }));
+}
+
+export interface CoinSearchHit {
+  id: string;
+  symbol: string;
+  name: string;
+  /** Market-cap rank; null for unranked coins. */
+  rank: number | null;
+}
+
+/** Reads `/api/v3/search` (coins only, in CoinGecko's order). */
+export function parseCoinSearch(text: string): CoinSearchHit[] {
+  const data = parseJson<{
+    coins?: { id?: string; symbol?: string; name?: string; market_cap_rank?: number | null }[];
+  }>(text, 'CoinGecko');
+  if (!Array.isArray(data.coins)) throw new MarketError('format', 'CoinGecko: beklenmeyen yanıt');
+  return data.coins.flatMap((c) =>
+    c.id && c.symbol && c.name
+      ? [
+          {
+            id: c.id,
+            symbol: c.symbol.toUpperCase(),
+            name: c.name,
+            rank: typeof c.market_cap_rank === 'number' ? c.market_cap_rank : null,
+          },
+        ]
+      : [],
+  );
+}
+
+export async function coingeckoSearch(query: string, http: Http): Promise<CoinSearchHit[]> {
+  return parseCoinSearch(await http(`${BASE}/search?query=${encodeURIComponent(query)}`));
 }
 
 export const coingecko: MarketSource = {

@@ -63,6 +63,25 @@ export function parseKlines(text: string): { date: string; close: number }[] {
   return rows.map((k) => ({ date: trDay(k[0]), close: Number(k[4]) }));
 }
 
+/** Reads `/api/v3/ticker/price` (one symbol). */
+export function parseTickerPrice(text: string): number | null {
+  const r = parseJson<{ symbol?: string; price?: string }>(text, 'Binance');
+  const price = Number(r.price);
+  return price > 0 && Number.isFinite(price) ? price : null;
+}
+
+/** The pair's last price, or null when Binance does not list it ("Invalid symbol"). */
+export async function binancePairPrice(pair: string, http: Http): Promise<number | null> {
+  try {
+    return parseTickerPrice(
+      await get(http, `/api/v3/ticker/price?symbol=${encodeURIComponent(pair)}`),
+    );
+  } catch (e) {
+    if (e instanceof MarketError && e.kind === 'http' && e.status === 400) return null;
+    throw e;
+  }
+}
+
 export const binance: MarketSource = {
   id: 'binance',
 

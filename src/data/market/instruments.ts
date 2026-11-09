@@ -124,6 +124,46 @@ const FIXED = new Map(FIXED_INSTRUMENTS.map((i) => [i.id, i]));
 
 type CryptoRow = [symbol: string, name: string, coingeckoId: string, binancePair: string | null];
 const CRYPTO = new Map((cryptoCatalog as CryptoRow[]).map((r) => [r[0], r]));
+const CATALOG_COINGECKO_IDS = new Set((cryptoCatalog as CryptoRow[]).map((r) => r[2]));
+
+/** True when a CoinGecko coin is already in the embedded catalog. */
+export const inCryptoCatalog = (coingeckoId: string) => CATALOG_COINGECKO_IDS.has(coingeckoId);
+
+/**
+ * Coins outside the catalog that the person matched to a CoinGecko coin. Stored on the asset
+ * row as `provider_symbol = "coingecko:<id>"` (so backups carry it) and read into this map
+ * when the database opens; such an asset is then priced from CoinGecko only.
+ */
+export const COINGECKO_PIN = 'coingecko:';
+const pinned = new Map<string, { ref: string; name?: string }>();
+
+export function pinnedCoingeckoId(providerSymbol: string | undefined): string | null {
+  return providerSymbol?.startsWith(COINGECKO_PIN)
+    ? providerSymbol.slice(COINGECKO_PIN.length) || null
+    : null;
+}
+
+/** Reads the pinned sources from asset rows (on open, after a backup is restored). */
+export function pinSources(
+  assets: Iterable<{ id: string; name?: string; providerSymbol?: string }>,
+) {
+  for (const a of assets) {
+    if (!a.id.startsWith('CRYPTO:') || a.providerSymbol === undefined) continue;
+    const ref = pinnedCoingeckoId(a.providerSymbol);
+    if (ref) pinned.set(a.id, { ref, name: a.name });
+    else pinned.delete(a.id); // matched to its Binance pair again
+  }
+}
+
+/** Test helper. */
+export function clearPinnedSources() {
+  pinned.clear();
+}
+
+/** What to store as the asset's provider symbol (keeps a pinned source). */
+export function providerSymbolOf(inst: Instrument): string | undefined {
+  return pinned.has(inst.id) ? `${COINGECKO_PIN}${pinned.get(inst.id)!.ref}` : inst.sources[0]?.ref;
+}
 
 /** The instrument behind an asset id; null for ids no source covers (demo:, custom…). */
 export function instrumentFor(assetId: string, name?: string): Instrument | null {
@@ -154,6 +194,17 @@ export function instrumentFor(assetId: string, name?: string): Instrument | null
         sources: [{ source: 'yahoo', ref: symbol }],
       };
     case 'CRYPTO': {
+      const pin = pinned.get(assetId);
+      if (pin) {
+        return {
+          id: assetId,
+          symbol,
+          name: name ?? pin.name ?? symbol,
+          market: 'CRYPTO',
+          currency: 'USD',
+          sources: [{ source: 'coingecko', ref: pin.ref }],
+        };
+      }
       const row = CRYPTO.get(symbol);
       const sources: SourceRef[] = [];
       // Unknown coins still get a try on Binance; a stablecoin without a USDT pair is ~1 USD.

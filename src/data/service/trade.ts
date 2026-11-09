@@ -1,9 +1,10 @@
-import { addDays } from '@/domain';
+import { addDays, trDay } from '@/domain';
 
 import type { SqlDriver } from '../db/driver';
-import { instrumentFor } from '../market/instruments';
+import { instrumentFor, pinSources, providerSymbolOf } from '../market/instruments';
 import type { MarketRouter } from '../market/router';
-import { upsertAssets } from '../repo/assets';
+import { getAssets, upsertAssets } from '../repo/assets';
+import { markSeriesDirty } from '../repo/portfolios';
 import { upsertCloses } from '../repo/prices';
 import type { StoredAsset } from '../types';
 
@@ -12,14 +13,28 @@ import type { StoredAsset } from '../types';
  * chosen day ("Seçilen gün kapanışı"), and the assets used last.
  */
 
-/** Creates (or refreshes) the asset a new record refers to. */
+/**
+ * Creates (or refreshes) the asset a new record refers to. When the person matches a coin to
+ * another source, prices from the old source are dropped and its history is fetched anew.
+ */
 export async function ensureAsset(db: SqlDriver, asset: StoredAsset): Promise<void> {
+  // A coin matched to CoinGecko by the person: priced from there from now on.
+  pinSources([asset]);
   const inst = instrumentFor(asset.id, asset.name);
-  await upsertAssets(
-    db,
-    [{ ...asset, providerSymbol: asset.providerSymbol ?? inst?.sources[0]?.ref }],
-    new Date().toISOString(),
-  );
+  const providerSymbol = asset.providerSymbol ?? (inst ? providerSymbolOf(inst) : undefined);
+  const before = (await getAssets(db, [asset.id])).get(asset.id);
+  await db.transaction(async (tx) => {
+    await upsertAssets(tx, [{ ...asset, providerSymbol }], new Date().toISOString());
+    if (!before || before.providerSymbol === providerSymbol) return;
+    for (const table of ['price_daily', 'quote', 'price_sync', 'corporate_action']) {
+      await tx.run(`DELETE FROM ${table} WHERE asset_id = ?`, [asset.id]);
+    }
+    const uses = await tx.all<{ portfolio_id: string; first: string }>(
+      'SELECT portfolio_id, MIN(ts) AS first FROM txn WHERE asset_id = ? GROUP BY portfolio_id',
+      [asset.id],
+    );
+    for (const u of uses) await markSeriesDirty(tx, u.portfolio_id, trDay(u.first));
+  });
 }
 
 export interface DayClose {

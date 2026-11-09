@@ -78,6 +78,30 @@ Web önizlemesi kurgusal fiyat kullanır. Dokunuşlar gerçek dokunma olaylarıy
 | Akış testindeki örnek mesaj belgeden kurulmuştu | Gerçek akıştan kaydedilen mesajla değiştirildi |
 | Canlı testte yalnız BTC beklenmişti | Varsayılan izleme listesindeki ETH de akışa giriyor; beklenti düzeltildi |
 
+## Ek: Katalogda Olmayan Coinler
+
+Kullanıcının sorusu üzerine eklendi ("Bu 248 coin dışında bir coin eklersem?").
+
+| Test | Beklenen | Sonuç |
+|---|---|---|
+| CoinGecko araması (kayıtlı gerçek yanıt) | "bob": 25 sonuç, 8'i tam "BOB" sembollü | ✅ |
+| Aday listesi | Binance'te BOBUSDT yok; 8 BOB coini sıraya göre (#853, #2189, #3042…), fiyatları tek istekte | ✅ |
+| Binance paritesi olan coin | PEPE → Binance adayı, fiyat $0,00000513 | ✅ |
+| Katalogdaki coin | "btc" araması katalogdaki Bitcoin'i tekrar göstermez; Binance'e ulaşılamadığı bildirilir | ✅ |
+| Seçimin saklanması | CoinGecko'dan seçilen BOB yalnızca CoinGecko'dan fiyatlanır; uygulama yeniden açılınca ve yedekten başka telefona yüklenince de | ✅ |
+| Kaynak değişince | Eski fiyatlar ve indirme durumu silinir, değer önbelleği ilk kayıt gününden yenilenir | ✅ |
+| Gerçek kaynaklarla (canlı test) | "bob" araması → ilk aday "BOB (Build on Bitcoin)" seçildi → geçmiş ve canlı fiyat CoinGecko'dan geldi, "fiyat yok" değil | ✅ |
+
+> İlk canlı denemede CoinGecko'nun istek sınırı yüzünden canlı fiyat o turda gelmedi, değer geçmiş
+> kapanıştan hesaplandı. Uygulamada kaynak dinlendirilip sonraki turda tekrar sorulur. İkinci
+> denemede canlı fiyat da geldi.
+
+Tarayıcı önizlemesinde ([görsel](../onizleme/faz5/4-katalog-disi-coin.jpg)):
+- "xyz" yazılınca "Binance ve CoinGecko'da aranıyor…" görünüyor, ardından üç XYZ coini sıra ve fiyatla listeleniyor (web'de kurgusal).
+- "XYZ Network" seçilip alış kaydedildi. Ana ekranda ve detayda o coinin fiyatıyla görünüyor.
+- Tekrar aranınca seçilen coin "kayıtlı", diğer iki XYZ "Bu sembolle başka bir coin kayıtlı" olarak kilitli.
+- "Fiyat yok" etiketi ve detaydaki uyarı web'de görülemiyor, çünkü web'in kurgusal kaynağı her sembole fiyat veriyor. Telefonda denenecek.
+
 ## Bilinen Sınırlar
 
 - **1G:** Gün içi değerler saklanmadığı için gerçek portföyde gün başından şimdiye tek çizgi (Faz 10).

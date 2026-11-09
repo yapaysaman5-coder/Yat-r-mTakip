@@ -2,6 +2,8 @@ import type { SqlDriver } from './db/driver';
 import { openExpoDriver } from './db/expoDriver';
 import { migrate } from './db/migrations';
 import { seedDemo } from './demo/seed';
+import { pinSources } from './market/instruments';
+import { listAssets } from './repo/assets';
 import { insertPortfolio, listPortfolios } from './repo/portfolios';
 
 import { DATABASE_NAME, MAIN_PORTFOLIO_ID } from './constants';
@@ -15,6 +17,7 @@ export function getDatabase(): Promise<SqlDriver> {
   opening ??= (async () => {
     const db = await openExpoDriver(DATABASE_NAME);
     await migrate(db);
+    pinSources(await listAssets(db));
     return db;
   })().catch((error) => {
     opening = null;

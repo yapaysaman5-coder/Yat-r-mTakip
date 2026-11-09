@@ -14,6 +14,7 @@ import { writeDemoPrices } from '../demo/seed';
 import { DEFAULT_ENGINE } from '../engine';
 import { listAssets, upsertAssets } from '../repo/assets';
 import { deletePortfolio, insertPortfolio, listPortfolios } from '../repo/portfolios';
+import { pinSources } from '../market/instruments';
 import { deleteCloses } from '../repo/prices';
 import { insertTransactions, listTransactions } from '../repo/transactions';
 import type { Portfolio, PortfolioKind, StoredAsset } from '../types';
@@ -247,4 +248,5 @@ export async function importBackup(
       await insertTransactions(tx, p.id, records, stamp);
     }
   });
+  pinSources(backup.assets);
 }

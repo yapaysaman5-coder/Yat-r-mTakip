@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { createHttp } from './http';
+import { lookupCoins, mockLookup, type LookupResult } from './lookup';
 import { binance } from './providers/binance';
 import { coingecko } from './providers/coingecko';
 import { isyatirim } from './providers/isyatirim';
@@ -27,3 +28,11 @@ export function getMarketRouter(): MarketRouter {
 }
 
 export const usesMockPrices = () => Platform.OS === 'web';
+
+/** Looks a coin up on Binance and CoinGecko (fictional results in the web preview). */
+export function lookupCoinsOnline(query: string): Promise<LookupResult> {
+  if (usesMockPrices()) {
+    return new Promise((resolve) => setTimeout(() => resolve(mockLookup(query)), 400));
+  }
+  return lookupCoins(query, createHttp(fetch, 10_000));
+}

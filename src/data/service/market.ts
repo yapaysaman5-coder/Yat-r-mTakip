@@ -2,7 +2,12 @@ import { addDays, trDay, type Currency } from '@/domain';
 
 import { BENCHMARKS, benchmarkAssetId } from '../benchmarks';
 import type { SqlDriver, SqlExecutor } from '../db/driver';
-import { fxInstrumentId, instrumentFor, type Instrument } from '../market/instruments';
+import {
+  fxInstrumentId,
+  instrumentFor,
+  providerSymbolOf,
+  type Instrument,
+} from '../market/instruments';
 import type { MarketRouter, Quote, QuoteResult } from '../market/router';
 import { getAssets, upsertAssets } from '../repo/assets';
 import {
@@ -124,7 +129,7 @@ async function storeInstrument(tx: SqlExecutor, inst: Instrument, stamp: string)
         name: inst.name,
         market: inst.market,
         currency: inst.currency,
-        providerSymbol: inst.sources[0]?.ref,
+        providerSymbol: providerSymbolOf(inst),
       },
     ],
     stamp,

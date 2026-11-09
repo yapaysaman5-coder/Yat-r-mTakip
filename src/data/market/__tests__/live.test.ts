@@ -14,6 +14,7 @@ import { coingecko } from '../providers/coingecko';
 import { isyatirim } from '../providers/isyatirim';
 import { tcmb } from '../providers/tcmb';
 import { yahoo } from '../providers/yahoo';
+import { lookupCoins } from '../lookup';
 import { MarketRouter } from '../router';
 import { PriceStream, streamablePairs, type SocketLike, type StreamPrice } from '../stream';
 import { migrate } from '../../db/migrations';
@@ -22,6 +23,7 @@ import { upsertAssets } from '../../repo/assets';
 import { insertPortfolio } from '../../repo/portfolios';
 import { loadPortfolioData } from '../../service/load';
 import { marketNeeds, refreshQuotes, storeStreamPrices, syncHistory } from '../../service/market';
+import { ensureAsset } from '../../service/trade';
 import { saveTransaction } from '../../service/transactions';
 import { buildAnalysis } from '../../view/analysisView';
 import { buildPortfolioView } from '../../view/portfolioView';
@@ -209,4 +211,76 @@ live('real sources', () => {
     expect(new Set(got.map((p) => p.pair))).toEqual(new Set(['BTCUSDT', 'ETHUSDT']));
     expect(got.every((p) => p.price > 0 && Math.abs(p.time - Date.now()) < 60_000)).toBe(true);
   }, 20_000);
+
+  it('finds a coin outside the catalog and prices it from CoinGecko', async () => {
+    const http = createHttp(fetch, 20_000);
+    const found = await lookupCoins('bob', http);
+    const first = found.candidates[0];
+    console.log(
+      'arama "bob":',
+      found.reached,
+      found.candidates.map((c) => `${c.source}:${c.ref} #${c.rank ?? '-'} $${c.priceUSD}`),
+    );
+    expect(found.reached.coingecko).toBe(true);
+    expect(first.source).toBe('coingecko');
+
+    const db = openNodeDriver();
+    await migrate(db);
+    const now = new Date();
+    await insertPortfolio(db, {
+      id: 'main',
+      name: 'Ana Portföy',
+      kind: 'user',
+      sortOrder: 0,
+      seriesDirtyFrom: null,
+      createdAt: now.toISOString(),
+    });
+    await ensureAsset(db, {
+      id: first.assetId,
+      symbol: first.symbol,
+      name: first.name,
+      market: 'CRYPTO',
+      currency: 'USD',
+      providerSymbol: `coingecko:${first.ref}`,
+    });
+    const day = addDays(trDay(now), -20);
+    await saveTransaction(
+      db,
+      'main',
+      { id: '', type: 'DEPOSIT', ts: `${day}T07:00:00Z`, amount: '1000' },
+      { now },
+    );
+    await saveTransaction(
+      db,
+      'main',
+      {
+        id: '',
+        type: 'BUY',
+        ts: `${day}T08:00:00Z`,
+        assetId: first.assetId,
+        quantity: '1000',
+        price: String(first.priceUSD ?? 1),
+        fxRate: '42',
+      },
+      { now },
+    );
+    const router = new MarketRouter({ yahoo, binance, coingecko, isyatirim, tcmb }, http);
+    const needs = await marketNeeds(db, now);
+    const sync = await syncHistory(db, router, needs, { now });
+    const live = await refreshQuotes(
+      db,
+      router,
+      needs.live.map((id) => needs.instruments.get(id)!),
+      { now },
+    );
+    console.log('canlı:', [...live.quotes.keys()], [...live.failed]);
+    const view = buildPortfolioView((await loadPortfolioData(db, 'main', { now }))!);
+    const h = view.holdings.find((x) => x.assetId === first.assetId)!;
+    console.log(
+      `${h.symbol} (${h.name}): ${h.price} USD, kaynak ${h.quote?.source}, fiyatsız: ${h.stale}, geçmiş ${sync.failed.get(first.assetId) ?? 'tamam'}, seri ${view.series.dates.length} gün`,
+    );
+    expect(h.stale).toBe(false);
+    expect(h.quote?.source).toBe('coingecko');
+    expect(sync.failed.has(first.assetId)).toBe(false);
+  }, 60_000);
 });

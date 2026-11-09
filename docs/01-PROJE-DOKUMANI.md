@@ -926,6 +926,8 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 33 | **Net K/Z ayrıntısı** | Gerçekleşmemiş + gerçekleşen + temettü − hesap ücretleri. Komisyonlar zaten maliyette ve satış gelirinde olduğu için ayrıca düşülmez, bilgi olarak gösterilir |
 | 34 | **Kripto canlı akışı** | Binance WebSocket'ten yalnız son fiyat; "bugün" yine İstanbul gece yarısına göre |
 | 35 | **Sıralama** | Değer · Bugün % · Toplam % · Ad, tek düğmeyle sırayla; seçim saklanır |
+| 36 | **Katalog dışı coin** | Önce Binance paritesi, yoksa CoinGecko'da arama; aynı sembollü coinler ad, sıra ve fiyatla listelenir, kişi seçer. Seçim varlık kaydında saklanır |
+| 37 | **Fiyatı olmayan varlık** | Sessizce son işlem fiyatıyla değerlenmez: satırda "fiyat yok", detayda uyarı ve sonradan "Coini eşleştir" |
 
 ---
 
