@@ -222,12 +222,16 @@ K/Z ile birebir aynı ([faz7-gecmis.md](test-raporu/faz7-gecmis.md)).
 
 > **Sonraya kalanlar:** Ekstreyi PDF paylaşma (P2), hesap ücreti düzenleme formu (Faz 10).
 
-## Faz 8: Fon (Hesabım)
+## Faz 8: Fon (Hesabım) ✅ (9 Kasım 2026)
 
-- [ ] Toplam varlık, maliyet, K/Z, bugün ve risk seviyesi kartı (gerçek veriyle)
-- [ ] **Varlık** ve **Maliyet** tuşları, animasyonlu halka grafik
-- [ ] Varlık ve maliyet listeleri, maliyet-değer karşılaştırma çubukları
-- [ ] Getiri tablosu, en büyük 5 pozisyon
+- [x] Toplam varlık, maliyet, açık K/Z, bugün ve risk seviyesi kartı (gerçek veriyle)
+- [x] **Varlık** ve **Maliyet** tuşları; halka dilimleri yeni oranlara animasyonla akar, ortadaki toplam kayarak değişir
+- [x] Dilime (veya piyasa adına) dokununca o piyasa vurgulanır, liste süzülür
+- [x] Varlık listesi: fiyat, maliyet, pay, K/Z %. Maliyet listesi: ortalama maliyet, başa baş fiyatı (bugünkü kurla), maliyet payı, maliyet-değer karşılaştırma çubukları
+- [x] Satıra dokununca varlık detayı
+- [x] Dönemsel getiri tablosu (TWR), en büyük 5 pozisyonun payı
+
+**Bitiş kriteri:** Hesap özeti gerçek veriyle ✅ ([faz8-hesabim.md](test-raporu/faz8-hesabim.md)).
 
 ## Faz 9: Analiz
 

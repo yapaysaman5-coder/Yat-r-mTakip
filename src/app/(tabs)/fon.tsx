@@ -1,3 +1,5 @@
+import { useRouter } from 'expo-router';
+import { X } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 
@@ -6,6 +8,7 @@ import { PreviewNote } from '@/components/PreviewNote';
 import type { Holding } from '@/data/view/portfolioView';
 import type { ReturnPeriod } from '@/domain';
 import { tr } from '@/i18n/tr';
+import { useAnimatedNumber } from '@/lib/useAnimatedNumber';
 import { useMarketStore } from '@/state/market';
 import { usePortfolioView } from '@/state/portfolio';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -14,9 +17,11 @@ import {
   AssetAvatar,
   Card,
   ChangeBadge,
+  Chip,
   Donut,
   LiveDot,
   Money,
+  PressableScale,
   Screen,
   SectionHeader,
   SegmentedControl,
@@ -52,7 +57,9 @@ function AccountBody() {
   const online = useMarketStore((s) => s.online);
   const mockPrices = useMarketStore((s) => s.mock);
   const liveStatus = view.isDemo || mockPrices ? 'sample' : online === false ? 'offline' : 'live';
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>('value');
+  const [market, setMarket] = useState<string | null>(null);
   const { summary } = view;
 
   const metric = (h: Holding) => (mode === 'value' ? h.valueTRY : h.costTRY);
@@ -75,6 +82,11 @@ function AccountBody() {
       ? [{ key: 'cash', label: tr.markets.cash, value: summary.cash, color: colors.market.cash }]
       : []),
   ].filter((m) => m.value > 0);
+  const animatedTotal = useAnimatedNumber(total);
+  const shown = market ? holdings.filter((h) => h.market === market) : holdings;
+  // Comparison bars share one scale: the largest cost or value in the list.
+  const barMax = Math.max(1, ...holdings.map((h) => Math.max(h.costTRY, h.valueTRY)));
+  const selectedLabel = markets.find((m) => m.key === market)?.label;
   const top5 =
     summary.positions > 0
       ? holdings.slice(0, 5).reduce((s, h) => s + h.valueTRY, 0) / summary.positions
@@ -134,17 +146,26 @@ function AccountBody() {
             size={150}
             thickness={16}
             trackColor={colors.surfaceAlt}
+            selected={market}
+            onSelect={setMarket}
             accessibilityLabel={markets
               .map((m) => `${m.label} ${formatPercent(m.value / total, { decimals: 0 })}`)
               .join(', ')}>
             <Text variant="caption" tone="secondary">
               {mode === 'value' ? 'Değer' : 'Maliyet'}
             </Text>
-            <Money value={total} variant="numL" compact />
+            <Money value={animatedTotal} variant="numL" compact />
           </Donut>
           <View style={{ flex: 1, gap: space.md }}>
             {markets.map((m) => (
-              <View key={m.key} style={{ gap: 2 }}>
+              <PressableScale
+                key={m.key}
+                onPress={() => setMarket(market === m.key ? null : m.key)}
+                haptic="selection"
+                accessibilityRole="button"
+                accessibilityState={{ selected: market === m.key }}
+                accessibilityLabel={`${m.label}: listeyi bu piyasaya süz`}
+                style={{ gap: 2, opacity: market && market !== m.key ? 0.45 : 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
                   <View
                     style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: m.color }}
@@ -161,7 +182,7 @@ function AccountBody() {
                   compact
                   style={{ marginLeft: 18 }}
                 />
-              </View>
+              </PressableScale>
             ))}
           </View>
         </View>
@@ -190,21 +211,48 @@ function AccountBody() {
       </Card>
 
       <Card padding={0} style={{ paddingHorizontal: space.lg, paddingVertical: space.sm }}>
-        <View style={{ flexDirection: 'row', paddingVertical: space.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: space.sm }}>
           <Text variant="overline" tone="tertiary" style={{ flex: 1 }}>
             VARLIK
           </Text>
           <Text variant="overline" tone="tertiary">
-            {mode === 'value' ? 'DEĞER · PAY' : 'MALİYET · PAY'}
+            {mode === 'value' ? 'DEĞER · PAY · K/Z' : 'MALİYET · PAY'}
           </Text>
         </View>
-        {holdings.map((h, i) => (
+        {market ? (
+          <View style={{ flexDirection: 'row', paddingBottom: space.sm }}>
+            <Chip
+              size="sm"
+              icon={X}
+              label={selectedLabel}
+              selected
+              onPress={() => setMarket(null)}
+              accessibilityLabel="Piyasa süzgecini kaldır"
+            />
+          </View>
+        ) : null}
+        {shown.map((h, i) => (
           <View key={h.assetId}>
             {i > 0 ? <View style={{ height: 1, backgroundColor: colors.border }} /> : null}
-            <FundRow holding={h} mode={mode} total={total} />
+            <FundRow
+              holding={h}
+              mode={mode}
+              total={total}
+              barMax={barMax}
+              onPress={() => router.push(`/varlik/${encodeURIComponent(h.assetId)}`)}
+            />
           </View>
         ))}
-        {summary.cash > 0 ? <CashRow amount={summary.cash} total={total} /> : null}
+        {summary.cash > 0 && (!market || market === 'cash') ? (
+          <CashRow amount={summary.cash} total={total} first={shown.length === 0} />
+        ) : null}
+        {mode === 'cost' ? (
+          <View style={{ flexDirection: 'row', gap: space.lg, paddingVertical: space.sm }}>
+            <Legend color={colors.textTertiary} label="maliyet" />
+            <Legend color={colors.up} label="değer (kârda)" />
+            <Legend color={colors.down} label="değer (zararda)" />
+          </View>
+        ) : null}
       </Card>
 
       <Card>
@@ -318,48 +366,113 @@ function RiskMeter({ level }: { level: number | null }) {
   );
 }
 
-function FundRow({ holding, mode, total }: { holding: Holding; mode: Mode; total: number }) {
+function FundRow({
+  holding,
+  mode,
+  total,
+  barMax,
+  onPress,
+}: {
+  holding: Holding;
+  mode: Mode;
+  total: number;
+  barMax: number;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
   const value = holding.valueTRY;
   const cost = holding.costTRY;
   const amount = mode === 'value' ? value : cost;
   const weight = amount / total;
+  const pnl = cost > 0 ? value / cost - 1 : 0;
+  // Price at which today's value equals the cost, at today's exchange rate.
+  const fxNow =
+    holding.price * holding.quantity > 0 ? value / (holding.price * holding.quantity) : 1;
+  const breakEven = holding.quantity > 0 ? cost / (holding.quantity * fxNow) : 0;
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: space.md,
-        paddingVertical: space.md,
-      }}>
-      <AssetAvatar symbol={holding.symbol} market={holding.market} size={38} />
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text variant="bodyStrong">{holding.symbol}</Text>
-        {mode === 'value' ? (
-          <ChangeBadge value={cost > 0 ? value / cost - 1 : 0} variant="plain" />
-        ) : (
-          <Text variant="caption" tone="secondary">
-            Ort. {formatPrice(holding.avgCost, holding.currency)}
-            {holding.currency === 'USD'
-              ? ` · kur ${formatMoney(holding.avgFx).replace('₺', '')}`
-              : ''}
+    <PressableScale
+      onPress={onPress}
+      haptic="selection"
+      scaleTo={0.985}
+      accessibilityRole="button"
+      accessibilityLabel={`${holding.symbol}, ayrıntı`}
+      style={{ paddingVertical: space.md, gap: space.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+        <AssetAvatar symbol={holding.symbol} market={holding.market} size={38} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="bodyStrong">{holding.symbol}</Text>
+          {mode === 'value' ? (
+            <Text variant="caption" tone="secondary" numberOfLines={1}>
+              {formatPrice(holding.price, holding.currency)} · maliyet{' '}
+              {formatMoney(cost, { decimals: 0 })}
+            </Text>
+          ) : (
+            <Text variant="caption" tone="secondary" numberOfLines={1}>
+              Ort. {formatPrice(holding.avgCost, holding.currency)} · başa baş{' '}
+              {formatPrice(breakEven, holding.currency)}
+            </Text>
+          )}
+        </View>
+        <View style={{ alignItems: 'flex-end', gap: 2 }}>
+          <Money value={amount} variant="numM" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+            <Text variant="caption" tone="secondary">
+              {formatPercent(weight, { decimals: 1 })}
+            </Text>
+            {mode === 'value' ? <ChangeBadge value={pnl} variant="plain" /> : null}
+          </View>
+        </View>
+      </View>
+      {mode === 'cost' ? (
+        <View style={{ gap: 3, marginLeft: 38 + space.md }}>
+          <Bar width={cost / barMax} color={colors.textTertiary} track={colors.surfaceAlt} />
+          <Bar
+            width={value / barMax}
+            color={value >= cost ? colors.up : colors.down}
+            track={colors.surfaceAlt}
+          />
+          <Text variant="caption" tone={value >= cost ? 'up' : 'down'}>
+            {formatMoney(value - cost, { decimals: 0, sign: 'always' })} (
+            {formatPercent(pnl, { decimals: 1, sign: 'always' })}) · değer{' '}
+            {formatMoney(value, { decimals: 0 })}
           </Text>
-        )}
-      </View>
-      <View style={{ alignItems: 'flex-end', gap: 2 }}>
-        <Money value={amount} variant="numM" />
-        <Text variant="caption" tone="secondary">
-          {formatPercent(weight, { decimals: 1 })}
-        </Text>
-      </View>
+        </View>
+      ) : null}
+    </PressableScale>
+  );
+}
+
+function Bar({ width, color, track }: { width: number; color: string; track: string }) {
+  return (
+    <View style={{ height: 6, borderRadius: 3, backgroundColor: track, overflow: 'hidden' }}>
+      <View
+        style={{
+          width: `${Math.max(1, Math.min(100, width * 100))}%`,
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: color,
+        }}
+      />
     </View>
   );
 }
 
-function CashRow({ amount, total }: { amount: number; total: number }) {
+function Legend({ color, label }: { color: string; label: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+      <View style={{ width: 12, height: 4, borderRadius: 2, backgroundColor: color }} />
+      <Text variant="caption" tone="tertiary">
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+function CashRow({ amount, total, first }: { amount: number; total: number; first: boolean }) {
   const { colors } = useTheme();
   return (
     <View>
-      <View style={{ height: 1, backgroundColor: colors.border }} />
+      {first ? null : <View style={{ height: 1, backgroundColor: colors.border }} />}
       <View
         style={{
           flexDirection: 'row',
