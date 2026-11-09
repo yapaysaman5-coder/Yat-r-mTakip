@@ -222,13 +222,34 @@ describe('T14 — reporting in USD (doc §3)', () => {
 
 describe('time-weighted return (doc §8)', () => {
   it('T2 — matches the documented example (3,125%)', () => {
+    // d1: +10 %. d2: ₺500 comes in in the morning, then −6,25 % on everything.
     const u = unitize([
       { date: 'd0', value: 1000, flow: 1000 },
-      { date: 'd1', value: 1600, flow: 500 },
-      { date: 'd2', value: 1500, flow: 0 },
+      { date: 'd1', value: 1100, flow: 0 },
+      { date: 'd2', value: 1500, flow: 500 },
     ]);
     expect(u.map((x) => x.unitValue)).toEqual([1, 1.1, expect.closeTo(1.03125, 12)]);
+    expect(u[2].units).toBeCloseTo(1000 + 500 / 1.1, 9);
     expect(twrBetween(u, 'd0', 'd2')).toBeCloseTo(0.03125, 12);
+  });
+
+  it('a big deposit spent at a price above the close counts as a loss on that money only', () => {
+    // ₺1.000 invested; then ₺3.000 comes in and buys at 10 % above the day's close.
+    // The old money did not move: the day's return is the loss over all money that day.
+    const u = unitize([
+      { date: 'd0', value: 1000, flow: 1000 },
+      { date: 'd1', value: 1000 + 3000 / 1.1, flow: 3000 },
+    ]);
+    expect(u[1].unitValue).toBeCloseTo((1000 + 3000 / 1.1) / 4000, 12); // −6,8 %, not −27 %
+  });
+
+  it('money leaving at the end of the day takes the day’s move with it', () => {
+    const u = unitize([
+      { date: 'd0', value: 1000, flow: 1000 },
+      { date: 'd1', value: 600, flow: -500 }, // +10 % (1.100), then 500 out
+    ]);
+    expect(u[1].unitValue).toBeCloseTo(1.1, 12);
+    expect(u[1].units).toBeCloseTo(1000 - 500 / 1.1, 9);
   });
 
   it('credits the first day’s move to the first deposit', () => {
@@ -317,7 +338,24 @@ describe('time-weighted return (doc §8)', () => {
 });
 
 describe('invariant 5 — a portfolio that is 100% one asset equals that benchmark', () => {
-  it('has the same values as the what-if replay and the asset’s own TWR', () => {
+  it('earns the asset’s own TWR when deposits buy at the open and sales leave at the close', () => {
+    const days = daysBetween('2026-01-01', '2026-01-07');
+    const closes = [10, 11, 9, 12.5, 12, 8, 11];
+    const prices: PriceHistory = { X: Object.fromEntries(days.map((d, i) => [d, closes[i]])) };
+    const txns = [
+      T({ id: 'd1', type: 'DEPOSIT', ts: at(days[0]), amount: '1000' }),
+      T({ id: 'b1', type: 'BUY', ts: at(days[0]), assetId: 'X', quantity: '100', price: '10' }),
+      // Day 4 opens at the previous close (9): the morning deposit buys there.
+      T({ id: 'd2', type: 'DEPOSIT', ts: at(days[3]), amount: '450' }),
+      T({ id: 'b2', type: 'BUY', ts: at(days[3]), assetId: 'X', quantity: '50', price: '9' }),
+      T({ id: 's', type: 'SELL', ts: at(days[5]), assetId: 'X', quantity: '37.5', price: '8' }),
+      T({ id: 'w', type: 'WITHDRAW', ts: at(days[5]), amount: '300' }),
+    ];
+    const u = unitize(buildDailySeries(txns, ASSETS, prices, {}, { to: days[6] }));
+    u.forEach((x, i) => expect(x.unitValue).toBeCloseTo(closes[i] / closes[0], 12));
+  });
+
+  it('has the same values as the what-if replay', () => {
     const days = daysBetween('2026-01-01', '2026-01-07');
     const closes = [10, 11, 9, 12.5, 12, 8, 11];
     const prices: PriceHistory = { X: Object.fromEntries(days.map((d, i) => [d, closes[i]])) };
@@ -337,8 +375,6 @@ describe('invariant 5 — a portfolio that is 100% one asset equals that benchma
       { index: 5, amount: -300 },
     ]);
     series.forEach((p, i) => expect(p.value).toBeCloseTo(whatIf.values[i], 9));
-    const u = unitize(series);
-    expect(twrBetween(u, days[0], days[6])).toBeCloseTo(closes[6] / closes[0] - 1, 12);
   });
 });
 

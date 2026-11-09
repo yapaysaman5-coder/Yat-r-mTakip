@@ -2,10 +2,16 @@
  * Time-weighted return through internal unit values (docs/02-HESAPLAMA-MOTORU.md §8).
  * The unit value / unit count are purely internal: they are never shown to the user.
  *
- * End-of-day convention: a flow on day d enters after that day's market move, so
- *   unitValue_d = (value_d − flow_d) / units_(d−1),  units_d = units_(d−1) + flow_d / unitValue_d.
- * On the first day (or after everything was withdrawn) units are issued at the last unit
- * value and the day's move is credited to them.
+ * Daily values cannot show when during the day money moved, so a convention is needed:
+ * money coming in joins at the START of the day (it usually funds that day's purchases), and
+ * money going out leaves at the END of the day (it usually comes from that day's sales):
+ *   units'      = units_(d−1) + inflow_d / unitValue_(d−1)
+ *   unitValue_d = (value_d + outflow_d) / units'
+ *   units_d     = units' − outflow_d / unitValue_d
+ * With this, a trade price that differs from the day's close can move the result by at most
+ * the day's move of the money already invested (with end-of-day inflows the error grew with
+ * the size of the deposit). On the first day (or after everything was withdrawn) units are
+ * issued at the last unit value and the day's move is credited to them.
  */
 
 export interface UnitPoint {
@@ -21,23 +27,19 @@ export function unitize(
   let units = 0;
   let unitValue = 1;
   for (const p of points) {
-    if (units <= 1e-12) {
-      // Starting (or restarting) the series.
-      if (p.flow > 0) {
-        units = p.flow / unitValue;
-        if (units > 0 && p.value > 0) unitValue = p.value / units;
-      }
+    const inflow = Math.max(0, p.flow);
+    const outflow = Math.max(0, -p.flow);
+    const pre = units + inflow / unitValue;
+    // Value the day's units earned: today's value plus what left at the end of the day.
+    const earned = p.value + outflow;
+    if (pre > 1e-12 && earned > 0) {
+      unitValue = earned / pre;
+      units = pre - outflow / unitValue;
     } else {
-      const before = (p.value - p.flow) / units;
-      if (before > 0) {
-        unitValue = before;
-        units += p.flow / unitValue;
-      } else {
-        // Everything was lost or withdrawn: keep the last unit value, reset units.
-        units = Math.max(0, p.value / unitValue);
-      }
-      if (p.value <= 1e-9) units = 0;
+      // Everything was lost or withdrawn: keep the last unit value, no units left.
+      units = 0;
     }
+    if (p.value <= 1e-9 || units < 1e-12) units = 0;
     out.push({ date: p.date, unitValue, units });
   }
   return out;
