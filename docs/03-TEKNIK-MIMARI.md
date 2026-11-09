@@ -140,9 +140,11 @@ src/
   i18n/tr.ts                 arayüz metinleri ✅
   utils/format.ts            Türkçe biçimlendiriciler ✅
   demo/                      önizleme için örnek veri ✅ (gerçek veri gelince kalkar)
-                             analysis.ts: nakit akışları gerçek formüllerle simüle edilir
-  domain/                    hesaplama motoru + testler
-                             (metrics.ts, whatIf.ts ✅ · gerisi Faz 2)
+                             market.ts: örnek fiyat yolları · portfolio.ts: örnek işlem
+                             geçmişi motordan geçer · data.ts: ekranlara özet
+  domain/                    hesaplama motoru + testler ✅ (Faz 2)
+                             ledger · valuation · autoRecords · series · twr · metrics
+                             whatIf · inflation · splits · validate · lttb · decimal
   data/db/                   şema, migration, repository (Faz 3)
   data/market/               yahoo · binance · coingecko · tcmb · mock (Faz 4)
   hooks/                     usePortfolio, useQuotes, useSeries (Faz 3–5)

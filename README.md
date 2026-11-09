@@ -4,10 +4,10 @@ BIST, ABD borsaları ve kripto paraları tek yerde takip eden, profesyonel yatı
 (TWR, XIRR, Alpha, risk) kişisel portföye uygulayan, tamamen telefonda çalışan portföy takip
 uygulaması.
 
-> **Durum:** Faz 1 ve geri bildirim revizyonu (Faz 1.1) tamamlandı. Tasarım sistemi, 4 tema,
-> Analiz (Performans Karnesi, etkileşimli karşılaştırma grafiği) hazır, APK GitHub'da derleniyor.
-> Ekranlar şimdilik örnek veri gösterir. Sıradaki adım: Faz 2 (hesaplama motoru).
-> Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md).
+> **Durum:** Faz 1 (tasarım) ve Faz 2 (hesaplama motoru) tamamlandı. Önizleme ekranlarındaki
+> tüm rakamlar artık motordan geliyor (örnek işlem geçmişiyle). Sıradaki adım: Faz 3
+> (veritabanı: kendi işlemlerinizi kaydetme). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
+> [Faz 2 test raporu](docs/test-raporu/faz2-hesaplama-motoru.md).
 
 ![Dört tema](docs/onizleme/faz1/1-temalar-ana-ekran.jpg)
 

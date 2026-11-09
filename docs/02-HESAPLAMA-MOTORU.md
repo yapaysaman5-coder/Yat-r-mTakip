@@ -3,9 +3,9 @@
 > Uygulamadaki her rakamın nasıl hesaplandığını tanımlar. Kod bu dokümana göre yazılır ve
 > buradaki örnek hesaplar otomatik test olarak koda eklenir.
 >
-> **Durum (9 Kasım 2026):** Bölüm 9 (XIRR), 10 (risk ve alpha) ve 12 (Ya Olsaydı?) fonksiyonları
-> yazıldı ve test edildi (`src/domain/metrics.ts`, `src/domain/whatIf.ts`). T3, T4 ve T11
-> testleri geçiyor. Diğer bölümler Faz 2'de.
+> **Durum (9 Kasım 2026):** Bu dokümanın tamamı `src/domain/` altında kodlandı ve test edildi
+> (Faz 2). T1–T14 senaryoları ve 5 değişmez kural otomatik testlerde. Sonuçlar:
+> [test raporu](test-raporu/faz2-hesaplama-motoru.md).
 > Ana doküman: [01-PROJE-DOKUMANI.md](01-PROJE-DOKUMANI.md)
 
 ## İçindekiler
@@ -54,7 +54,8 @@
 
 **Bağlı (otomatik) kayıtlar:**
 
-- **Alışta nakit yetmezse:** *Otomatik para yatırma* ayarı açıksa, eksik tutar kadar bir `DEPOSIT` kaydı alışla **aynı zaman damgasıyla** oluşturulur ve alışa bağlanır (`linkedTo`). Alış silinir veya düzenlenirse bağlı kayıt da güncellenir.
+- **Alışta nakit yetmezse:** *Otomatik para yatırma* ayarı açıksa, eksik tutar kadar bir `DEPOSIT` kaydı alışla **aynı zaman damgasıyla** oluşturulur ve alışa bağlanır (`linkedTo`). Tutar **bir üst kuruşa yuvarlanır**; böylece gerçek bir para hareketine benzer ve nakit eksiye düşmez. Alış silinir veya düzenlenirse bağlı kayıt da güncellenir.
+- **Yeniden üretim:** Otomatik kayıtlar elle düzenlenmez. Her değişiklikten sonra hepsi elle girilen işlemlerden baştan üretilir (`reconcileAutoRecords`).
 - **Satışta "Hesaptan çek" seçilirse:** Satış tutarı kadar bir `WITHDRAW` kaydı oluşur ve satışa bağlanır.
 
 ## 3. Para Birimi Kuralları
@@ -119,7 +120,7 @@ Güncel fiyat 18,00 kabul edilmiştir.
 
 - **Fazla satış engeli:** Bir tarihte, o tarihteki adetten fazla satış yapılamaz. Geçmişe dönük düzenlemelerde de kontrol edilir: geçmişteki bir alışı silmek sonraki bir satışı geçersiz kılıyorsa kullanıcı uyarılır.
 - **Pozisyon kapanışı:** Adet sıfırlanınca pozisyon "kapalı" olur. Kapalı pozisyonlar listede gizlenir, geçmişte ve gerçekleşen K/Z'de görünür.
-- **Hesaplama sırası:** İşlemler zaman damgasına göre sıralanarak hesaplanır. Aynı saniyede birden fazla işlem varsa sıra şöyledir: `DEPOSIT` → `BUY` → `SELL` → `WITHDRAW`.
+- **Hesaplama sırası:** İşlemler zaman damgasına göre sıralanarak hesaplanır. Aynı saniyede birden fazla işlem varsa sıra şöyledir: `SPLIT` → `DEPOSIT` → `BUY` → `SELL` → `DIVIDEND` → `FEE` → `WITHDRAW`. Bölünme önce uygulanır, para gelir, alınır, satılır, gelir ve giderler işlenir, en son para çıkar. Eşitlikte işlem kimliği belirleyicidir.
 
 ## 5. Kâr / Zarar
 

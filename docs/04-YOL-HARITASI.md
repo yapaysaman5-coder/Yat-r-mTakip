@@ -76,20 +76,27 @@ geçiş yapılıyor. Ekran görüntüleri paylaşıldı ✅
 - [x] Hesap fonksiyonları ve testleri: XIRR, risk ölçüleri, Alpha, Ya Olsaydı simülasyonu (Faz 2'den öne alındı)
 - [x] **GitHub'da APK derleme** ve indirme sayfası (Faz 11'den öne alındı), uygulama simgesi
 
-## Faz 2: Hesaplama Motoru
+## Faz 2: Hesaplama Motoru ✅ (9 Kasım 2026)
 
-- [ ] Ondalık yardımcıları, işlem tipleri ve doğrulama
-- [ ] Pozisyon: ağırlıklı ortalama ve FIFO, gerçekleşen ve gerçekleşmemiş K/Z
-- [ ] Nakit ve Canlı Bütçe. Otomatik bağlı kayıtlar (para yatırma ve çekme)
-- [ ] Kur etkisi ayrıştırması, günlük değişim
-- [ ] Bölünme / bedelsiz, temettü
-- [ ] Değer serisi (günlük ve gün içi), LTTB seyreltme
-- [ ] TWR (iç birim değer yöntemi), reel getiri
-- [x] XIRR, risk metrikleri, Alpha, risk seviyesi *(Faz 1.1'de yapıldı)*
-- [x] Ya Olsaydı simülasyonu *(Faz 1.1'de yapıldı; Faz 2'de ondalık hassasiyetle sağlamlaştırılacak)*
-- [ ] Test senaryoları T1–T14 ve değişmez kurallar
+- [x] Ondalık yardımcıları, işlem tipleri ve alan doğrulamaları
+- [x] Pozisyon: ağırlıklı ortalama ve FIFO, gerçekleşen ve gerçekleşmemiş K/Z, elde tutma süresi
+- [x] Nakit ve Canlı Bütçe. Otomatik bağlı kayıtlar (kuruşa yuvarlanmış para yatırma, satış tutarını çekme)
+- [x] Fazla satış ve eksi nakit uyarıları (geçmişe dönük düzenlemeler dahil)
+- [x] Kur etkisi ayrıştırması, bugünkü değişim
+- [x] Bölünme / bedelsiz, temettü (stopajlı), hesap ücreti, kaydedilmemiş bedelsiz tespiti
+- [x] Günlük değer serisi (tatil taşıma, bölünme düzeltmesi), USD raporlama, LTTB seyreltme
+- [x] TWR (iç birim değer yöntemi), dönemsel getiri tablosu, reel getiri (TÜFE ara değeri)
+- [x] XIRR, risk metrikleri, Alpha, risk seviyesi
+- [x] Ya Olsaydı simülasyonu (ondalık hassasiyetli)
+- [x] Test senaryoları T1–T14 ve değişmez kurallar 1–5
+- [x] **Ek:** Önizleme ekranlarının tüm rakamları artık motordan geliyor (örnek işlem geçmişi → defter → değerleme → seri → metrikler)
 
-**Bitiş kriteri:** Tüm testler başarılı. `src/domain` kapsamı ≥ %95. Test raporu paylaşıldı.
+**Bitiş kriteri:** Tüm testler başarılı ✅ (267 test). `src/domain` satır kapsamı
+%99,8 ✅. Test raporu paylaşıldı ✅ ([faz2-hesaplama-motoru.md](test-raporu/faz2-hesaplama-motoru.md)).
+
+> **Not:** T12'deki hız hedefi (10.000 işlem < 200 ms) tam karşılanmadı: ~270 ms. Gerçekçi
+> boyutta (~1.150 işlem) 25–35 ms. Faz 3'teki günlük değer önbelleği ile tüm geçmişin baştan
+> hesaplanması nadir bir işlem olacak. Telefonda ölçüm Faz 3'te yapılacak.
 
 ## Faz 3: Veritabanı ve Kalıcılık
 
