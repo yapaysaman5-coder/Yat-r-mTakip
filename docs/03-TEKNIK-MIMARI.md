@@ -70,13 +70,21 @@ Sürümler 8 Kasım 2026'da npm'den kontrol edilmiştir. Yerel modüller `npx ex
 | Kod kalitesi ✅ | `eslint` + `eslint-config-expo`, `prettier` | 9 / 3 |
 
 **Grafik kararı:** Bakiye grafiği uygulamanın imza öğesi olduğu için hazır bir grafik kütüphanesi
-yerine **Skia üzerine kendi grafik bileşenimiz (`FinChart`)** yazılacak. Bunu gerektiren
+yerine **kendi grafik bileşenimiz (`FinChart`)** yazıldı. Bunu gerektiren
 özellikler: net yatırılan çizgisi, para akışı işaretleri, iki parmakla ölçüm, şekil dönüşümü
 animasyonu, ölçüt katmanı. Tam kontrol ancak kendi bileşenimizle mümkün.
 
 **Faz 1 notu:** Önizleme ekranlarındaki statik grafikler (alan, çoklu çizgi, mini trend, halka)
 `react-native-svg` ile çizildi. Mini trend ve halka grafik bu haliyle kalır. Ana ekrandaki büyük
-grafik Faz 5'te Skia tabanlı, parmakla gezinilen FinChart ile değiştirilecek.
+grafik Faz 5'te parmakla gezinilen FinChart ile değiştirildi.
+
+**FinChart (Faz 5):** Skia yerine `react-native-svg` + Reanimated ile yazıldı. Neden: çizgi her
+aralıkta 96 noktaya örneklenir; bu boyutta SVG yolu UI iş parçacığında (worklet) üretilip
+`animatedProps` ile verilebiliyor. Böylece şekil dönüşümü JavaScript'i beklemeden çalışıyor, web
+önizlemesi de aynı kodla çiziliyor ve Skia'nın yerel kütüphanesi uygulamaya eklenmiyor.
+Dokunuşlar Gesture Handler'ın `onTouchesMove` olayından okunuyor (tek parmak okuma, iki parmak
+ölçüm); yalnızca gösterilen gün değişince JavaScript'e haber veriliyor. Telefonda akıcılık
+yetersiz kalırsa aynı arayüzle Skia'ya geçilebilir.
 
 **Karşılaştırma grafiği (Faz 1.1):** Analiz ekranındaki `ComparisonChart` `react-native-svg` +
 Gesture Handler v3 ile yazıldı. Özellikleri: dokun-kaydır imleç, sıralı bilgi kutusu, sıkı değer
@@ -275,7 +283,7 @@ gerçek isteklerle dener (CI'da çalışmaz; kaynakların sınırlarına takılm
 
 | Pazar | Seans içinde | Seans dışında |
 |---|---|---|
-| Kripto | 15 sn'de bir toplu sorgu (WebSocket akışı Faz 5'te, ana ekrandaki fiyat tik efektiyle) | — (7/24) |
+| Kripto | Anlık akış (WebSocket, 3 sn'de bir yazılır); akış yokken 15 sn'de bir toplu sorgu | — (7/24) |
 | ABD | 15 sn | 5 dk |
 | BIST | 60 sn (veri zaten 15 dk gecikmeli) | Kapanıştan 20 dk sonra bir kez (son kapanış için), sonra sorgu yok |
 | Döviz ve emtia | 30 sn | 5 dk (hafta sonu) |
@@ -290,6 +298,23 @@ gerçek isteklerle dener (CI'da çalışmaz; kaynakların sınırlarına takılm
   - 2026–2027 tatilleri gömülü.
 - **Hata durumunda:** Kaynak dinlendirilir, yedek kaynağa geçilir. İnternet yoksa "ÇEVRİMDIŞI" rozeti ve son güncelleme saati gösterilir.
 - **Mobil veri ayarı:** Ayarlar › Veri ve bağlantı'da (Faz 10).
+
+### 7.3 Kripto Canlı Akışı (Faz 5 ✅)
+
+- **Bağlantı:** Tek WebSocket, birleşik akış: `wss://data-stream.binance.vision/stream?streams=btcusdt@miniTicker/…`
+  (yalnız piyasa verisi sunan, her bölgede açık adres; yedek `stream.binance.com:9443`).
+- **Kapsam:** Fiyatı doğrudan bir Binance paritesinden gelen kriptolar (portföydekiler ve izleme listesi).
+  Gram altın gibi türetilmiş fiyatlar sorguyla güncellenir.
+- **Kullanılan alan:** Yalnız son fiyat (`c`). Akışın açılış fiyatı kayan 24 saatlik olduğu için
+  "bugün" karşılaştırması sorgudaki İstanbul gece yarısı fiyatıyla yapılır. Gece yarısı geçince,
+  ilk sorguya kadar dünün son fiyatı başlangıç sayılır.
+- **Yazma:** Gelen fiyatlar toplanır, 3 saniyede bir tek seferde kaydedilir (canlı fiyat + günün
+  kapanışı + önbellek işareti); ana ekran en fazla 4 saniyede bir yeniden hesaplanır.
+- **Sorguyla birlikte:** Akış açıkken bu kriptolar 5 dakikada bir sorgulanır (günün başlangıç
+  fiyatı için). Akış kesilirse sorgu 15 saniyelik aralığa kendiliğinden döner.
+- **Kopma:** 1 sn'den başlayıp iki katına çıkan, en fazla 1 dk bekleme ile yeniden bağlanma,
+  adresler sırayla denenir. 30 sn mesaj gelmezse bağlantı ölü sayılıp yenilenir. Arka planda kapanır.
+- **Durum:** Ayarlar › Veri kaynakları'nda "Kripto canlı akış: Bağlı (anlık) · N coin".
 
 ## 8. Performans Stratejisi
 

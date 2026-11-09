@@ -102,7 +102,7 @@ tamamen telefonda çalışan ve verisi cihazda kalan bir portföy takip uygulama
 | 9 | Aynı tutarı aynı tarihlerde BIST100, BIST30, altın, gümüş, S&P500, Russell, BTC, Dolar/TL, NASDAQ'a yatırsaydım | **Ya Olsaydı?** ekranı: para akışlarınız bire bir simüle edilir. Lig tablosu, çoklu grafik ve fon düzeyinde metrikler sunulur | [6.7](#67-analiz-sekmesi) |
 | 10 | Ayarlar ekranı | Görünüm, para birimi, hesaplama, veri, güvenlik, bildirim ve yedekleme ayarları | [6.8](#68-ayarlar) |
 | 11 | Ana ekranda canlı bütçe: yatırılan ve çekilen para | **Canlı Bütçe** kartı: Yatırılan, Çekilen, Net Yatırılan, Nakit ve Net K/Z | [6.1](#61-portföy-ana-ekran) |
-| 12 | 1G, 1H, 1A, 3A, 6A, 1Y ve özel tarih aralığında bakiye grafiği | Skia (GPU) tabanlı grafik. Ek olarak YB (yılbaşından beri) ve Tümü seçenekleri | [7](#7-grafik-tasarımı) |
+| 12 | 1G, 1H, 1A, 3A, 6A, 1Y ve özel tarih aralığında bakiye grafiği | Parmakla gezinilen kendi grafiğimiz (FinChart). Ek olarak YB (yılbaşından beri) ve Tümü seçenekleri | [7](#7-grafik-tasarımı) |
 | 13 | Tamamen telefonda çalışma | Expo / React Native ile iOS ve Android. Sunucu yok, veri cihazda | [03-TEKNIK-MIMARI](03-TEKNIK-MIMARI.md) |
 
 ---
@@ -730,7 +730,7 @@ profesyonel bir yatırım uygulaması ciddiyetinde bir grafik.
 
 ### Teknik
 
-- **Çizim:** Skia (GPU). Eğri ve ölçek hesapları d3, animasyonlar Reanimated ile yapılır. Animasyon UI iş parçacığında çalıştığı için JavaScript meşgulken bile 60/120 fps korunur.
+- **Çizim:** SVG + Reanimated (Faz 5'te Skia yerine seçildi, gerekçe Teknik Mimari §2'de). Eğri UI iş parçacığında üretilir, animasyonlar Reanimated ile yapılır. Animasyon UI iş parçacığında çalıştığı için JavaScript meşgulken bile 60/120 fps korunur.
 - **Ekran okuyucu:** Grafik için "Son 1 ayda %3,1 yükseliş, en yüksek ₺1.301.200" gibi bir özet metin sağlanır.
 
 ---
@@ -916,6 +916,16 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 28 | **Geçmiş tarihli işlem saati** | Saat yazılmazsa piyasanın seans içi bir saati: BIST 11:00, ABD 18:00, diğerleri 12:00 (İstanbul) |
 | 29 | **Önizleme** | Formdaki her rakam, kaydedilecek kayıtla tüm geçmiş yeniden oynatılarak hesaplanır; kaydedilen ile gösterilen aynıdır |
 | 30 | **Stopaj önerisi** | BIST temettülerinde %15, ABD'de %20; değiştirilebilir |
+
+### 9 Kasım 2026: Faz 5'te verilen kararlar
+
+| # | Konu | Karar |
+|---|---|---|
+| 31 | **Grafik çizimi** | SVG + Reanimated; şekil UI iş parçacığında, 96 noktaya örneklenerek dönüşür. Skia gerekirse aynı arayüzle eklenir |
+| 32 | **Satırdan silme** | Varlığın tüm kayıtları tek değişiklik olarak silinir, onay sorulmaz; 5 saniye içinde "GERİ AL" hepsini geri getirir |
+| 33 | **Net K/Z ayrıntısı** | Gerçekleşmemiş + gerçekleşen + temettü − hesap ücretleri. Komisyonlar zaten maliyette ve satış gelirinde olduğu için ayrıca düşülmez, bilgi olarak gösterilir |
+| 34 | **Kripto canlı akışı** | Binance WebSocket'ten yalnız son fiyat; "bugün" yine İstanbul gece yarısına göre |
+| 35 | **Sıralama** | Değer · Bugün % · Toplam % · Ad, tek düğmeyle sırayla; seçim saklanır |
 
 ---
 

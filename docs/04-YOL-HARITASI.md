@@ -149,28 +149,39 @@ birebir aynı sonucu veriyor ✅ ([faz3-veritabani.md](test-raporu/faz3-veritaba
 APK ile doğrulanacak). İnternet kesilince son fiyatlarla çalışmaya devam ediyor ✅
 ([faz4-piyasa-verisi.md](test-raporu/faz4-piyasa-verisi.md)).
 
-> **Not:** Kripto için canlı akış (WebSocket) Faz 5'e kaldı; şimdilik 15 saniyede bir sorgu
-> yapılıyor. TÜFE ve mevduat ölçütleri Faz 9'da gömülü tabloyla gelecek.
+> **Not:** Kripto için canlı akış (WebSocket) Faz 5'te eklendi. TÜFE ve mevduat ölçütleri Faz 9'da gömülü tabloyla gelecek.
 
-## Faz 5: Portföy (Ana Ekran)
+## Faz 5: Portföy (Ana Ekran) ✅ (9 Kasım 2026)
 
-- [ ] Canlı bakiye: kayan sayaç, durum noktası, yapışkan başlık
-- [ ] **FinChart:**
-  - Aralıklar: 1G · 1H · 1A · 3A · 6A · 1Y · YB · Tümü · Özel
-  - Sürükleyerek okuma, net yatırılan çizgisi
-  - Şekil dönüşümü animasyonu, iki parmakla ölçüm
-- [ ] Canlı Bütçe kartı (genişleyebilir)
-- [ ] Dağılım çubuğu
-- [ ] Varlık listesi:
-  - Filtre ve sıralama, rozet geçişi
-  - Mini grafik (sparkline), fiyat tik efekti
-- [ ] Satır hareketleri:
+- [x] Canlı bakiye: kayan sayaç, durum noktası (canlı / örnek / çevrimdışı), kaydırınca yapışkan küçük başlık
+- [x] **FinChart:**
+  - Aralıklar: 1G · 1H · 1A · 3A · 6A · 1Y · YB · Tümü · Özel (takvim ve hazır kısayollar)
+  - Tek parmakla okuma: kılavuz çizgi, o günün değeri, aralık başına göre değişim
+  - İki parmakla ölçüm: aradaki alan renklenir, iki gün arası değişim (para giriş/çıkışı ayıklanmış)
+  - Net yatırılan çizgisi (kesikli basamak), aralık değişince şekil dönüşümü (UI iş parçacığında)
+- [x] Canlı Bütçe kartı, "Ayrıntılar" ile açılır: gerçekleşmemiş + gerçekleşen + temettü − hesap ücretleri = Net K/Z; komisyon bilgi olarak
+- [x] Dağılım çubuğu
+- [x] Varlık listesi:
+  - Pazar filtresi; sıralama: Değer · Bugün % · Toplam % · Ad (seçim saklanır)
+  - Rozete dokununca: günlük % → günlük ₺ → toplam %
+  - Mini grafik, fiyat değişince satır yeşil/kırmızı parlar
+- [x] Satır hareketleri:
   - Sağa çek: Düzenle + Al. Sola çek: Sat + Sil
-  - Uzun bas menüsü, geri al
-- [ ] Portföy seçici, gizlilik modu, aşağı çekip yenileme
+  - Uzun bas menüsü: Ayrıntı, Al, Sat, Kayıtları düzenle, İzleme listesine ekle, Tüm kayıtlarını sil
+  - Sil, varlığın tüm kayıtlarını tek değişiklik olarak siler; 5 saniye "GERİ AL"
+- [x] Portföy seçici, gizlilik modu, aşağı çekip yenileme
+- [x] **Faz 4'ten:** Kripto için canlı akış (Binance WebSocket); kesilirse sorguyla devam
 
-**Bitiş kriteri:** Ana ekran örnek ve gerçek veriyle akıcı çalışıyor (60 fps). Ekran
-görüntüleri 4 temada paylaşıldı.
+**Bitiş kriteri:** Ana ekran örnek ve gerçek veriyle çalışıyor ✅ (tarayıcı önizlemesinde ve
+gerçek kaynaklarla denendi). Ekran görüntüleri 4 temada ✅
+([faz5-ana-ekran.md](test-raporu/faz5-ana-ekran.md)). 60 fps akıcılık telefonda APK ile
+doğrulanacak.
+
+> **Sonraya kalanlar:**
+> - Grafikte para giriş/çıkış işaretleri, en yüksek/en düşük etiketleri, Değer/Getiri/K/Z anahtarı,
+>   telefonu yan çevirince tam ekran: Faz 9 (Analiz) ile birlikte.
+> - 1G gün içi eğrisi: gün içi değerler saklanmadığı için gerçek portföyde gün başından şimdiye
+>   tek çizgi. Gün içi kayıt Faz 10'da.
 
 ## Faz 6: İşlem Ekranları ve Varlık Detayı ✅ (9 Kasım 2026, Faz 5'ten önce yapıldı)
 

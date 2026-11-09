@@ -4,14 +4,15 @@ BIST, ABD borsaları ve kripto paraları tek yerde takip eden, profesyonel yatı
 (TWR, XIRR, Alpha, risk) kişisel portföye uygulayan, tamamen telefonda çalışan portföy takip
 uygulaması.
 
-> **Durum:** Faz 1–4 ve Faz 6 tamamlandı: tasarım, hesaplama motoru, veritabanı, piyasa verisi,
-> işlem ekranları. Kendi alış, satış, temettü ve bölünmelerini girip BIST, ABD ve kripto
-> varlıklarını gerçek fiyatlarla takip edebilirsin. Sıradaki adım: Faz 5 (ana ekran: parmakla
-> gezinilen grafik, kaydırmalı satırlar). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
+> **Durum:** Faz 1–6 tamamlandı: tasarım, hesaplama motoru, veritabanı, piyasa verisi, ana
+> ekran, işlem ekranları. Kendi alış, satış, temettü ve bölünmelerini girip BIST, ABD ve kripto
+> varlıklarını gerçek fiyatlarla takip edebilirsin; kripto fiyatları anlık akar. Sıradaki adım:
+> Faz 7 (Geçmiş). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
 > test raporları: [Faz 2](docs/test-raporu/faz2-hesaplama-motoru.md),
-> [Faz 3](docs/test-raporu/faz3-veritabani.md), [Faz 4](docs/test-raporu/faz4-piyasa-verisi.md), [Faz 6](docs/test-raporu/faz6-islem-ekranlari.md).
+> [Faz 3](docs/test-raporu/faz3-veritabani.md), [Faz 4](docs/test-raporu/faz4-piyasa-verisi.md),
+> [Faz 5](docs/test-raporu/faz5-ana-ekran.md), [Faz 6](docs/test-raporu/faz6-islem-ekranlari.md).
 
-![Dört tema](docs/onizleme/faz1/1-temalar-ana-ekran.jpg)
+![Dört tema](docs/onizleme/faz5/1-dort-tema.jpg)
 
 ## Dokümanlar
 

@@ -34,10 +34,19 @@ export function ReadOut({
         color={colors.heroTextSecondary}
         numberOfLines={1}
         style={{ flexShrink: 1 }}>
-        {range ? `${chart.labels[a]} → ${chart.labels[b]}` : chart.labels[b]}
+        {range ? rangeText(chart.labels[a], chart.labels[b]) : chart.labels[b]}
       </Text>
     </View>
   );
+}
+
+/** "15.10 → 05.11" when both days are in the same year (fits next to the badges). */
+function rangeText(from: string, to: string): string {
+  const day = /^(\d\d\.\d\d)\.(\d{4})$/;
+  const f = day.exec(from);
+  const t = day.exec(to);
+  if (f && t && f[2] === t[2]) return `${f[1]} → ${t[1]}`;
+  return `${from} → ${to}`;
 }
 
 const PRESETS: [label: string, months: number][] = [
