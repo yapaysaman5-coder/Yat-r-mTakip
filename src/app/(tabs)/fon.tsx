@@ -1,16 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 
+import { EmptyPortfolio } from '@/components/EmptyPortfolio';
 import { PreviewNote } from '@/components/PreviewNote';
-import {
-  DEMO_ACCOUNT,
-  DEMO_HOLDINGS,
-  demoSummary,
-  holdingCostTRY,
-  holdingValueTRY,
-  type DemoHolding,
-} from '@/demo/data';
+import type { Holding } from '@/data/view/portfolioView';
+import type { ReturnPeriod } from '@/domain';
 import { tr } from '@/i18n/tr';
+import { usePortfolioView } from '@/state/portfolio';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
 import {
@@ -26,21 +22,41 @@ import {
   TabHeader,
   Text,
 } from '@/ui';
-import { formatMoney, formatPercent, formatPrice } from '@/utils/format';
+import { formatMoney, formatPercent, formatPrice, upperTR } from '@/utils/format';
 
 type Mode = 'value' | 'cost';
 
-export default function AccountScreen() {
-  const { colors } = useTheme();
-  const [mode, setMode] = useState<Mode>('value');
-  const summary = demoSummary();
+const ACCOUNT_PERIODS: ReturnPeriod[] = ['1A', '3A', '6A', 'YB', '1Y', 'Tümü'];
 
-  const metric = (h: DemoHolding) => (mode === 'value' ? holdingValueTRY(h) : holdingCostTRY(h));
-  const holdings = [...DEMO_HOLDINGS].sort((a, b) => metric(b) - metric(a));
+export default function AccountScreen() {
+  const view = usePortfolioView();
+  const header = <TabHeader title="Hesabım" subtitle={upperTR(view.portfolio.name)} />;
+  if (view.empty) {
+    return (
+      <Screen withTabBar header={header}>
+        <EmptyPortfolio />
+      </Screen>
+    );
+  }
+  return (
+    <Screen withTabBar header={header}>
+      <AccountBody />
+    </Screen>
+  );
+}
+
+function AccountBody() {
+  const { colors } = useTheme();
+  const view = usePortfolioView();
+  const [mode, setMode] = useState<Mode>('value');
+  const { summary } = view;
+
+  const metric = (h: Holding) => (mode === 'value' ? h.valueTRY : h.costTRY);
+  const holdings = [...view.holdings].sort((a, b) => metric(b) - metric(a));
   // Cash counts the same in both views (its cost is itself), so the ring adds up to the account.
   const total = holdings.reduce((s, h) => s + metric(h), 0) + summary.cash;
-  const totalCost = DEMO_HOLDINGS.reduce((s, h) => s + holdingCostTRY(h), 0);
-  const byMarket = (m: DemoHolding['market']) =>
+  const totalCost = view.holdings.reduce((s, h) => s + h.costTRY, 0);
+  const byMarket = (m: Holding['market']) =>
     holdings.filter((h) => h.market === m).reduce((s, h) => s + metric(h), 0);
   const markets = [
     { key: 'bist', label: tr.markets.bist, value: byMarket('bist'), color: colors.market.bist },
@@ -54,15 +70,18 @@ export default function AccountScreen() {
     ...(summary.cash > 0
       ? [{ key: 'cash', label: tr.markets.cash, value: summary.cash, color: colors.market.cash }]
       : []),
-  ];
-  const top5 = holdings.slice(0, 5).reduce((s, h) => s + holdingValueTRY(h), 0) / summary.positions;
+  ].filter((m) => m.value > 0);
+  const top5 =
+    summary.positions > 0
+      ? holdings.slice(0, 5).reduce((s, h) => s + h.valueTRY, 0) / summary.positions
+      : null;
   // Account-level cost = what the open positions cost + cash on hand.
   const accountCost = totalCost + summary.cash;
   const unrealized = summary.totalValue - accountCost;
 
   return (
-    <Screen withTabBar header={<TabHeader title="Hesabım" subtitle="ANA PORTFÖY" />}>
-      <PreviewNote />
+    <>
+      {view.isDemo ? <PreviewNote /> : null}
 
       <Card elevated>
         <View
@@ -82,14 +101,16 @@ export default function AccountScreen() {
           </Stat>
           <Stat label="Açık K/Z">
             <Money value={unrealized} variant="numM" decimals={0} colorize sign="always" />
-            <ChangeBadge value={unrealized / accountCost} />
+            {accountCost > 0 ? <ChangeBadge value={unrealized / accountCost} /> : null}
           </Stat>
           <Stat label="Bugün">
             <Money value={summary.dailyChange} variant="numM" decimals={0} colorize sign="always" />
-            <ChangeBadge value={summary.dailyChangeRatio} />
+            {summary.dailyChangeRatio !== null ? (
+              <ChangeBadge value={summary.dailyChangeRatio} />
+            ) : null}
           </Stat>
         </View>
-        <RiskMeter level={DEMO_ACCOUNT.riskLevel} />
+        <RiskMeter level={view.riskLevel} />
       </Card>
 
       <SegmentedControl
@@ -157,7 +178,9 @@ export default function AccountScreen() {
               </Text>
               <Money value={summary.positions - totalCost} variant="numM" colorize sign="always" />
             </View>
-            <ChangeBadge value={summary.positions / totalCost - 1} size="md" />
+            {totalCost > 0 ? (
+              <ChangeBadge value={summary.positions / totalCost - 1} size="md" />
+            ) : null}
           </View>
         ) : null}
       </Card>
@@ -172,7 +195,7 @@ export default function AccountScreen() {
           </Text>
         </View>
         {holdings.map((h, i) => (
-          <View key={h.symbol}>
+          <View key={h.assetId}>
             {i > 0 ? <View style={{ height: 1, backgroundColor: colors.border }} /> : null}
             <FundRow holding={h} mode={mode} total={total} />
           </View>
@@ -186,26 +209,36 @@ export default function AccountScreen() {
           Para yatırma ve çekmelerin etkisi çıkarılmış getiri (TWR)
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
-          {DEMO_ACCOUNT.returns.map((r) => (
-            <View
-              key={r.label}
-              style={{
-                flexBasis: '30%',
-                flexGrow: 1,
-                alignItems: 'center',
-                paddingVertical: space.md,
-                borderRadius: radius.md,
-                backgroundColor: r.ratio >= 0 ? colors.upSoft : colors.downSoft,
-                gap: 2,
-              }}>
-              <Text variant="caption" tone="secondary">
-                {r.label}
-              </Text>
-              <Text variant="numM" tone={r.ratio >= 0 ? 'up' : 'down'}>
-                {formatPercent(r.ratio, { decimals: 1, sign: 'always' })}
-              </Text>
-            </View>
-          ))}
+          {ACCOUNT_PERIODS.map((label) => {
+            const ratio = view.periodReturns[label];
+            return (
+              <View
+                key={label}
+                style={{
+                  flexBasis: '30%',
+                  flexGrow: 1,
+                  alignItems: 'center',
+                  paddingVertical: space.md,
+                  borderRadius: radius.md,
+                  backgroundColor:
+                    ratio === null
+                      ? colors.surfaceAlt
+                      : ratio >= 0
+                        ? colors.upSoft
+                        : colors.downSoft,
+                  gap: 2,
+                }}>
+                <Text variant="caption" tone="secondary">
+                  {label}
+                </Text>
+                <Text
+                  variant="numM"
+                  tone={ratio === null ? 'tertiary' : ratio >= 0 ? 'up' : 'down'}>
+                  {ratio === null ? '—' : formatPercent(ratio, { decimals: 1, sign: 'always' })}
+                </Text>
+              </View>
+            );
+          })}
         </View>
         <View
           style={{
@@ -219,10 +252,10 @@ export default function AccountScreen() {
           <Text variant="subhead" tone="secondary">
             En büyük 5 pozisyonun payı
           </Text>
-          <Text variant="numM">{formatPercent(top5, { decimals: 1 })}</Text>
+          <Text variant="numM">{top5 === null ? '—' : formatPercent(top5, { decimals: 1 })}</Text>
         </View>
       </Card>
-    </Screen>
+    </>
   );
 }
 
@@ -245,7 +278,7 @@ function Stat({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function RiskMeter({ level }: { level: number }) {
+function RiskMeter({ level }: { level: number | null }) {
   const { colors } = useTheme();
   const steps = [1, 2, 3, 4, 5, 6, 7];
   const tone = (i: number) =>
@@ -256,11 +289,15 @@ function RiskMeter({ level }: { level: number }) {
         <Text variant="caption" tone="secondary">
           Risk Seviyesi
         </Text>
-        <Text variant="numS">{level} / 7</Text>
+        <Text variant="numS">{level === null ? '—' : `${level} / 7`}</Text>
       </View>
       <View
         style={{ flexDirection: 'row', gap: 4 }}
-        accessibilityLabel={`Risk seviyesi 7 üzerinden ${level}`}>
+        accessibilityLabel={
+          level === null
+            ? 'Risk seviyesi için en az bir aylık geçmiş gerekir'
+            : `Risk seviyesi 7 üzerinden ${level}`
+        }>
         {steps.map((i) => (
           <View
             key={i}
@@ -268,7 +305,7 @@ function RiskMeter({ level }: { level: number }) {
               flex: 1,
               height: 8,
               borderRadius: 4,
-              backgroundColor: i <= level ? tone(i) : colors.surfaceAlt,
+              backgroundColor: level !== null && i <= level ? tone(i) : colors.surfaceAlt,
             }}
           />
         ))}
@@ -277,9 +314,9 @@ function RiskMeter({ level }: { level: number }) {
   );
 }
 
-function FundRow({ holding, mode, total }: { holding: DemoHolding; mode: Mode; total: number }) {
-  const value = holdingValueTRY(holding);
-  const cost = holdingCostTRY(holding);
+function FundRow({ holding, mode, total }: { holding: Holding; mode: Mode; total: number }) {
+  const value = holding.valueTRY;
+  const cost = holding.costTRY;
   const amount = mode === 'value' ? value : cost;
   const weight = amount / total;
   return (
@@ -294,7 +331,7 @@ function FundRow({ holding, mode, total }: { holding: DemoHolding; mode: Mode; t
       <View style={{ flex: 1, gap: 2 }}>
         <Text variant="bodyStrong">{holding.symbol}</Text>
         {mode === 'value' ? (
-          <ChangeBadge value={value / cost - 1} variant="plain" />
+          <ChangeBadge value={cost > 0 ? value / cost - 1 : 0} variant="plain" />
         ) : (
           <Text variant="caption" tone="secondary">
             Ort. {formatPrice(holding.avgCost, holding.currency)}

@@ -1,22 +1,18 @@
-import { PieChart, Sparkles } from 'lucide-react-native';
+import { BarChart3, PieChart, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 import { MetricInfoSheet, MetricTile } from '@/components/MetricTile';
 import type { MetricKey } from '@/components/metricInfo';
+import { EmptyPortfolio } from '@/components/EmptyPortfolio';
 import { PreviewNote } from '@/components/PreviewNote';
 import {
-  BENCHMARKS,
-  DEMO_DATES,
-  DEMO_DAYS,
-  DEMO_METRICS,
-  DEMO_NET_INVESTED,
-  DEMO_VALUES,
-  PERIOD_START,
+  ANALYSIS_PERIODS,
   periodReturn,
-  type PeriodKey,
-} from '@/demo/analysis';
-import { demoSummary } from '@/demo/data';
+  type AnalysisPeriod,
+  type MonthReturn,
+} from '@/data/view/analysisView';
+import { useAnalysis, usePortfolioView } from '@/state/portfolio';
 import { seriesColor } from '@/theme/chartColors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
@@ -35,28 +31,48 @@ import {
 } from '@/ui';
 import { ComparisonChart } from '@/ui/charts/ComparisonChart';
 import { rebasePercent } from '@/ui/charts/scale';
-import { formatCompact, formatMoney, formatNumber, formatPercent, MONTHS_TR } from '@/utils/format';
+import {
+  formatCompact,
+  formatDate,
+  formatMoney,
+  formatNumber,
+  formatPercent,
+  MONTHS_TR,
+} from '@/utils/format';
 
 type Section = 'whatif' | 'performance' | 'allocation';
 type Mode = 'value' | 'percent';
 
 const BENCHMARK_NAME = 'BIST 100';
-const RANGES: PeriodKey[] = ['1A', '3A', '6A', 'YB', '1Y', 'Tümü'];
+const RANGES: AnalysisPeriod[] = ANALYSIS_PERIODS;
 const MAX_SERIES = 6;
 const MEDALS = ['🥇', '🥈', '🥉'];
 const CONTEXT = `Ölçüt: ${BENCHMARK_NAME} · Risksiz faiz: %0 (Ayarlar › Hesaplama’dan girilecek)`;
 
-const pct = (r: number, decimals = 1) => formatPercent(r, { decimals, sign: 'always' });
-const tone = (r: number) => (r > 0 ? 'up' : r < 0 ? 'down' : 'primary');
+const pct = (r: number | null, decimals = 1) =>
+  r === null ? '—' : formatPercent(r, { decimals, sign: 'always' });
+const tone = (r: number | null) =>
+  r === null ? 'primary' : r > 0 ? 'up' : r < 0 ? 'down' : 'primary';
+const dec2 = (n: number | null) =>
+  n === null ? '—' : formatNumber(n, { minDecimals: 2, maxDecimals: 2 });
 
 export default function AnalysisScreen() {
   const [section, setSection] = useState<Section>('whatif');
   const [info, setInfo] = useState<{ key: MetricKey; value: string } | null>(null);
   const open = (key: MetricKey, value: string) => setInfo({ key, value });
+  const view = usePortfolioView();
+
+  if (view.empty) {
+    return (
+      <Screen withTabBar header={<TabHeader title="Analiz" />}>
+        <EmptyPortfolio message="Performans ve “Ya Olsaydı?” hesapları ilk kayıtlarınla başlar." />
+      </Screen>
+    );
+  }
 
   return (
     <Screen withTabBar header={<TabHeader title="Analiz" />}>
-      <PreviewNote />
+      {view.isDemo ? <PreviewNote /> : null}
       <Scorecard onInfo={open} />
       <SegmentedControl
         value={section}
@@ -93,8 +109,8 @@ export default function AnalysisScreen() {
 /* ───────────────────────── Scorecard ───────────────────────── */
 
 function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
-  const summary = demoSummary();
-  const m = DEMO_METRICS;
+  const { summary, series } = usePortfolioView();
+  const m = useAnalysis().metrics;
   const today = pct(summary.dailyChangeRatio, 2);
   return (
     <Card>
@@ -107,7 +123,7 @@ function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
         }}>
         <SectionHeader title="PERFORMANS KARNESİ" />
         <Text variant="caption" tone="tertiary">
-          12.01.2025’ten beri
+          {series.dates.length ? `${formatDate(`${series.dates[0]}T12:00:00Z`)}’ten beri` : ''}
         </Text>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
@@ -120,24 +136,28 @@ function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
         />
         <MetricTile
           label="TWR"
-          value={pct(m.twr)}
-          tone={tone(m.twr)}
-          sub={`yıllık ${pct(m.twrAnnual)}`}
-          onPress={() => onInfo('twr', pct(m.twr))}
+          value={pct(m?.twr ?? null)}
+          tone={tone(m?.twr ?? null)}
+          sub={m ? `yıllık ${pct(m.twrAnnual)}` : 'en az 2 gün gerekir'}
+          onPress={() => onInfo('twr', pct(m?.twr ?? null))}
         />
         <MetricTile
           label="XIRR (yıllık)"
-          value={pct(m.xirr)}
-          tone={tone(m.xirr)}
+          value={pct(m?.xirr ?? null)}
+          tone={tone(m?.xirr ?? null)}
           sub="nakit akışına göre"
-          onPress={() => onInfo('xirr', pct(m.xirr))}
+          onPress={() => onInfo('xirr', pct(m?.xirr ?? null))}
         />
         <MetricTile
           label="Alpha (yıllık)"
-          value={pct(m.alpha)}
-          tone={tone(m.alpha)}
-          sub={`${BENCHMARK_NAME}’e göre · β ${formatNumber(m.beta, { minDecimals: 2, maxDecimals: 2 })}`}
-          onPress={() => onInfo('alpha', pct(m.alpha))}
+          value={pct(m?.alpha ?? null)}
+          tone={tone(m?.alpha ?? null)}
+          sub={
+            m?.beta != null
+              ? `${BENCHMARK_NAME}’e göre · β ${dec2(m.beta)}`
+              : 'ölçüt fiyatları Faz 4’te'
+          }
+          onPress={() => onInfo('alpha', pct(m?.alpha ?? null))}
         />
       </View>
     </Card>
@@ -147,13 +167,33 @@ function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
 /* ───────────────────────── Ya Olsaydı? ───────────────────────── */
 
 function WhatIf() {
-  const { colors, dark } = useTheme();
-  const [range, setRange] = useState<PeriodKey>('Tümü');
-  const [mode, setMode] = useState<Mode>('value');
-  const [visible, setVisible] = useState<string[]>(['me', 'xu100', 'gold', 'spx', 'usd']);
+  const analysis = useAnalysis();
+  if (analysis.series.length < 2) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title="Ölçüt fiyatları henüz yok"
+        message="Altın, BIST 100, S&P 500, Dolar/TL ve diğer seçeneklerin günlük fiyatları piyasa verisiyle (Faz 4) gelecek. Örnek portföyde kurgusal fiyatlarla deneyebilirsin."
+      />
+    );
+  }
+  return <WhatIfBody />;
+}
 
-  const start = PERIOD_START[range];
-  const dates = DEMO_DATES.slice(start);
+function WhatIfBody() {
+  const { colors, dark } = useTheme();
+  const analysis = useAnalysis();
+  const BENCHMARKS = analysis.series;
+  const VALUES = Object.fromEntries(BENCHMARKS.map((b) => [b.key, b.values]));
+  const NET_INVESTED = analysis.netInvested;
+  const [range, setRange] = useState<AnalysisPeriod>('Tümü');
+  const [mode, setMode] = useState<Mode>('value');
+  const [visible, setVisible] = useState<string[]>(
+    ['me', 'xu100', 'gold', 'spx', 'usd'].filter((k) => k in VALUES),
+  );
+
+  const start = analysis.periodStart[range];
+  const dates = analysis.dates.slice(start);
   const toggle = (key: string) => {
     if (key === 'me') return;
     if (visible.includes(key)) setVisible(visible.filter((k) => k !== key));
@@ -169,19 +209,17 @@ function WhatIf() {
     emphasis: b.key === 'me',
     values:
       mode === 'value'
-        ? DEMO_VALUES[b.key].slice(start)
-        : rebasePercent(DEMO_VALUES[b.key], DEMO_NET_INVESTED, start),
+        ? VALUES[b.key].slice(start)
+        : rebasePercent(VALUES[b.key], NET_INVESTED, start),
   }));
 
-  const last = DEMO_DAYS - 1;
-  const me = DEMO_VALUES.me[last];
-  const ranked = [...BENCHMARKS].sort(
-    (a, b) => DEMO_VALUES[b.key][last] - DEMO_VALUES[a.key][last],
-  );
-  const netInvested = DEMO_NET_INVESTED[last];
-  const beaten = BENCHMARKS.filter((b) => b.key !== 'me' && DEMO_VALUES[b.key][last] < me).length;
+  const last = analysis.dates.length - 1;
+  const me = VALUES.me[last];
+  const ranked = [...BENCHMARKS].sort((a, b) => VALUES[b.key][last] - VALUES[a.key][last]);
+  const netInvested = NET_INVESTED[last];
+  const beaten = BENCHMARKS.filter((b) => b.key !== 'me' && VALUES[b.key][last] < me).length;
   const best = ranked.find((b) => b.key !== 'me')!;
-  const realReturn = me / DEMO_VALUES.cpi[last] - 1;
+  const realReturn = VALUES.cpi ? me / VALUES.cpi[last] - 1 : null;
 
   return (
     <View style={{ gap: space.lg }}>
@@ -232,7 +270,7 @@ function WhatIf() {
             series={series}
             reference={
               mode === 'value'
-                ? { values: DEMO_NET_INVESTED.slice(start), label: 'Net yatırılan' }
+                ? { values: NET_INVESTED.slice(start), label: 'Net yatırılan' }
                 : undefined
             }
             zeroLine={mode === 'percent'}
@@ -306,7 +344,7 @@ function WhatIf() {
           </Text>
         </View>
         {ranked.map((b, i) => {
-          const value = DEMO_VALUES[b.key][last];
+          const value = VALUES[b.key][last];
           const isMe = b.key === 'me';
           return (
             <View
@@ -344,7 +382,7 @@ function WhatIf() {
                   {b.name}
                 </Text>
                 <Text variant="caption" tone="secondary">
-                  {pct((value - netInvested) / netInvested)} getiri
+                  {pct(netInvested > 0 ? (value - netInvested) / netInvested : null)} getiri
                 </Text>
               </View>
               <View style={{ alignItems: 'flex-end', gap: 3 }}>
@@ -378,11 +416,17 @@ function WhatIf() {
             text={`Portföyün ${BENCHMARKS.length - 1} seçenekten ${beaten} tanesini geride bıraktı.`}
           />
           <Insight
-            text={`En iyi seçenek ${best.name} olurdu: bugün ${formatMoney(DEMO_VALUES[best.key][last] - me, { decimals: 0 })} daha fazla.`}
+            text={
+              VALUES[best.key][last] > me
+                ? `En iyi seçenek ${best.name} olurdu: bugün ${formatMoney(VALUES[best.key][last] - me, { decimals: 0 })} daha fazla.`
+                : `Tüm seçeneklerden iyi gittin: en yakın ${best.name}, ${formatMoney(me - VALUES[best.key][last], { decimals: 0 })} geride.`
+            }
           />
-          <Insight
-            text={`Enflasyona (TÜFE) göre reel getirin ${pct(realReturn)}${realReturn < 0 ? ': paranın alım gücü biraz azaldı.' : '.'}`}
-          />
+          {realReturn !== null ? (
+            <Insight
+              text={`Enflasyona (TÜFE) göre reel getirin ${pct(realReturn)}${realReturn < 0 ? ': paranın alım gücü biraz azaldı.' : '.'}`}
+            />
+          ) : null}
         </View>
       </Card>
     </View>
@@ -411,6 +455,11 @@ function Insight({ text }: { text: string }) {
 
 /* ───────────────────────── Performans ───────────────────────── */
 
+const points = (r: number | null, unit: string) =>
+  r === null
+    ? '—'
+    : `${formatNumber(r * 100, { minDecimals: 1, maxDecimals: 1, sign: 'always' })}${unit}`;
+
 function monthLabel(yyyymm: string) {
   const [y, m] = yyyymm.split('-').map(Number);
   return `${MONTHS_TR[m - 1]} ${y}`;
@@ -418,8 +467,19 @@ function monthLabel(yyyymm: string) {
 
 function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
   const { colors } = useTheme();
-  const m = DEMO_METRICS;
-  const dec2 = (n: number) => formatNumber(n, { minDecimals: 2, maxDecimals: 2 });
+  const analysis = useAnalysis();
+  const m = analysis.metrics;
+  const me = analysis.series[0];
+  const main = analysis.mainBenchmark;
+  if (!m) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title="Biraz daha geçmiş gerekiyor"
+        message="Risk ve getiri ölçüleri en az iki günlük değer geçmişiyle hesaplanır."
+      />
+    );
+  }
 
   return (
     <View style={{ gap: space.lg }}>
@@ -429,7 +489,7 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
           <MetricTile
             label="Beta"
             value={dec2(m.beta)}
-            sub={`${BENCHMARK_NAME}’e göre`}
+            sub={main ? `${BENCHMARK_NAME}’e göre` : 'ölçüt fiyatı yok'}
             onPress={() => onInfo('beta', dec2(m.beta))}
           />
           <MetricTile
@@ -459,30 +519,29 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
           />
           <MetricTile
             label="Fazla getiri"
-            value={`${formatNumber(m.excessReturn * 100, { minDecimals: 1, maxDecimals: 1, sign: 'always' })} p`}
+            value={points(m.excessReturn, ' p')}
             tone={tone(m.excessReturn)}
             sub={`${BENCHMARK_NAME}’e göre, tüm dönem`}
-            onPress={() =>
-              onInfo(
-                'excess',
-                `${formatNumber(m.excessReturn * 100, { minDecimals: 1, maxDecimals: 1, sign: 'always' })} puan`,
-              )
-            }
+            onPress={() => onInfo('excess', points(m.excessReturn, ' puan'))}
           />
-          <MetricTile
-            label="En iyi ay"
-            value={pct(m.bestMonth.ratio)}
-            tone="up"
-            sub={monthLabel(m.bestMonth.month)}
-            onPress={() => onInfo('bestMonth', pct(m.bestMonth.ratio))}
-          />
-          <MetricTile
-            label="En kötü ay"
-            value={pct(m.worstMonth.ratio)}
-            tone="down"
-            sub={monthLabel(m.worstMonth.month)}
-            onPress={() => onInfo('bestMonth', pct(m.worstMonth.ratio))}
-          />
+          {m.bestMonth && m.worstMonth ? (
+            <>
+              <MetricTile
+                label="En iyi ay"
+                value={pct(m.bestMonth.ratio)}
+                tone={tone(m.bestMonth.ratio)}
+                sub={monthLabel(m.bestMonth.month)}
+                onPress={() => onInfo('bestMonth', pct(m.bestMonth!.ratio))}
+              />
+              <MetricTile
+                label="En kötü ay"
+                value={pct(m.worstMonth.ratio)}
+                tone={tone(m.worstMonth.ratio)}
+                sub={monthLabel(m.worstMonth.month)}
+                onPress={() => onInfo('bestMonth', pct(m.worstMonth!.ratio))}
+              />
+            </>
+          ) : null}
         </View>
       </Card>
 
@@ -499,8 +558,9 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
           ))}
         </View>
         {RANGES.map((r, i) => {
-          const a = periodReturn('me', r);
-          const b = periodReturn('xu100', r);
+          const start = analysis.periodStart[r];
+          const a = periodReturn(me, start);
+          const b = main ? periodReturn(main, start) : null;
           return (
             <View
               key={r}
@@ -520,24 +580,27 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
               <Text variant="numS" tone="secondary" align="right" style={{ width: 82 }}>
                 {pct(b)}
               </Text>
-              <Text variant="numS" tone={tone(a - b)} align="right" style={{ width: 82 }}>
-                {formatNumber((a - b) * 100, { minDecimals: 1, maxDecimals: 1, sign: 'always' })} p
+              <Text
+                variant="numS"
+                tone={tone(b === null ? null : a - b)}
+                align="right"
+                style={{ width: 82 }}>
+                {points(b === null ? null : a - b, ' p')}
               </Text>
             </View>
           );
         })}
       </Card>
 
-      <MonthlyHeatmap />
+      <MonthlyHeatmap months={m.months} />
     </View>
   );
 }
 
-function MonthlyHeatmap() {
+function MonthlyHeatmap({ months }: { months: MonthReturn[] }) {
   const { colors } = useTheme();
-  const months = DEMO_METRICS.months;
   const years = [...new Set(months.map((x) => x.month.slice(0, 4)))];
-  const max = Math.max(...months.map((x) => Math.abs(x.ratio)));
+  const max = Math.max(1e-9, ...months.map((x) => Math.abs(x.ratio)));
   const SHORT = ['O', 'Ş', 'M', 'N', 'M', 'H', 'T', 'A', 'E', 'E', 'K', 'A'];
   return (
     <Card>

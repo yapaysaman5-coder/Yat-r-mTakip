@@ -85,6 +85,16 @@ export default function SettingsScreen() {
         />
       </Group>
 
+      <Group title="VERİ">
+        <ListRow
+          title="Veri ve Yedekleme"
+          subtitle="Yedekle, geri yükle, örnek portföy, hız testi"
+          leading={icon(Database, colors.accent, colors.accentSoft)}
+          showChevron
+          onPress={() => router.push('/ayarlar/veri')}
+        />
+      </Group>
+
       <Group title="YAKINDA">
         <ListRow
           title="Para birimi ve biçim"
@@ -96,7 +106,7 @@ export default function SettingsScreen() {
           title="Portföyler"
           subtitle="Ekle, yeniden adlandır, sırala"
           leading={icon(Layers, colors.textSecondary, colors.neutralSoft)}
-          badge={<Soon phase="Faz 3" />}
+          badge={<Soon phase="Faz 10" />}
         />
         <ListRow
           title="Hesaplama"
@@ -122,18 +132,12 @@ export default function SettingsScreen() {
           leading={icon(Bell, colors.textSecondary, colors.neutralSoft)}
           badge={<Soon phase="Sonra" />}
         />
-        <ListRow
-          title="Yedekleme"
-          subtitle="Dışa / içe aktar, CSV"
-          leading={icon(Database, colors.textSecondary, colors.neutralSoft)}
-          badge={<Soon phase="Faz 3" />}
-        />
       </Group>
 
       <Group title="HAKKINDA">
         <ListRow
           title="Yatırım Takip"
-          subtitle="Sürüm 0.1.0 · Faz 1 (tasarım sistemi)"
+          subtitle="Sürüm 0.3.0 · Faz 3 (veritabanı)"
           leading={icon(Info, colors.accent, colors.accentSoft)}
         />
         <Text variant="caption" tone="tertiary" style={{ paddingBottom: space.md }}>

@@ -16,16 +16,14 @@ import {
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { EmptyPortfolio } from '@/components/EmptyPortfolio';
 import { HoldingRow } from '@/components/HoldingRow';
+import { PortfolioSheet } from '@/components/PortfolioSheet';
 import { PreviewNote } from '@/components/PreviewNote';
-import {
-  DEMO_HOLDINGS,
-  demoSeries,
-  demoSummary,
-  holdingValueTRY,
-  type DemoRange,
-} from '@/demo/data';
+import { homeChart, type HomeRange } from '@/data/view/chart';
+import type { Summary } from '@/data/view/portfolioView';
 import { tr } from '@/i18n/tr';
+import { usePortfolioView } from '@/state/portfolio';
 import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme/ThemeProvider';
 import { GUTTER, radius, space } from '@/theme/tokens';
@@ -48,8 +46,8 @@ import {
 } from '@/ui';
 import { formatPercent } from '@/utils/format';
 
-const RANGES: DemoRange[] = ['1G', '1H', '1A', '3A', '6A', '1Y', 'YB', 'Tümü'];
-const RANGE_LABEL: Record<DemoRange, string> = {
+const RANGES: HomeRange[] = ['1G', '1H', '1A', '3A', '6A', '1Y', 'YB', 'Tümü'];
+const RANGE_LABEL: Record<HomeRange, string> = {
   '1G': 'Bugün',
   '1H': 'Son 1 hafta',
   '1A': 'Son 1 ay',
@@ -67,14 +65,16 @@ export default function PortfolioScreen() {
   const { colors } = useTheme();
   const privacy = useSettings((s) => s.privacyMode);
   const togglePrivacy = useSettings((s) => s.togglePrivacyMode);
-  const [range, setRange] = useState<DemoRange>('1A');
+  const [range, setRange] = useState<HomeRange>('1A');
   const [filter, setFilter] = useState<MarketFilter>('all');
+  const [picker, setPicker] = useState(false);
 
-  const summary = demoSummary();
-  const series = demoSeries(range);
-  const holdings = DEMO_HOLDINGS.filter((h) => filter === 'all' || h.market === filter).sort(
-    (a, b) => holdingValueTRY(b) - holdingValueTRY(a),
-  );
+  const view = usePortfolioView();
+  const { summary } = view;
+  const series = homeChart(view, range);
+  const holdings = view.holdings
+    .filter((h) => filter === 'all' || h.market === filter)
+    .sort((a, b) => b.valueTRY - a.valueTRY);
 
   const soon = (what: string) => toast.show({ message: `${what} yakında geliyor ✨` });
 
@@ -92,10 +92,10 @@ export default function PortfolioScreen() {
             gap: space.sm,
           }}>
           <PressableScale
-            onPress={() => soon('Çoklu portföy')}
+            onPress={() => setPicker(true)}
             haptic="selection"
             accessibilityRole="button"
-            accessibilityLabel="Portföy seç: Ana Portföy"
+            accessibilityLabel={`Portföy seç: ${view.portfolio.name}`}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -107,10 +107,15 @@ export default function PortfolioScreen() {
               backgroundColor: colors.surfaceAlt,
             }}>
             <View
-              style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent }}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: view.isDemo ? colors.accent2 : colors.accent,
+              }}
             />
-            <Text variant="subhead" style={{ marginLeft: 2 }}>
-              Ana Portföy
+            <Text variant="subhead" style={{ marginLeft: 2 }} numberOfLines={1}>
+              {view.portfolio.name}
             </Text>
             <ChevronDown size={18} color={colors.textSecondary} strokeWidth={2.4} />
           </PressableScale>
@@ -132,149 +137,179 @@ export default function PortfolioScreen() {
           />
         </View>
       }>
-      <PreviewNote />
-
-      <GradientCard colors={colors.heroGradient} padding={0}>
-        <View style={{ padding: space.xl, paddingBottom: space.sm, gap: space.xs }}>
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text variant="overline" color={colors.heroTextSecondary}>
-              {tr.home.totalValue}
-            </Text>
+      <PortfolioSheet visible={picker} onClose={() => setPicker(false)} />
+      {view.isDemo ? <PreviewNote /> : null}
+      {view.empty ? <EmptyPortfolio /> : null}
+      {view.empty ? null : (
+        <>
+          <GradientCard colors={colors.heroGradient} padding={0}>
+            <View style={{ padding: space.xl, paddingBottom: space.sm, gap: space.xs }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <Text variant="overline" color={colors.heroTextSecondary}>
+                  {tr.home.totalValue}
+                </Text>
+                <View
+                  style={{
+                    paddingHorizontal: space.sm + 2,
+                    paddingVertical: 4,
+                    borderRadius: radius.pill,
+                    backgroundColor: colors.heroGlass,
+                  }}>
+                  <LiveDot status="live" onHero />
+                </View>
+              </View>
+              <Money value={summary.totalValue} variant="hero" color={colors.heroText} />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: space.sm,
+                  flexWrap: 'wrap',
+                }}>
+                <ChangeBadge value={summary.dailyChange} kind="money" variant="hero" size="md" />
+                {summary.dailyChangeRatio !== null ? (
+                  <ChangeBadge value={summary.dailyChangeRatio} variant="hero" size="md" />
+                ) : null}
+                <Text variant="footnote" color={colors.heroTextSecondary}>
+                  {tr.home.today}
+                </Text>
+              </View>
+              <Text variant="footnote" color={colors.heroTextSecondary} style={{ marginTop: 2 }}>
+                {RANGE_LABEL[range]}{' '}
+                <Text variant="numS" color={colors.heroText}>
+                  {series.changeRatio === null
+                    ? '—'
+                    : formatPercent(series.changeRatio, { sign: 'always' })}
+                </Text>
+              </Text>
+            </View>
+            <AreaChart
+              values={series.values}
+              baseline={series.baseline}
+              height={128}
+              lineColor={colors.chartLine}
+              fillColor={colors.chartFill}
+              baselineColor={colors.heroTextSecondary}
+              accessibilityLabel={`${RANGE_LABEL[range]} değer grafiği`}
+            />
             <View
               style={{
-                paddingHorizontal: space.sm + 2,
-                paddingVertical: 4,
-                borderRadius: radius.pill,
-                backgroundColor: colors.heroGlass,
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: space.sm,
+                paddingTop: space.sm,
+                paddingBottom: space.md,
+                gap: 2,
               }}>
-              <LiveDot status="live" onHero />
+              {RANGES.map((r) => (
+                <HeroRangeChip
+                  key={r}
+                  label={r}
+                  selected={r === range}
+                  onPress={() => setRange(r)}
+                />
+              ))}
+              <HeroRangeChip
+                label="Özel"
+                icon={CalendarDays}
+                selected={false}
+                onPress={() => soon('Özel tarih aralığı')}
+              />
             </View>
-          </View>
-          <Money value={summary.totalValue} variant="hero" color={colors.heroText} />
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' }}>
-            <ChangeBadge value={summary.dailyChange} kind="money" variant="hero" size="md" />
-            <ChangeBadge value={summary.dailyChangeRatio} variant="hero" size="md" />
-            <Text variant="footnote" color={colors.heroTextSecondary}>
-              {tr.home.today}
-            </Text>
-          </View>
-          <Text variant="footnote" color={colors.heroTextSecondary} style={{ marginTop: 2 }}>
-            {RANGE_LABEL[range]}{' '}
-            <Text variant="numS" color={colors.heroText}>
-              {formatPercent(series.changeRatio, { sign: 'always' })}
-            </Text>
-          </Text>
-        </View>
-        <AreaChart
-          values={series.values}
-          baseline={series.baseline}
-          height={128}
-          lineColor={colors.chartLine}
-          fillColor={colors.chartFill}
-          baselineColor={colors.heroTextSecondary}
-          accessibilityLabel={`${RANGE_LABEL[range]} değer grafiği`}
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingHorizontal: space.sm,
-            paddingTop: space.sm,
-            paddingBottom: space.md,
-            gap: 2,
-          }}>
-          {RANGES.map((r) => (
-            <HeroRangeChip key={r} label={r} selected={r === range} onPress={() => setRange(r)} />
-          ))}
-          <HeroRangeChip
-            label="Özel"
-            icon={CalendarDays}
-            selected={false}
-            onPress={() => soon('Özel tarih aralığı')}
-          />
-        </View>
-      </GradientCard>
+          </GradientCard>
 
-      <BudgetCard summary={summary} />
+          <BudgetCard summary={summary} />
 
-      <Card>
-        <SectionHeader title={tr.home.allocation} style={{ marginBottom: space.md }} />
-        <AllocationBar
-          segments={[
-            {
-              key: 'bist',
-              label: tr.markets.bist,
-              value: summary.allocation.bist,
-              color: colors.market.bist,
-            },
-            {
-              key: 'us',
-              label: tr.markets.us,
-              value: summary.allocation.us,
-              color: colors.market.us,
-            },
-            {
-              key: 'crypto',
-              label: tr.markets.crypto,
-              value: summary.allocation.crypto,
-              color: colors.market.crypto,
-            },
-            { key: 'cash', label: tr.markets.cash, value: summary.cash, color: colors.market.cash },
-          ]}
-        />
-      </Card>
+          <Card>
+            <SectionHeader title={tr.home.allocation} style={{ marginBottom: space.md }} />
+            <AllocationBar
+              segments={[
+                {
+                  key: 'bist',
+                  label: tr.markets.bist,
+                  value: summary.allocation.bist,
+                  color: colors.market.bist,
+                },
+                {
+                  key: 'us',
+                  label: tr.markets.us,
+                  value: summary.allocation.us,
+                  color: colors.market.us,
+                },
+                {
+                  key: 'crypto',
+                  label: tr.markets.crypto,
+                  value: summary.allocation.crypto,
+                  color: colors.market.crypto,
+                },
+                {
+                  key: 'cash',
+                  label: tr.markets.cash,
+                  value: summary.cash,
+                  color: colors.market.cash,
+                },
+              ].filter((segment) => segment.value > 0)}
+            />
+          </Card>
 
-      <View style={{ gap: space.md }}>
-        <SectionHeader title={tr.home.holdings} />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: space.sm }}
-          style={{ marginHorizontal: -GUTTER }}>
-          <View style={{ width: GUTTER - space.sm }} />
-          <Chip
-            label={tr.markets.all}
-            selected={filter === 'all'}
-            onPress={() => setFilter('all')}
-          />
-          <Chip
-            label={tr.markets.bist}
-            dotColor={colors.market.bist}
-            selected={filter === 'bist'}
-            onPress={() => setFilter('bist')}
-          />
-          <Chip
-            label={tr.markets.us}
-            dotColor={colors.market.us}
-            selected={filter === 'us'}
-            onPress={() => setFilter('us')}
-          />
-          <Chip
-            label={tr.markets.crypto}
-            dotColor={colors.market.crypto}
-            selected={filter === 'crypto'}
-            onPress={() => setFilter('crypto')}
-          />
-          <Chip
-            icon={ArrowUpDown}
-            label={tr.home.sortByValue}
-            onPress={() => soon('Sıralama seçenekleri')}
-          />
-          <View style={{ width: GUTTER - space.sm }} />
-        </ScrollView>
-        <Card padding={0} style={{ paddingHorizontal: space.lg, paddingVertical: space.xs }}>
-          {holdings.map((h, i) => (
-            <View key={h.symbol}>
-              {i > 0 ? (
-                <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 56 }} />
-              ) : null}
-              <HoldingRow holding={h} onPress={() => soon('Varlık detayı')} />
+          {holdings.length > 0 || filter !== 'all' ? (
+            <View style={{ gap: space.md }}>
+              <SectionHeader title={tr.home.holdings} />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: space.sm }}
+                style={{ marginHorizontal: -GUTTER }}>
+                <View style={{ width: GUTTER - space.sm }} />
+                <Chip
+                  label={tr.markets.all}
+                  selected={filter === 'all'}
+                  onPress={() => setFilter('all')}
+                />
+                <Chip
+                  label={tr.markets.bist}
+                  dotColor={colors.market.bist}
+                  selected={filter === 'bist'}
+                  onPress={() => setFilter('bist')}
+                />
+                <Chip
+                  label={tr.markets.us}
+                  dotColor={colors.market.us}
+                  selected={filter === 'us'}
+                  onPress={() => setFilter('us')}
+                />
+                <Chip
+                  label={tr.markets.crypto}
+                  dotColor={colors.market.crypto}
+                  selected={filter === 'crypto'}
+                  onPress={() => setFilter('crypto')}
+                />
+                <Chip
+                  icon={ArrowUpDown}
+                  label={tr.home.sortByValue}
+                  onPress={() => soon('Sıralama seçenekleri')}
+                />
+                <View style={{ width: GUTTER - space.sm }} />
+              </ScrollView>
+              <Card padding={0} style={{ paddingHorizontal: space.lg, paddingVertical: space.xs }}>
+                {holdings.map((h, i) => (
+                  <View key={h.assetId}>
+                    {i > 0 ? (
+                      <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 56 }} />
+                    ) : null}
+                    <HoldingRow holding={h} onPress={() => soon('Varlık detayı')} />
+                  </View>
+                ))}
+              </Card>
             </View>
-          ))}
-        </Card>
-      </View>
+          ) : null}
+        </>
+      )}
     </Screen>
   );
 }
@@ -320,7 +355,7 @@ function HeroRangeChip({
   );
 }
 
-function BudgetCard({ summary }: { summary: ReturnType<typeof demoSummary> }) {
+function BudgetCard({ summary }: { summary: Summary }) {
   const { colors } = useTheme();
   const tiles: { label: string; value: number; icon: LucideIcon; color: string; bg: string }[] = [
     {
@@ -402,7 +437,9 @@ function BudgetCard({ summary }: { summary: ReturnType<typeof demoSummary> }) {
         <Text variant="subhead">{tr.home.netPnl}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
           <Money value={summary.netPnl} variant="numL" colorize sign="always" />
-          <ChangeBadge value={summary.netPnlRatio} variant="plain" size="md" />
+          {summary.netPnlRatio !== null ? (
+            <ChangeBadge value={summary.netPnlRatio} variant="plain" size="md" />
+          ) : null}
         </View>
       </View>
     </Card>

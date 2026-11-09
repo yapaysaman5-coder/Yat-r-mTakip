@@ -53,6 +53,7 @@ export const tr = {
     WITHDRAW: 'Para Çekme',
     DIVIDEND: 'Temettü',
     FEE: 'Hesap Ücreti',
+    SPLIT: 'Bölünme / Bedelsiz',
     auto: 'otomatik',
   },
   privacy: {

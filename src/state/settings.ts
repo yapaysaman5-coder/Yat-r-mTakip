@@ -16,12 +16,15 @@ interface SettingsState {
   privacyMode: boolean;
   hapticsEnabled: boolean;
   changeDisplay: ChangeDisplay;
+  /** Portfolio shown on the screens (null: the first one). */
+  activePortfolioId: string | null;
 
   setThemePreference: (preference: ThemePreference) => void;
   setColorBlindSafe: (value: boolean) => void;
   togglePrivacyMode: () => void;
   setHapticsEnabled: (value: boolean) => void;
   cycleChangeDisplay: () => void;
+  setActivePortfolioId: (id: string | null) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -32,6 +35,7 @@ export const useSettings = create<SettingsState>()(
       privacyMode: false,
       hapticsEnabled: true,
       changeDisplay: 'dailyPercent',
+      activePortfolioId: null,
 
       setThemePreference: (themePreference) => set({ themePreference }),
       setColorBlindSafe: (colorBlindSafe) => set({ colorBlindSafe }),
@@ -42,6 +46,7 @@ export const useSettings = create<SettingsState>()(
           const i = CHANGE_DISPLAY_CYCLE.indexOf(s.changeDisplay);
           return { changeDisplay: CHANGE_DISPLAY_CYCLE[(i + 1) % CHANGE_DISPLAY_CYCLE.length] };
         }),
+      setActivePortfolioId: (activePortfolioId) => set({ activePortfolioId }),
     }),
     {
       name: 'settings',
@@ -53,6 +58,7 @@ export const useSettings = create<SettingsState>()(
         privacyMode: s.privacyMode,
         hapticsEnabled: s.hapticsEnabled,
         changeDisplay: s.changeDisplay,
+        activePortfolioId: s.activePortfolioId,
       }),
     },
   ),

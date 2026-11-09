@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -16,10 +17,15 @@ import { IconWell, ListRow, PressableScale, Sheet, Text, toast } from '@/ui';
 /** Sheet opened by the "+" button: buy / sell first, then cash movements. */
 export function QuickActionSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const colors = useColors();
+  const router = useRouter();
 
   const soon = () => {
     onClose();
     setTimeout(() => toast.show({ message: tr.quick.comingSoon }), 250);
+  };
+  const cash = (type: 'DEPOSIT' | 'WITHDRAW') => {
+    onClose();
+    router.push({ pathname: '/islem/nakit', params: { type } });
   };
 
   return (
@@ -57,7 +63,7 @@ export function QuickActionSheet({ visible, onClose }: { visible: boolean; onClo
             </IconWell>
           }
           showChevron
-          onPress={soon}
+          onPress={() => cash('DEPOSIT')}
         />
         <ListRow
           title={tr.quick.withdraw}
@@ -68,7 +74,7 @@ export function QuickActionSheet({ visible, onClose }: { visible: boolean; onClo
             </IconWell>
           }
           showChevron
-          onPress={soon}
+          onPress={() => cash('WITHDRAW')}
         />
         <ListRow
           title={tr.quick.dividend}

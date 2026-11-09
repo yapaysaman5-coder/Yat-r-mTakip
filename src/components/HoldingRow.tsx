@@ -1,7 +1,6 @@
 import { View } from 'react-native';
 
-import type { DemoHolding } from '@/demo/data';
-import { holdingCostTRY, holdingDailyChangeTRY, holdingValueTRY } from '@/demo/data';
+import type { Holding } from '@/data/view/portfolioView';
 import { useSettings } from '@/state/settings';
 import { useColors } from '@/theme/ThemeProvider';
 import { space } from '@/theme/tokens';
@@ -13,15 +12,15 @@ import { formatPrice, formatQuantity } from '@/utils/format';
  * daily % → daily ₺ → total % (remembered in settings).
  * Swipe actions (edit / buy / sell / delete) arrive in Phase 5.
  */
-export function HoldingRow({ holding, onPress }: { holding: DemoHolding; onPress?: () => void }) {
+export function HoldingRow({ holding, onPress }: { holding: Holding; onPress?: () => void }) {
   const colors = useColors();
   const changeDisplay = useSettings((s) => s.changeDisplay);
   const cycle = useSettings((s) => s.cycleChangeDisplay);
 
-  const value = holdingValueTRY(holding);
-  const dailyAmount = holdingDailyChangeTRY(holding);
-  const dailyRatio = holding.price / holding.prevClose - 1;
-  const totalRatio = value / holdingCostTRY(holding) - 1;
+  const value = holding.valueTRY;
+  const dailyAmount = holding.dailyChangeTRY;
+  const dailyRatio = holding.prevClose > 0 ? holding.price / holding.prevClose - 1 : 0;
+  const totalRatio = holding.costTRY > 0 ? value / holding.costTRY - 1 : 0;
   const trendColor =
     holding.spark[holding.spark.length - 1] >= holding.spark[0] ? colors.up : colors.down;
 

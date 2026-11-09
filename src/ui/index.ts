@@ -19,6 +19,7 @@ export { SegmentedControl, type SegmentOption } from './SegmentedControl';
 export { Sheet } from './Sheet';
 export { Skeleton } from './Skeleton';
 export { Text, type TextTone } from './Text';
+export { TextField } from './TextField';
 export { toast, ToastHost } from './Toast';
 export { Toggle } from './Toggle';
 export { Triangle } from './Triangle';

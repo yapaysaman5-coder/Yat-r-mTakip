@@ -5,8 +5,8 @@ import { useColors } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
 import { Text } from '@/ui';
 
-/** Honest label on screens that still show demo data. */
-export function PreviewNote({ text = 'Tasarım önizlemesi · örnek veriler' }: { text?: string }) {
+/** Honest label on screens that show the example portfolio or still use illustrative data. */
+export function PreviewNote({ text = 'Örnek portföy · kurgusal fiyatlar' }: { text?: string }) {
   const colors = useColors();
   return (
     <View

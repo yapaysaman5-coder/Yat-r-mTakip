@@ -8,12 +8,16 @@ import {
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { DatabaseZap } from 'lucide-react-native';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { usePortfolioStore } from '@/state/portfolio';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
-import { ToastHost } from '@/ui';
+import { space } from '@/theme/tokens';
+import { Button, EmptyState, ToastHost } from '@/ui';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -25,7 +29,14 @@ export default function RootLayout() {
     Inter_700Bold,
     Inter_800ExtraBold,
   });
-  const ready = fontsLoaded || !!fontError;
+  const fontsReady = fontsLoaded || !!fontError;
+  const dataStatus = usePortfolioStore((s) => s.status);
+  const init = usePortfolioStore((s) => s.init);
+  const ready = fontsReady && (dataStatus === 'ready' || dataStatus === 'error');
+
+  useEffect(() => {
+    init();
+  }, [init]);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -37,7 +48,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <RootStack />
+          {dataStatus === 'error' ? <DataError /> : <RootStack />}
           <ToastHost />
         </ThemeProvider>
       </SafeAreaProvider>
@@ -55,5 +66,22 @@ function RootStack() {
         animation: 'slide_from_right',
       }}
     />
+  );
+}
+
+function DataError() {
+  const { colors } = useTheme();
+  const error = usePortfolioStore((s) => s.error);
+  const reload = usePortfolioStore((s) => s.reload);
+  return (
+    <View
+      style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', padding: space.xl }}>
+      <EmptyState
+        icon={DatabaseZap}
+        title="Veriler açılamadı"
+        message={`Kayıtların güvende; sadece okunamadı. Tekrar dene, sorun sürerse uygulamayı yeniden başlat.\n\n${error ?? ''}`}
+      />
+      <Button label="Tekrar dene" onPress={() => reload()} />
+    </View>
   );
 }

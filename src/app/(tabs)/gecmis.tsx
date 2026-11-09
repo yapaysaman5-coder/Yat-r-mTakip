@@ -1,25 +1,15 @@
-import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  CalendarDays,
-  HandCoins,
-  Receipt,
-  ReceiptText,
-  Search,
-  ShoppingCart,
-  TrendingDown,
-  Trophy,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { CalendarDays, ReceiptText, Search, Trophy, Wallet } from 'lucide-react-native';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { EmptyPortfolio } from '@/components/EmptyPortfolio';
 import { PreviewNote } from '@/components/PreviewNote';
-import { DEMO_TXNS, type DemoTxn, type DemoTxnType } from '@/demo/data';
+import { TxnDetailSheet } from '@/components/TxnDetailSheet';
+import { txnVisual } from '@/components/txnVisual';
+import type { HistoryItem } from '@/data/view/portfolioView';
 import { tr } from '@/i18n/tr';
+import { usePortfolioView } from '@/state/portfolio';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { ThemeColors } from '@/theme/types';
 import { GUTTER, space } from '@/theme/tokens';
 import {
   Card,
@@ -46,8 +36,6 @@ import {
 
 type Section = 'txns' | 'realized' | 'cash' | 'statement';
 type Filter = 'all' | 'BUY' | 'SELL' | 'CASH' | 'DIVIDEND';
-
-const NOW = new Date('2026-11-08T15:00:00Z');
 
 export default function HistoryScreen() {
   const [section, setSection] = useState<Section>('txns');
@@ -103,14 +91,18 @@ export default function HistoryScreen() {
 }
 
 function Transactions() {
+  const view = usePortfolioView();
   const [filter, setFilter] = useState<Filter>('all');
-  const visible = DEMO_TXNS.filter((t) => {
+  const [selected, setSelected] = useState<HistoryItem | null>(null);
+  if (view.empty) return <EmptyPortfolio />;
+  const visible = view.history.filter((t) => {
+    if (t.type === 'SPLIT') return false;
     if (filter === 'all') return true;
     if (filter === 'CASH') return t.type === 'DEPOSIT' || t.type === 'WITHDRAW';
     return t.type === filter;
   });
 
-  const groups = new Map<string, DemoTxn[]>();
+  const groups = new Map<string, HistoryItem[]>();
   for (const t of visible) {
     const key = formatMonthYear(t.ts);
     groups.set(key, [...(groups.get(key) ?? []), t]);
@@ -138,7 +130,13 @@ function Transactions() {
           onPress={() => toast.show({ message: 'Tarih filtresi Faz 7’de geliyor ✨' })}
         />
       </ScrollView>
-      <PreviewNote />
+      {view.isDemo ? <PreviewNote /> : null}
+      <TxnDetailSheet item={selected} onClose={() => setSelected(null)} />
+      {visible.length === 0 ? (
+        <Text variant="footnote" tone="tertiary" align="center">
+          Bu filtrede kayıt yok.
+        </Text>
+      ) : null}
       {[...groups.entries()].map(([month, txns]) => {
         const net = txns.reduce((s, t) => s + t.amountTRY, 0);
         return (
@@ -163,7 +161,7 @@ function Transactions() {
               {txns.map((t, i) => (
                 <View key={t.id}>
                   {i > 0 ? <Separator /> : null}
-                  <TxnRow txn={t} />
+                  <TxnRow txn={t} onPress={() => setSelected(t)} />
                 </View>
               ))}
             </Card>
@@ -179,27 +177,7 @@ function Separator() {
   return <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 52 }} />;
 }
 
-function txnVisual(
-  type: DemoTxnType,
-  c: ThemeColors,
-): { icon: LucideIcon; color: string; bg: string } {
-  switch (type) {
-    case 'BUY':
-      return { icon: ShoppingCart, color: c.up, bg: c.upSoft };
-    case 'SELL':
-      return { icon: TrendingDown, color: c.down, bg: c.downSoft };
-    case 'DEPOSIT':
-      return { icon: ArrowDownToLine, color: c.accent, bg: c.accentSoft };
-    case 'WITHDRAW':
-      return { icon: ArrowUpFromLine, color: c.warning, bg: c.warningSoft };
-    case 'DIVIDEND':
-      return { icon: HandCoins, color: c.accent2, bg: c.accent2Soft };
-    case 'FEE':
-      return { icon: Receipt, color: c.textSecondary, bg: c.neutralSoft };
-  }
-}
-
-function TxnRow({ txn }: { txn: DemoTxn }) {
+function TxnRow({ txn, onPress }: { txn: HistoryItem; onPress: () => void }) {
   const { colors } = useTheme();
   const v = txnVisual(txn.type, colors);
   const label = txn.isAuto ? `${tr.txn[txn.type]} (${tr.txn.auto})` : tr.txn[txn.type];
@@ -212,7 +190,7 @@ function TxnRow({ txn }: { txn: DemoTxn }) {
     <PressableScale
       haptic="selection"
       scaleTo={0.985}
-      onPress={() => toast.show({ message: 'İşlem detayı ve düzenleme Faz 7’de geliyor ✨' })}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={title}
       style={{
@@ -230,7 +208,7 @@ function TxnRow({ txn }: { txn: DemoTxn }) {
         </Text>
         <Text variant="caption" tone="secondary" numberOfLines={1}>
           {detail}
-          {formatRelativeDay(txn.ts, NOW)}
+          {formatRelativeDay(txn.ts, new Date())}
         </Text>
       </View>
       <View style={{ alignItems: 'flex-end', gap: 3 }}>
