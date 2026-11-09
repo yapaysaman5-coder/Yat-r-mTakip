@@ -1,0 +1,161 @@
+/**
+ * Analiz figures: "Ya Olsaydı?" replays, TWR, XIRR, Alpha and risk measures. Computed only
+ * when the Analiz screen asks for them (they replay every benchmark).
+ */
+import {
+  annualize,
+  beta,
+  jensenAlpha,
+  maxDrawdown,
+  riskLevel,
+  sharpe,
+  simulateWhatIf,
+  sortino,
+  stepReturns,
+  volatility,
+  xirr,
+  type CashFlow,
+} from '@/domain';
+
+import { MAIN_BENCHMARK } from '../benchmarks';
+import { rangeStartIndex, type PortfolioView } from './portfolioView';
+
+export type AnalysisPeriod = '1A' | '3A' | '6A' | 'YB' | '1Y' | 'Tümü';
+export const ANALYSIS_PERIODS: AnalysisPeriod[] = ['1A', '3A', '6A', 'YB', '1Y', 'Tümü'];
+
+export interface ComparedSeries {
+  key: string;
+  name: string;
+  /** Value of the replayed cash flows per day (for the portfolio: its real value). */
+  values: number[];
+  /** Price level per day (for the portfolio: its internal unit value). */
+  prices: number[];
+}
+
+export interface MonthReturn {
+  month: string;
+  ratio: number;
+}
+
+export interface Metrics {
+  twr: number;
+  twrAnnual: number;
+  xirr: number | null;
+  /** null without benchmark prices. */
+  alpha: number | null;
+  beta: number | null;
+  excessReturn: number | null;
+  volatility: number;
+  sharpe: number;
+  sortino: number;
+  maxDrawdown: number;
+  riskLevel: number;
+  bestMonth: MonthReturn | null;
+  worstMonth: MonthReturn | null;
+  months: MonthReturn[];
+}
+
+export interface AnalysisView {
+  dates: string[];
+  netInvested: number[];
+  periodStart: Record<AnalysisPeriod, number>;
+  /** The portfolio first, then every benchmark with prices. */
+  series: ComparedSeries[];
+  mainBenchmark: ComparedSeries | null;
+  metrics: Metrics | null;
+  riskFree: number;
+}
+
+const RISK_FREE = 0; // Ayarlar › Hesaplama (Phase 10)
+
+export function buildAnalysis(view: PortfolioView): AnalysisView {
+  const { dates, values, netInvested, flows, unitValues } = view.series;
+  const n = dates.length;
+  const indexedFlows = flows.flatMap((amount, index) => (amount !== 0 ? [{ index, amount }] : []));
+
+  const me: ComparedSeries = { key: 'me', name: 'Portföyüm', values, prices: unitValues };
+  const benchmarks: ComparedSeries[] = view.data.benchmarks
+    .filter((b) => b.prices.length === n && n > 0)
+    .map((b) => ({
+      key: b.key,
+      name: b.name,
+      prices: b.prices,
+      values: simulateWhatIf(b.prices, indexedFlows).values,
+    }));
+  const main = benchmarks.find((b) => b.key === MAIN_BENCHMARK) ?? null;
+
+  const periodStart = Object.fromEntries(
+    ANALYSIS_PERIODS.map((p) => [p, rangeStartIndex(dates, p)]),
+  ) as Record<AnalysisPeriod, number>;
+
+  return {
+    dates,
+    netInvested,
+    periodStart,
+    series: [me, ...benchmarks],
+    mainBenchmark: main,
+    metrics: n >= 2 ? computeMetrics(view, main) : null,
+    riskFree: RISK_FREE,
+  };
+}
+
+/** Time-weighted return of a price series over a period (from its start index). */
+export function periodReturn(s: ComparedSeries, start: number): number {
+  const p = s.prices;
+  return p[start] > 0 ? p[p.length - 1] / p[start] - 1 : 0;
+}
+
+function computeMetrics(view: PortfolioView, main: ComparedSeries | null): Metrics {
+  const { dates, values, flows, unitValues } = view.series;
+  const last = dates.length - 1;
+  const days = last;
+  const twr = unitValues[last] / unitValues[0] - 1;
+  const twrAnnual = annualize(twr, days);
+  const rMe = stepReturns(unitValues);
+  const vol = volatility(rMe, 365);
+
+  const cashFlows: CashFlow[] = flows.flatMap((amount, i) =>
+    amount !== 0 ? [{ date: dates[i], amount: -amount }] : [],
+  );
+  cashFlows.push({ date: dates[last], amount: values[last] });
+
+  let b: number | null = null;
+  let alpha: number | null = null;
+  let excess: number | null = null;
+  if (main) {
+    const benchTotal = main.prices[last] / main.prices[0] - 1;
+    b = beta(rMe, stepReturns(main.prices));
+    alpha = jensenAlpha(twrAnnual, annualize(benchTotal, days), b, RISK_FREE);
+    excess = twr - benchTotal;
+  }
+
+  // Month-end to month-end returns (the first month from the first day).
+  const monthEnds: number[] = [0];
+  for (let i = 1; i < dates.length; i++) {
+    if (dates[i].slice(0, 7) !== dates[i - 1].slice(0, 7)) monthEnds.push(i - 1);
+  }
+  if (monthEnds[monthEnds.length - 1] !== last) monthEnds.push(last);
+  const months: MonthReturn[] = monthEnds.slice(1).map((end, k) => ({
+    month: dates[end].slice(0, 7),
+    ratio: unitValues[end] / unitValues[monthEnds[k]] - 1,
+  }));
+  const pick = (better: (a: MonthReturn, b: MonthReturn) => boolean) =>
+    months.length ? months.reduce((a, m) => (better(m, a) ? m : a)) : null;
+
+  return {
+    twr,
+    twrAnnual,
+    xirr: cashFlows.length >= 2 ? xirr(cashFlows) : null,
+    alpha,
+    beta: b,
+    excessReturn: excess,
+    volatility: vol,
+    sharpe: sharpe(twrAnnual, RISK_FREE, vol),
+    sortino: sortino(rMe, twrAnnual, RISK_FREE, 365),
+    maxDrawdown: maxDrawdown(unitValues),
+    riskLevel: riskLevel(vol),
+    bestMonth: pick((m, a) => m.ratio > a.ratio),
+    worstMonth: pick((m, a) => m.ratio < a.ratio),
+    months,
+  };
+}

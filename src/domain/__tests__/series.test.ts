@@ -108,6 +108,93 @@ describe('daily value series (doc §7)', () => {
     );
   });
 
+  it('starting later gives exactly the same days as a full rebuild (incremental cache)', () => {
+    const txns = [
+      T({ id: 'd1', type: 'DEPOSIT', ts: at('2026-01-05'), amount: '10000' }),
+      T({
+        id: 'b1',
+        type: 'BUY',
+        ts: at('2026-01-05'),
+        assetId: 'X',
+        quantity: '100',
+        price: '10',
+      }),
+      T({
+        id: 'b2',
+        type: 'BUY',
+        ts: at('2026-01-06'),
+        assetId: 'U',
+        quantity: '5',
+        price: '100',
+        fee: '1',
+        fxRate: '35',
+      }),
+      T({ id: 'w1', type: 'WITHDRAW', ts: at('2026-01-08'), amount: '500' }),
+      T({
+        id: 's1',
+        type: 'SELL',
+        ts: at('2026-01-09'),
+        assetId: 'X',
+        quantity: '40',
+        price: '13',
+      }),
+      T({ id: 'sp', type: 'SPLIT', ts: at('2026-01-12'), assetId: 'X', splitRatio: '2' }),
+      T({ id: 'd2', type: 'DEPOSIT', ts: at('2026-01-13'), amount: '2500' }),
+      T({
+        id: 'v1',
+        type: 'DIVIDEND',
+        ts: at('2026-01-14'),
+        assetId: 'U',
+        amount: '2',
+        tax: '0.3',
+        fxRate: '36',
+      }),
+    ];
+    // Gaps on purpose: weekends, a rate-less day, an asset whose first close comes late.
+    const prices: PriceHistory = {
+      X: {
+        '2026-01-05': 10.2,
+        '2026-01-07': 11,
+        '2026-01-09': 12.5,
+        '2026-01-12': 6.4,
+        '2026-01-14': 6.6,
+      },
+      U: { '2026-01-08': 102, '2026-01-13': 99.5 },
+    };
+    const fx = { USD: { '2026-01-05': 35.1, '2026-01-07': 35.4, '2026-01-12': 35.9 } };
+    const opts = { to: '2026-01-15', providerSplits: [] };
+    const full = buildDailySeries(txns, ASSETS, prices, fx, opts);
+    expect(full).toHaveLength(11);
+    for (const from of daysBetween('2026-01-05', '2026-01-15')) {
+      const part = buildDailySeries(txns, ASSETS, prices, fx, { ...opts, from });
+      expect(part).toEqual(full.filter((p) => p.date >= from));
+    }
+  });
+
+  it('values an asset with no price history at its latest trade price', () => {
+    const txns = [
+      T({ id: 'd', type: 'DEPOSIT', ts: at('2026-02-02'), amount: '5000' }),
+      T({
+        id: 'b1',
+        type: 'BUY',
+        ts: at('2026-02-02'),
+        assetId: 'X',
+        quantity: '10',
+        price: '100',
+      }),
+      T({
+        id: 'b2',
+        type: 'BUY',
+        ts: at('2026-02-04'),
+        assetId: 'X',
+        quantity: '10',
+        price: '120',
+      }),
+    ];
+    const s = buildDailySeries(txns, ASSETS, {}, {}, { to: '2026-02-05' });
+    expect(s.map((p) => p.value)).toEqual([5000, 5000, 5200, 5200]);
+  });
+
   it('has calendar helpers', () => {
     expect(addDays('2026-02-28', 1)).toBe('2026-03-01');
     expect(daysBetween('2025-12-30', '2026-01-02')).toEqual([

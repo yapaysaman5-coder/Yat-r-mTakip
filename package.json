@@ -64,9 +64,13 @@
     ],
     "collectCoverageFrom": [
       "src/domain/**/*.ts",
+      "src/data/**/*.ts",
       "!src/domain/index.ts",
       "!src/domain/types.ts",
-      "!src/domain/**/__tests__/**"
+      "!src/data/types.ts",
+      "!src/data/db/expoDriver.ts",
+      "!src/data/db/nodeSqlite.d.ts",
+      "!src/**/__tests__/**"
     ],
     "coverageThreshold": {
       "./src/domain/": {
@@ -74,6 +78,12 @@
         "statements": 95,
         "functions": 95,
         "branches": 90
+      },
+      "./src/data/": {
+        "lines": 90,
+        "statements": 90,
+        "functions": 90,
+        "branches": 80
       }
     },
     "coverageReporters": [

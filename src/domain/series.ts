@@ -89,10 +89,52 @@ export function buildDailySeries(
     return f;
   };
 
+  // Until the price source has a close (or rate), the latest trade price stands in for it.
+  const closeKnown = new Set<string>();
+  const fxKnown = new Set<Currency>();
+  const noteTrade = (t: Transaction) => {
+    if ((t.type === 'BUY' || t.type === 'SELL') && t.assetId && !closeKnown.has(t.assetId)) {
+      lastClose.set(t.assetId, dec(t.price).div(splitFactor(t.assetId, trDay(t.ts))));
+    }
+    const cur = t.assetId ? assets.get(t.assetId)?.currency : undefined;
+    if (cur && cur !== 'TRY' && t.fxRate && !fxKnown.has(cur)) lastFx.set(cur, dec(t.fxRate));
+  };
+
   let i = 0;
   let netInvested = ZERO;
   const out: SeriesPoint[] = [];
-  // Seed closes from history before `first` so the first point is valued correctly.
+
+  // Starting later than the first record (incremental refresh): replay the earlier records
+  // without emitting points, so holdings, cash and net invested are right on day one.
+  while (i < sorted.length && trDay(sorted[i].ts) < first) {
+    const t = sorted[i];
+    applyTransaction(state, t);
+    if (t.type === 'DEPOSIT') netInvested = netInvested.plus(dec(t.amount));
+    if (t.type === 'WITHDRAW') netInvested = netInvested.minus(dec(t.amount));
+    noteTrade(t);
+    i++;
+  }
+  // …and carry the last known close and rate from before `first` into it.
+  const latestBefore = (byDay: Readonly<Record<string, number | string>> | undefined) => {
+    let best: string | undefined;
+    for (const d in byDay) if (d < first && (best === undefined || d > best)) best = d;
+    return best === undefined ? undefined : byDay![best];
+  };
+  for (const [assetId, closes] of Object.entries(prices)) {
+    const c = latestBefore(closes);
+    if (c !== undefined) {
+      lastClose.set(assetId, dec(c));
+      closeKnown.add(assetId);
+    }
+  }
+  for (const [cur, rates] of Object.entries(fx) as [Currency, Record<string, number | string>][]) {
+    const r = latestBefore(rates);
+    if (r !== undefined) {
+      lastFx.set(cur, dec(r));
+      fxKnown.add(cur);
+    }
+  }
+
   for (const day of daysBetween(first, last)) {
     let flow = ZERO;
     while (i < sorted.length && trDay(sorted[i].ts) <= day) {
@@ -100,24 +142,25 @@ export function buildDailySeries(
       applyTransaction(state, t);
       if (t.type === 'DEPOSIT') flow = flow.plus(dec(t.amount));
       if (t.type === 'WITHDRAW') flow = flow.minus(dec(t.amount));
-      // Trades give a price (and rate) to fall back on until a close is known.
-      if ((t.type === 'BUY' || t.type === 'SELL') && t.assetId && !lastClose.has(t.assetId)) {
-        lastClose.set(t.assetId, dec(t.price).div(splitFactor(t.assetId, day)));
-      }
-      const cur = t.assetId ? assets.get(t.assetId)?.currency : undefined;
-      if (cur && cur !== 'TRY' && t.fxRate && !lastFx.has(cur)) lastFx.set(cur, dec(t.fxRate));
+      noteTrade(t);
       i++;
     }
     for (const [assetId, closes] of Object.entries(prices)) {
       const c = closes[day];
-      if (c !== undefined) lastClose.set(assetId, dec(c));
+      if (c !== undefined) {
+        lastClose.set(assetId, dec(c));
+        closeKnown.add(assetId);
+      }
     }
     for (const [cur, rates] of Object.entries(fx) as [
       Currency,
       Record<string, number | string>,
     ][]) {
       const r = rates?.[day];
-      if (r !== undefined) lastFx.set(cur, dec(r));
+      if (r !== undefined) {
+        lastFx.set(cur, dec(r));
+        fxKnown.add(cur);
+      }
     }
     netInvested = netInvested.plus(flow);
 

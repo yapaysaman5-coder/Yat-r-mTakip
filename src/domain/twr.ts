@@ -62,7 +62,8 @@ export function twrBetween(units: readonly UnitPoint[], from: string, to: string
 
 export type ReturnPeriod = '1A' | '3A' | '6A' | 'YB' | '1Y' | 'Tümü';
 
-function monthsBack(day: string, months: number): string {
+/** The same day `months` months earlier (clamped to the month’s last day). */
+export function monthsBack(day: string, months: number): string {
   const d = new Date(`${day}T00:00:00Z`);
   const target = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - months, 1));
   const lastDay = new Date(
