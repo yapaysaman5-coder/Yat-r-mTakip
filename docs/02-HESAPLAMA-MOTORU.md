@@ -55,7 +55,7 @@
 **Bağlı (otomatik) kayıtlar:**
 
 - **Alışta nakit yetmezse:** *Otomatik para yatırma* ayarı açıksa, eksik tutar kadar bir `DEPOSIT` kaydı alışla **aynı zaman damgasıyla** oluşturulur ve alışa bağlanır (`linkedTo`). Tutar **bir üst kuruşa yuvarlanır**; böylece gerçek bir para hareketine benzer ve nakit eksiye düşmez. Alış silinir veya düzenlenirse bağlı kayıt da güncellenir.
-- **Yeniden üretim:** Otomatik kayıtlar elle düzenlenmez. Her değişiklikten sonra hepsi elle girilen işlemlerden baştan üretilir (`reconcileAutoRecords`).
+- **Yeniden üretim:** Otomatik kayıtlar elle düzenlenmez. Her değişiklikten sonra hepsi elle girilen işlemlerden baştan üretilir (`reconcileAutoRecords`). Veritabanında yalnızca elle girilen kayıtlar saklanır; otomatik kayıtlar her okumada türetilir, böylece hiçbir zaman bağlı oldukları kayıtla çelişemez (Faz 3).
 - **Satışta "Hesaptan çek" seçilirse:** Satış tutarı kadar bir `WITHDRAW` kaydı oluşur ve satışa bağlanır.
 
 ## 3. Para Birimi Kuralları
@@ -118,7 +118,7 @@ Güncel fiyat 18,00 kabul edilmiştir.
 
 ### 4.4 Kurallar
 
-- **Fazla satış engeli:** Bir tarihte, o tarihteki adetten fazla satış yapılamaz. Geçmişe dönük düzenlemelerde de kontrol edilir: geçmişteki bir alışı silmek sonraki bir satışı geçersiz kılıyorsa kullanıcı uyarılır.
+- **Fazla satış engeli:** Bir tarihte, o tarihteki adetten fazla satış yapılamaz. Geçmişe dönük düzenlemelerde de kontrol edilir: geçmişteki bir alışı silmek veya küçültmek sonraki bir satışı geçersiz kılıyorsa değişiklik **yapılmaz** ve kullanıcıya hangi satışın etkilendiği söylenir ("05.09.2025 tarihli ASELS satışı eldekinden fazla olurdu…"). Aynı kontrol nakit için de yapılır: bir para çekme veya ücret, o andaki nakitten büyük olamaz. Her kayıt yazılmadan önce tüm geçmiş yeniden oynatılarak denetlenir (Faz 3, `saveTransaction` / `deleteTransaction`).
 - **Pozisyon kapanışı:** Adet sıfırlanınca pozisyon "kapalı" olur. Kapalı pozisyonlar listede gizlenir, geçmişte ve gerçekleşen K/Z'de görünür.
 - **Hesaplama sırası:** İşlemler zaman damgasına göre sıralanarak hesaplanır. Aynı saniyede birden fazla işlem varsa sıra şöyledir: `SPLIT` → `DEPOSIT` → `BUY` → `SELL` → `DIVIDEND` → `FEE` → `WITHDRAW`. Bölünme önce uygulanır, para gelir, alınır, satılır, gelir ve giderler işlenir, en son para çıkar. Eşitlikte işlem kimliği belirleyicidir.
 
@@ -213,9 +213,12 @@ Her gün d için (ilk işlemden bugüne):
 - **Gün içi aralıklar (1G, 1H):**
   - Varlıkların 5 dk / 30 dk'lık fiyatları ortak bir zaman ızgarasına hizalanır.
   - Eksik noktalarda son fiyat taşınır.
-- **Önbellek:**
+- **Fiyatı hiç olmayan varlık:** Veri kaynağında henüz kapanış yoksa varlık **en son işlem fiyatıyla** değerlenir; ilk kapanış gelince o kullanılır.
+- **Önbellek (Faz 3 ✅):**
   - Günlük değerler cihazda saklanır (`portfolio_snapshot`).
-  - Geçmiş tarihli bir işlem eklenir veya düzenlenirse yalnızca **o tarihten sonraki** günler yeniden hesaplanır (artımlı hesap).
+  - Geçmiş tarihli bir işlem eklenir veya düzenlenirse yalnızca **o tarihten sonraki** günler yeniden hesaplanır (artımlı hesap). O güne kadarki kayıtlar sessizce yeniden oynatılır, son kapanış ve kur önceki günlerden taşınır.
+  - Son kayıtlı gün her açılışta yeniden hesaplanır (o gün "bugün" iken fiyat değişmiş olabilir).
+  - Testle doğrulanan kural: herhangi bir günden başlayan artımlı hesap, baştan hesapla **birebir aynı** sonucu verir.
 - **Görselleştirme:** Grafiğe gönderilmeden önce seri, LTTB algoritmasıyla şekli bozulmadan ~300 noktaya indirilir.
 
 ## 8. Zaman Ağırlıklı Getiri (TWR)

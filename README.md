@@ -4,10 +4,12 @@ BIST, ABD borsaları ve kripto paraları tek yerde takip eden, profesyonel yatı
 (TWR, XIRR, Alpha, risk) kişisel portföye uygulayan, tamamen telefonda çalışan portföy takip
 uygulaması.
 
-> **Durum:** Faz 1 (tasarım) ve Faz 2 (hesaplama motoru) tamamlandı. Önizleme ekranlarındaki
-> tüm rakamlar artık motordan geliyor (örnek işlem geçmişiyle). Sıradaki adım: Faz 3
-> (veritabanı: kendi işlemlerinizi kaydetme). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
-> [Faz 2 test raporu](docs/test-raporu/faz2-hesaplama-motoru.md).
+> **Durum:** Faz 1 (tasarım), Faz 2 (hesaplama motoru) ve Faz 3 (veritabanı) tamamlandı.
+> Kayıtlar telefonda kalıcı olarak saklanıyor, yedeklenip geri yüklenebiliyor. Kendi portföyüne
+> para girişi ve çıkışı eklenebiliyor; örnek portföy tüm özellikleri gösteriyor. Sıradaki adım:
+> Faz 4 (piyasa verisi: gerçek fiyatlar). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
+> test raporları: [Faz 2](docs/test-raporu/faz2-hesaplama-motoru.md),
+> [Faz 3](docs/test-raporu/faz3-veritabani.md).
 
 ![Dört tema](docs/onizleme/faz1/1-temalar-ana-ekran.jpg)
 
@@ -19,7 +21,7 @@ uygulaması.
 | 2 | [Hesaplama Motoru](docs/02-HESAPLAMA-MOTORU.md) | Maliyet, K/Z, TWR, XIRR, risk ve "Ya Olsaydı?" formülleri, örnek hesaplar |
 | 3 | [Teknik Mimari](docs/03-TEKNIK-MIMARI.md) | Expo / React Native, klasör yapısı, veri modeli, piyasa veri kaynakları |
 | 4 | [Yol Haritası](docs/04-YOL-HARITASI.md) | Fazlar ve bitiş kriterleri |
-| — | [Önizleme görselleri](docs/onizleme/faz1/) | Faz 1 ekranları, 4 tema |
+| — | [Önizleme görselleri](docs/onizleme/) | Her fazın ekranları |
 
 ## Öne Çıkanlar
 
@@ -38,7 +40,8 @@ uygulaması.
   - Aynı tutarları aynı tarihlerde şunlara yatırsaydınız ne olurdu: BIST 100, BIST 30, altın, gümüş, S&P 500, Russell 2000, Nasdaq, Bitcoin, Dolar/TL, Euro/TL, TÜFE, mevduat
   - Lig tablosu ve dokun-kaydır grafikle karşılaştırma
 - **Temalar:** 4 tema: Okyanus (mavi), Gece, Gün, Kraliyet. Hepsi WCAG AA kontrast testinden geçer
-- **Gizlilik:** Veriler telefonda kalır, gizlilik modu, parmak izi kilidi (Faz 10)
+- **Gizlilik:** Veriler telefonda kalır (SQLite), gizlilik modu, parmak izi kilidi (Faz 10)
+- **Yedekleme:** Tek dosya JSON yedek, paylaş menüsüyle Drive'a veya e-postaya; denetimli geri yükleme
 
 ## Geliştirme
 

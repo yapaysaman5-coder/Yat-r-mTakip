@@ -53,7 +53,7 @@ Sürümler 8 Kasım 2026'da npm'den kontrol edilmiştir. Yerel modüller `npx ex
 | Yüksek performanslı liste | `@shopify/flash-list` | 2.3 |
 | Alt sayfa (bottom sheet) ✅ | Kendi `Sheet` bileşenimiz (Reanimated + Gesture Handler v3) | — |
 | Degrade ✅ | `expo-linear-gradient` | SDK 58 |
-| Yerel veritabanı | `expo-sqlite` (ayarlar için `kv-store` ✅) + `drizzle-orm` | SDK 58 / 0.45 |
+| Yerel veritabanı ✅ | `expo-sqlite` (ayarlar için `kv-store`), ince SQL katmanı (bkz. §5) | SDK 58 |
 | Uygulama durumu ✅ | `zustand` (kalıcı ayarlar) | 5.1 |
 | Ağ verisi önbelleği | `@tanstack/react-query` | 5.x |
 | Hassas ondalık hesap ✅ | `decimal.js` | 10.6 |
@@ -63,7 +63,7 @@ Sürümler 8 Kasım 2026'da npm'den kontrol edilmiştir. Yerel modüller `npx ex
 | Güvenli anahtar deposu | `expo-secure-store` | SDK 58 |
 | Ekran görüntüsü engeli | `expo-screen-capture` | SDK 58 |
 | Bulanıklaştırma | `expo-blur` | SDK 58 |
-| Dosya, paylaşma, belge seçici | `expo-file-system`, `expo-sharing`, `expo-document-picker` | SDK 58 |
+| Dosya, paylaşma, belge seçici ✅ | `expo-file-system`, `expo-sharing`, `expo-document-picker` (yedekleme) | SDK 58 |
 | Yazı tipi ✅ | `@expo-google-fonts/inter` (Inter 400–800, eşit genişlikli rakamlar) | 0.4 |
 | Simgeler ✅ | `lucide-react-native` | 1.70 |
 | Test ✅ | `jest`, `jest-expo`, `@testing-library/react-native` | 30 / 58 |
@@ -112,7 +112,7 @@ Android geri tuşu desteği.
 
 ## 4. Klasör Yapısı
 
-✅ = Faz 1'de oluşturuldu.
+✅ = oluşturuldu (Faz 1–3).
 
 ```
 src/
@@ -126,54 +126,73 @@ src/
     ayarlar/index.tsx        Ayarlar ✅
     ayarlar/gorunum.tsx      Tema seçimi ✅
     ayarlar/vitrin.tsx       Tasarım vitrini ✅
+    ayarlar/veri.tsx         Veri ve Yedekleme ✅
     varlik/[id].tsx          Varlık detay (Faz 6)
-    islem/yeni.tsx           Al / Sat / Para / Temettü formu (Faz 6)
+    islem/nakit.tsx          Para Yatır / Para Çek formu ✅ (Faz 3'te öne alındı)
+    islem/yeni.tsx           Al / Sat / Temettü formu (Faz 6)
     kilit.tsx                Kilit ekranı (Faz 10)
     baslangic/               İlk açılış akışı (Faz 10)
   components/                uygulamaya özel parçalar ✅
-                             (TabBar, QuickActionSheet, HoldingRow, PreviewNote)
+                             (TabBar, QuickActionSheet, HoldingRow, PreviewNote,
+                             PortfolioSheet, TxnDetailSheet, EmptyPortfolio)
   ui/                        tasarım sistemi bileşenleri ✅
   ui/charts/                 AreaChart, LineChart, Sparkline, Donut, path ✅
   theme/                     types, themes, tokens, ThemeProvider, contrast ✅
-  state/                     Zustand store'ları (settings ✅)
-  lib/                       storage (kalıcı ayarlar), haptics ✅
-  i18n/tr.ts                 arayüz metinleri ✅
+  state/                     Zustand store'ları (settings ✅, portfolio ✅: aktif portföy görünümü)
+  lib/                       storage (kalıcı ayarlar), haptics, backupFile (paylaş/seç) ✅
+  i18n/tr.ts                 arayüz metinleri ✅ (rejections.ts: reddedilen değişikliklerin açıklaması)
   utils/format.ts            Türkçe biçimlendiriciler ✅
-  demo/                      önizleme için örnek veri ✅ (gerçek veri gelince kalkar)
-                             market.ts: örnek fiyat yolları · portfolio.ts: örnek işlem
-                             geçmişi motordan geçer · data.ts: ekranlara özet
   domain/                    hesaplama motoru + testler ✅ (Faz 2)
                              ledger · valuation · autoRecords · series · twr · metrics
                              whatIf · inflation · splits · validate · lttb · decimal
-  data/db/                   şema, migration, repository (Faz 3)
+  data/                      veri katmanı ✅ (Faz 3)
+    db/                      SQL sürücüsü (expo-sqlite; testte Node SQLite), migration'lar
+    repo/                    portfolios · assets · transactions · prices · snapshots
+    service/                 kayıt kaydet/sil (kontrollü) · değer önbelleği · yükleme ·
+                             yedek · bakım (istatistik, tümünü sil, hız testi)
+    demo/                    örnek portföy: kurgusal piyasa, geçmiş, ölçütler, yazma
+    view/                    ekran modeli (saf): özet, varlıklar, geçmiş, grafik, analiz
   data/market/               yahoo · binance · coingecko · tcmb · mock (Faz 4)
-  hooks/                     usePortfolio, useQuotes, useSeries (Faz 3–5)
+  hooks/                     useQuotes (Faz 4–5)
 docs/                        dokümanlar ve önizleme görselleri
 ```
 
 ## 5. Veri Modeli (SQLite)
 
-Tutar ve adetler **TEXT** olarak, tam ondalık hassasiyetle saklanır (bkz. Hesaplama Motoru §14).
-Zaman damgaları UTC ISO-8601'dir, gösterimde Europe/Istanbul'a çevrilir.
+> **Durum (Faz 3 ✅):** Şema sürüm 1 kodlandı (`src/data/db/migrations.ts`). Aşağıdaki tablolar
+> kullanılıyor; diğerleri ilgili fazda yeni migration'la eklenecek.
+
+**Saklama kuralları:**
+
+- Kullanıcının girdiği tutar ve adetler (adet, fiyat, komisyon, kur, tutar, stopaj) **TEXT** olarak, tam ondalık hassasiyetle saklanır (bkz. Hesaplama Motoru §14).
+- Fiyat geçmişi ve günlük değer önbelleği **türetilmiş veridir** ve REAL (ondalıklı sayı) olarak tutulur. Kaybolsa yeniden indirilir veya hesaplanır.
+- Zaman damgaları UTC ISO-8601'dir. Gün sınırları İstanbul saatine göredir.
+- **Otomatik kayıtlar saklanmaz.** Otomatik para yatırma ve satış tutarını çekme kayıtları, her okumada elle girilen kayıtlardan türetilir. Böylece hiçbir zaman bağlı oldukları kayıtla çelişemezler.
 
 | Tablo | Sütunlar | Not |
 |---|---|---|
-| `portfolio` | id, name, color, icon, sort_order, archived, created_at | Çoklu portföy |
-| `asset` | id, market (`BIST`/`US`/`CRYPTO`/`FX`/`COMMODITY`/`INDEX`/`CUSTOM`), symbol, provider_symbol (ör. `THYAO.IS`), name, currency, logo_url, price_decimals, meta_json | Varlık tanımı |
-| `txn` | id, portfolio_id, asset_id (nakit işlemlerinde boş), type, ts, quantity, price, fee, fx_rate, amount, tax, split_ratio, note, linked_txn_id, is_auto, created_at, updated_at | Tüm işlemler. İndeks: (portfolio_id, ts), (asset_id, ts) |
-| `quote` | provider_symbol, price, prev_close, change_pct, market_state, ts | Son fiyat önbelleği |
-| `price_daily` | provider_symbol, date, open, high, low, close, adj_close, volume | Günlük fiyat önbelleği |
-| `price_intraday` | provider_symbol, ts, close | 1G/1H için, süreli önbellek |
-| `fx_daily` | pair, date, rate | USD/TRY, EUR/TRY |
-| `corporate_action` | provider_symbol, date, type (`SPLIT`/`DIVIDEND`), ratio, amount | Bölünme tespiti |
-| `portfolio_snapshot` | portfolio_id, date, value, cash, net_invested, nav, units | Günlük değer önbelleği. `nav`/`units` yalnızca TWR iç hesabı içindir, ekranda gösterilmez |
-| `inflation_monthly` | yyyymm, index | TÜFE |
-| `watchlist` | asset_id, sort_order | İzleme listesi |
-| `alert` *(P2)* | id, asset_id, condition, value, active | Fiyat alarmı |
-| `setting` | key, value_json | Tüm ayarlar |
+| `portfolio` ✅ | id, name, kind (`user`/`demo`), color, sort_order, meta_json, series_dirty_from, created_at | `series_dirty_from`: değer önbelleğinin yeniden hesaplanacağı ilk gün |
+| `asset` ✅ | id, market, symbol, provider_symbol, name, currency, meta_json, created_at | Döviz kurları da varlıktır (`FX:USDTRY`). Örnek portföyün varlıkları `demo:` ile başlar |
+| `txn` ✅ | id, portfolio_id, asset_id, type, ts, quantity, price, fee, fx_rate, amount, tax, split_ratio, withdraw_proceeds, note, created_at, updated_at | Yalnızca elle girilen kayıtlar. İndeks: (portfolio_id, ts), (asset_id, ts). Portföy silinince kayıtları da silinir |
+| `price_daily` ✅ | asset_id, date, close | Günlük kapanış (varlıklar, kurlar, ölçütler). Faz 4'te açılış/yüksek/düşük eklenecek |
+| `portfolio_snapshot` ✅ | portfolio_id, date, value, cash, net_invested, flow | Günlük değer önbelleği. TWR'nin iç birim değerleri buradan anında hesaplanır, ayrıca saklanmaz |
+| `quote` | provider_symbol, price, prev_close, change_pct, market_state, ts | Canlı fiyat önbelleği (Faz 4) |
+| `price_intraday` | provider_symbol, ts, close | 1G/1H için, süreli önbellek (Faz 4) |
+| `corporate_action` | provider_symbol, date, type, ratio, amount | Bölünme tespiti (Faz 4) |
+| `inflation_monthly` | yyyymm, index | TÜFE (Faz 9) |
+| `watchlist`, `alert` | | İzleme listesi, fiyat alarmı (sonraki sürümler) |
 
-- **Şema değişiklikleri:** Numaralı migration dosyalarıyla yapılır. Uygulama güncellense de veri kaybolmaz.
-- **Yedek dosyası:** `{ schemaVersion, exportedAt, portfolios, assets, transactions, settings }` biçiminde JSON. Fiyat önbellekleri yedeğe girmez, yeniden indirilir.
+- **Şema değişiklikleri:** Numaralı migration'larla yapılır. Veritabanı son uygulananı `PRAGMA user_version` ile bilir; açılışta eksik olanlar sırayla, her biri kendi işleminde (transaction) uygulanır. Yarıda kalan bir migration tamamen geri alınır. Uygulamanın daha yeni bir sürümüyle yazılmış veritabanı açılmaz (veri bozulmasın diye).
+- **Ayarlar:** Görünüm ayarları ve aktif portföy `kv-store`'da (küçük anahtar-değer deposu) kalır.
+- **Kayıt kontrolleri:** Her ekleme, düzenleme ve silme yazılmadan önce tüm geçmiş yeniden oynatılarak denetlenir: alan kuralları, fazla satış (geçmişe dönük dahil) ve nakdin eksiye düşmesi. Sorun varsa hiçbir şey yazılmaz ve Türkçe açıklama gösterilir.
+- **Değer önbelleği:** Bir değişiklik, önbelleği değişen ilk günden itibaren "eski" olarak işaretler. Bir sonraki okumada yalnızca o günden bugüne hesaplanır.
+- **Örnek portföy:** Kendi kurgusal fiyatlarıyla (`demo:` varlıkları) veritabanına yazılır, gerçek piyasa verisiyle karışmaz. Geçmişi oluşturulduğu gün biter; Ayarlar › Veri'den bugüne taşınabilir veya kaldırılabilir.
+- **Yedek dosyası:** `{ format, schemaVersion, exportedAt, portfolios, assets, transactions, settings }` biçiminde tek JSON dosyası.
+  - Fiyat geçmişi yedeğe girmez, yeniden indirilir. Örnek portföyün fiyatları, bitiş gününden birebir aynı üretilir.
+  - Geri yüklemeden önce dosya baştan sona denetlenir (biçim, sürüm, alanlar, kayıt tutarlılığı). Sorun varsa hiçbir şey değişmez.
+  - Geri yükleme tek işlemde yapılır: ya tamamı ya hiçbiri.
+- **Neden Drizzle değil:** Plan `drizzle-orm` kullanmaktı. Sorgular küçük ve elle yazılmış SQL ile yazıldı. Böylece aynı kod testlerde Node'un yerleşik SQLite'ı ile **gerçek SQLite üzerinde** çalışıyor; derleme sırasında SQL paketleme ve ek bağımlılık gerekmiyor.
+- **Web önizleme:** `expo-sqlite` web'de WebAssembly ile çalışır. Metro'ya `wasm` uzantısı eklendi. Sunucunun `Cross-Origin-Opener-Policy: same-origin` ve `Cross-Origin-Embedder-Policy: require-corp` başlıklarını göndermesi gerekir.
 
 ## 6. Piyasa Veri Kaynakları
 
@@ -261,7 +280,8 @@ veya sağlık kontrolünden geçemezse otomatik olarak yedeğe geçilir.
 
 | Katman | Araç | Hedef |
 |---|---|---|
-| Hesaplama motoru | Jest | Hesaplama Motoru §15'teki tüm senaryolar. `src/domain` için ≥ %95 kod kapsamı |
+| Hesaplama motoru | Jest | Hesaplama Motoru §15'teki tüm senaryolar. `src/domain` için ≥ %95 kod kapsamı ✅ |
+| Veri katmanı | Jest + Node'un yerleşik SQLite'ı | Migration, kayıt kuralları, artımlı önbellek = baştan hesap, yedek → geri yükleme = birebir aynı. `src/data` için ≥ %90 satır kapsamı ✅ |
 | Biçimlendiriciler | Jest | `tr-TR` para, yüzde, tarih ve kısaltma çıktıları |
 | Bileşenler | Testing Library | Form doğrulamaları, kaydırma eylemleri |
 | Tema erişilebilirliği | Jest | Her temada tüm metin/zemin çiftleri ≥ 4,5:1 kontrast (WCAG AA) ✅ |

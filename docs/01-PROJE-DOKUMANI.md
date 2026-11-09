@@ -887,6 +887,15 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 14 | Pay adedi, pay tutarı olmasın, bu bir fon değil | Hesabım ekranında pay değeri ve pay sayısı kaldırıldı. Yerine Maliyet, Kâr/Zarar ve Bugün gösterilir. TWR hesabı arka planda aynı yöntemle yapılır ama pay kavramı ekranda görünmez |
 | 15 | Alpha, TWR, XIRR, Bugün | Analiz'in en üstüne **Performans Karnesi** eklendi. Performans sekmesine Beta, Sharpe, Sortino, volatilite, maks. düşüş, en iyi/kötü ay, dönemsel tablo ve aylık harita eklendi. Hesap fonksiyonları yazıldı ve test edildi |
 
+### 9 Kasım 2026: Faz 3'te verilen kararlar
+
+| # | Konu | Karar |
+|---|---|---|
+| 16 | **İlk açılış** | Boş bir "Ana Portföy" (kendi kayıtların) ve ayrı bir "Örnek Portföy" (kurgusal fiyatlar) oluşturulur. İkisi asla karışmaz. Örnek, Ayarlar › Veri ve Yedekleme'den kaldırılabilir veya bugüne taşınabilir. İlk açılış akışı Faz 10'da gelecek |
+| 17 | **Geçmişe dönük tutarsız değişiklik** | Uyarıyla bırakılmaz, **yapılmaz**. Kullanıcıya hangi satışın veya çekişin etkilendiği söylenir. Böylece kayıtlar her zaman tutarlı kalır (T8) |
+| 18 | **Otomatik kayıtlar** | Saklanmaz, her seferinde türetilir. Elle silinemez ve düzenlenemez. Bağlı olduğu alış veya satış değişince kendiliğinden güncellenir |
+| 19 | **Silme** | Onay penceresi yerine anında silme ve 5 saniye **GERİ AL**. Toplu ve geri dönüşsüz işlemlerde (tüm verileri silme, yedekten geri yükleme) ise açık onay istenir |
+
 ---
 
 ## 14. Yasal Uyarı

@@ -13,9 +13,9 @@
 | Faz | Konu | Sonunda göreceğiniz |
 |---|---|---|
 | 0 | Doküman ve onay | Bu dokümanlar ✅ |
-| 1 | Proje iskeleti ve tasarım sistemi | 4 temalı, alt barlı, gezilebilir uygulama kabuğu |
-| 2 | Hesaplama motoru | Tüm formüllerin test raporu |
-| 3 | Veritabanı ve kalıcılık | İşlemler kaydediliyor, uygulama kapanınca kaybolmuyor. Örnek portföy |
+| 1 | Proje iskeleti ve tasarım sistemi ✅ | 4 temalı, alt barlı, gezilebilir uygulama kabuğu |
+| 2 | Hesaplama motoru ✅ | Tüm formüllerin test raporu |
+| 3 | Veritabanı ve kalıcılık ✅ | İşlemler kaydediliyor, uygulama kapanınca kaybolmuyor. Örnek portföy |
 | 4 | Piyasa verisi | Telefonda gerçek ve canlı fiyatlar |
 | 5 | Portföy (ana ekran) | Canlı bakiye, grafik, canlı bütçe, kaydırmalı liste |
 | 6 | İşlem ekranları ve varlık detayı | Al/Sat, para yatır/çek, varlık detay |
@@ -96,18 +96,36 @@ geçiş yapılıyor. Ekran görüntüleri paylaşıldı ✅
 
 > **Not:** T12'deki hız hedefi (10.000 işlem < 200 ms) tam karşılanmadı: ~270 ms. Gerçekçi
 > boyutta (~1.150 işlem) 25–35 ms. Faz 3'teki günlük değer önbelleği ile tüm geçmişin baştan
-> hesaplanması nadir bir işlem olacak. Telefonda ölçüm Faz 3'te yapılacak.
+> hesaplanması nadir bir işlem oldu. Telefonda ölçüm için uygulamaya hız testi eklendi
+> (Ayarlar › Veri ve Yedekleme).
 
-## Faz 3: Veritabanı ve Kalıcılık
+## Faz 3: Veritabanı ve Kalıcılık ✅ (9 Kasım 2026)
 
-- [ ] SQLite şeması ve migration altyapısı
-- [ ] Repository'ler, işlem ekleme/düzenleme/silme ve doğrulamalar (fazla satış vb.)
-- [ ] Günlük değer önbelleği (artımlı yeniden hesap)
-- [ ] Örnek (demo) portföy üretici
-- [ ] Yedeği dışa ve içe aktarma (JSON)
+- [x] SQLite şeması ve migration altyapısı (`PRAGMA user_version`, yarıda kalan migration geri alınır, yeni sürüm veritabanı korunur)
+- [x] Repository'ler: portföy, varlık, kayıt, günlük fiyat, değer önbelleği
+- [x] Kayıt ekleme, düzenleme ve silme kontrolleri:
+  - Alan kuralları
+  - Fazla satış, geçmişe dönük dahil (T7, T8)
+  - Nakdin eksiye düşmesi
+  - Otomatik kayıtlar saklanmaz, türetilir
+- [x] Günlük değer önbelleği: değişen ilk günden itibaren artımlı hesap (baştan hesapla birebir aynı)
+- [x] Örnek portföy veritabanında, kendi kurgusal fiyatlarıyla. Her zaman oluşturulduğu gün biter
+- [x] Yedeği dışa ve içe aktarma (JSON): paylaş menüsü, dosya seçici, tam denetim, ya hep ya hiç geri yükleme
+- [x] Ekranlar veritabanından çalışıyor. Boş portföy ekranları, portföy seçici
+- [x] **Ek (Faz 6'dan öne alındı):** Para Yatır / Para Çek formu
+- [x] **Ek (Faz 7'den öne alındı):** Kayıt detayı, düzenleme (para kayıtları), silme ve geri alma
+- [x] **Ek (Faz 10'dan öne alındı):** Ayarlar › Veri ve Yedekleme:
+  - Sayılar, yedekleme
+  - Örnek portföyü bugüne taşıma ve kaldırma
+  - Tüm verileri silme
+  - Telefonda hız testi
 
-**Bitiş kriteri:** Eklenen işlemler uygulama yeniden açılınca duruyor. Yedekten geri yükleme
-birebir aynı sonucu veriyor.
+**Bitiş kriteri:** Eklenen işlemler uygulama yeniden açılınca duruyor ✅. Yedekten geri yükleme
+birebir aynı sonucu veriyor ✅ ([faz3-veritabani.md](test-raporu/faz3-veritabani.md)).
+
+> **Not:** Alış ve satış formları Faz 6'da gelecek. Şimdilik kendi portföyüne para girişi ve
+> çıkışı eklenebiliyor; tüm kayıt türleri örnek portföyde görülebiliyor. Gerçek fiyatlar ve
+> "Ya Olsaydı?" ölçütleri Faz 4'te (piyasa verisi) gelecek.
 
 ## Faz 4: Piyasa Verisi
 
@@ -148,7 +166,7 @@ görüntüleri 4 temada paylaşıldı.
   - Tarihli kapanış fiyatı önerisi, kur alanı
   - Otomatik komisyon, canlı özet
   - Nakit kaynağı seçimi, satış ön izlemesi
-- [ ] Para yatırma/çekme, temettü, bölünme formları
+- [ ] Temettü, bölünme formları (para yatırma/çekme Faz 3'te yapıldı ✅)
 - [ ] Varlık detay:
   - Fiyat grafiği (alış ▲ ve satış ▼ işaretleri, maliyet çizgisi)
   - Pozisyon kartı, kur etkisi
@@ -186,7 +204,7 @@ görüntüleri 4 temada paylaşıldı.
 
 - [ ] Tüm ayar grupları (01-PROJE-DOKUMANI §6.8)
 - [ ] Face ID / parmak izi kilidi, otomatik kilit, arka planda bulanıklaştırma, ekran görüntüsü engeli
-- [ ] Yedekleme, CSV dışa aktarma, tüm verileri silme
+- [ ] CSV dışa aktarma (yedekleme ve tüm verileri silme Faz 3'te yapıldı ✅)
 - [ ] İlk açılış akışı, boş durumlar, yükleniyor durumları
 - [ ] Yatay tam ekran grafik ve mum grafik
 - [ ] Erişilebilirlik (ekran okuyucu, dinamik yazı boyutu, kontrast) ve performans ölçümü
