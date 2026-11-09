@@ -310,7 +310,10 @@ export default function PortfolioScreen() {
                     {i > 0 ? (
                       <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 56 }} />
                     ) : null}
-                    <HoldingRow holding={h} onPress={() => soon('Varlık detayı')} />
+                    <HoldingRow
+                      holding={h}
+                      onPress={() => router.push(`/varlik/${encodeURIComponent(h.assetId)}`)}
+                    />
                   </View>
                 ))}
               </Card>

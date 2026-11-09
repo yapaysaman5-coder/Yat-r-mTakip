@@ -1,4 +1,5 @@
 import { Plus, RefreshCw, Search, Trash2 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -283,6 +284,7 @@ function SearchSheet({ visible, onClose }: { visible: boolean; onClose: () => vo
 
 function DetailSheet({ item, onClose }: { item: WatchItem | null; onClose: () => void }) {
   const { colors } = useTheme();
+  const router = useRouter();
   const removeWatch = useMarketStore((s) => s.removeWatch);
   const mock = useMarketStore((s) => s.mock);
   const now = useNow();
@@ -347,6 +349,33 @@ function DetailSheet({ item, onClose }: { item: WatchItem | null; onClose: () =>
               </Text>
             </View>
           ))}
+        </View>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <Button
+            label="Ayrıntı"
+            variant="secondary"
+            style={{ flex: 1 }}
+            fullWidth
+            onPress={() => {
+              onClose();
+              router.push(`/varlik/${encodeURIComponent(inst.id)}`);
+            }}
+          />
+          {/^(BIST|US|CRYPTO):/.test(inst.id) ? (
+            <Button
+              label="Al"
+              variant="buy"
+              style={{ flex: 1 }}
+              fullWidth
+              onPress={() => {
+                onClose();
+                router.push({
+                  pathname: '/islem/al-sat',
+                  params: { side: 'BUY', assetId: inst.id },
+                });
+              }}
+            />
+          ) : null}
         </View>
         <Button
           label="Listeden çıkar"

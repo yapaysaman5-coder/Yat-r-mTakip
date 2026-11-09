@@ -18,6 +18,8 @@ export interface ScreenProps {
   withTabBar?: boolean;
   scroll?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
+  /** Fixed below the scroll area (e.g. AL / SAT buttons). */
+  footer?: ReactNode;
 }
 
 /** Screen container: themed background, safe-area padding, gutter and bottom room. */
@@ -27,11 +29,13 @@ export function Screen({
   withTabBar = false,
   scroll = true,
   contentStyle,
+  footer,
 }: ScreenProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const bottom =
-    insets.bottom + (withTabBar ? TAB_BAR_HEIGHT + TAB_BAR_BOTTOM_GAP + space.xl : space.xxl);
+  const bottom = footer
+    ? space.lg
+    : insets.bottom + (withTabBar ? TAB_BAR_HEIGHT + TAB_BAR_BOTTOM_GAP + space.xl : space.xxl);
   const inner: StyleProp<ViewStyle> = [
     { paddingHorizontal: GUTTER, paddingBottom: bottom, gap: space.lg },
     contentStyle,
@@ -49,6 +53,19 @@ export function Screen({
       ) : (
         <View style={[{ flex: 1 }, inner]}>{children}</View>
       )}
+      {footer ? (
+        <View
+          style={{
+            paddingHorizontal: GUTTER,
+            paddingTop: space.md,
+            paddingBottom: insets.bottom + space.md,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            backgroundColor: colors.bg,
+          }}>
+          {footer}
+        </View>
+      ) : null}
     </View>
   );
 }

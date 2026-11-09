@@ -97,6 +97,9 @@ export default function TradeScreen() {
   const [note, setNote] = useState(editing?.note ?? '');
   const [payment, setPayment] = useState<Payment>('cash');
   const [withdraw, setWithdraw] = useState(!!editing?.withdrawProceeds);
+  // Typed by hand (or loaded for an edit): never replaced by a suggestion.
+  const [priceTouched, setPriceTouched] = useState(!!editing);
+  const [fxTouched, setFxTouched] = useState(!!editing);
   const [closeHint, setCloseHint] = useState<DayClose | null>(null);
   const [fxHint, setFxHint] = useState<DayClose | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -124,13 +127,13 @@ export default function TradeScreen() {
       setCloseHint(c);
       setFxHint(r);
       // Fill empty fields with the day's figures (never overwrite what was typed).
-      if (c) setPrice((p) => p || toInput(c.close, priceDecimals(c.close)));
-      if (r) setFx((f) => f || toInput(r.close, 4));
+      if (c && !priceTouched) setPrice(toInput(c.close, priceDecimals(c.close)));
+      if (r && !fxTouched) setFx(toInput(r.close, 4));
     })().catch(() => undefined);
     return () => {
       alive = false;
     };
-  }, [asset, day, view.isDemo, view.portfolio.kind]);
+  }, [asset, day, view.isDemo, view.portfolio.kind, priceTouched, fxTouched]);
 
   const priceN = num(price);
   const fxN = foreign ? num(fx) : 1;
@@ -317,7 +320,10 @@ export default function TradeScreen() {
       <TextField
         label={`Fiyat (${ccy === 'TRY' ? '₺' : '$'})`}
         value={price}
-        onChangeText={setPrice}
+        onChangeText={(t) => {
+          setPriceTouched(true);
+          setPrice(t);
+        }}
         placeholder="0,00"
         keyboardType="decimal-pad"
         hint={
@@ -341,7 +347,10 @@ export default function TradeScreen() {
         <TextField
           label={`Kur (1 ${asset?.currency} kaç ₺)`}
           value={fx}
-          onChangeText={setFx}
+          onChangeText={(t) => {
+            setFxTouched(true);
+            setFx(t);
+          }}
           placeholder="0,0000"
           keyboardType="decimal-pad"
           hint={
@@ -515,6 +524,8 @@ export default function TradeScreen() {
           setAsset(a);
           setPrice('');
           setFx('');
+          setPriceTouched(false);
+          setFxTouched(false);
           setCloseHint(null);
           setFxHint(null);
         }}
