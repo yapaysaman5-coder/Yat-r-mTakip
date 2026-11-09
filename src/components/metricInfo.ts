@@ -68,6 +68,12 @@ export const METRIC_INFO = {
     body: 'Avrupa fon standardındaki ölçek kullanılır: 1 çok düşük, 7 çok yüksek risk. Portföyün volatilitesine göre otomatik belirlenir.',
     formula: '<%0,5 →1 · <%2 →2 · <%5 →3 · <%10 →4 · <%15 →5 · <%25 →6 · üstü →7',
   },
+  excess: {
+    title: 'Fazla getiri',
+    short: 'Ölçüte göre fark (puan)',
+    body: 'Aynı dönemde portföyünün zaman ağırlıklı getirisi ile ölçütün getirisi arasındaki farktır. Riski hesaba katmaz; riske göre düzeltilmiş hali Alpha’dır.',
+    formula: 'TWR(portföy) − getiri(ölçüt)   (aynı dönem, puan)',
+  },
   bestMonth: {
     title: 'En iyi ve en kötü ay',
     short: 'Aylık getiri uçları',

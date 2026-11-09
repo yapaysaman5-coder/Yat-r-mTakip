@@ -80,7 +80,9 @@ export default function AnalysisScreen() {
         metric={info?.key ?? null}
         value={info?.value}
         context={
-          info && ['alpha', 'beta', 'sharpe', 'sortino'].includes(info.key) ? CONTEXT : undefined
+          info && ['alpha', 'beta', 'sharpe', 'sortino', 'excess'].includes(info.key)
+            ? CONTEXT
+            : undefined
         }
         onClose={() => setInfo(null)}
       />
@@ -454,6 +456,18 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
             tone="down"
             sub="zirveden en büyük kayıp"
             onPress={() => onInfo('maxDrawdown', formatPercent(-m.maxDrawdown, { decimals: 1 }))}
+          />
+          <MetricTile
+            label="Fazla getiri"
+            value={`${formatNumber(m.excessReturn * 100, { minDecimals: 1, maxDecimals: 1, sign: 'always' })} p`}
+            tone={tone(m.excessReturn)}
+            sub={`${BENCHMARK_NAME}’e göre, tüm dönem`}
+            onPress={() =>
+              onInfo(
+                'excess',
+                `${formatNumber(m.excessReturn * 100, { minDecimals: 1, maxDecimals: 1, sign: 'always' })} puan`,
+              )
+            }
           />
           <MetricTile
             label="En iyi ay"
