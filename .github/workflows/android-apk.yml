@@ -76,7 +76,17 @@ jobs:
 
       - name: Build APK (arm64)
         working-directory: android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
+        run: |
+          # Dependency downloads (Maven Central, GitHub release redirects) have also returned
+          # 504s; Gradle keeps what it already fetched, so a retry resumes where it stopped.
+          for attempt in 1 2 3; do
+            if ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace; then
+              exit 0
+            fi
+            [ "$attempt" = 3 ] && exit 1
+            echo "Build failed (attempt $attempt/3); retrying in $((attempt * 60)) s..."
+            sleep $((attempt * 60))
+          done
 
       - name: Collect APK
         run: |
