@@ -907,6 +907,16 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 24 | **TWR kuralı** | Para girişi günün başında, çıkışı günün sonunda sayılır. Büyük girişlerde sonucu bozabilen eski "gün sonu" kuralının yerine geçti |
 | 25 | **Web önizlemesi** | Tarayıcılar bu kaynakları engellediği için web önizlemesi kurgusal fiyat kullanır ve bunu ekranda açıkça yazar |
 
+### 9 Kasım 2026: Faz 6'da verilen kararlar
+
+| # | Konu | Karar |
+|---|---|---|
+| 26 | **Sıra** | Fiyatlar geldiği için işlem ekranları (Faz 6), ana ekrandan (Faz 5) önce yapıldı |
+| 27 | **Varsayılan komisyon** | BIST ‰2, ABD işlem başına $1, kripto %0,1. Formda değiştirilebilir; ayarı Faz 10'da |
+| 28 | **Geçmiş tarihli işlem saati** | Saat yazılmazsa piyasanın seans içi bir saati: BIST 11:00, ABD 18:00, diğerleri 12:00 (İstanbul) |
+| 29 | **Önizleme** | Formdaki her rakam, kaydedilecek kayıtla tüm geçmiş yeniden oynatılarak hesaplanır; kaydedilen ile gösterilen aynıdır |
+| 30 | **Stopaj önerisi** | BIST temettülerinde %15, ABD'de %20; değiştirilebilir |
+
 ---
 
 ## 14. Yasal Uyarı

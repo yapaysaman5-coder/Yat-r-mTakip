@@ -18,7 +18,7 @@
 | 3 | Veritabanı ve kalıcılık ✅ | İşlemler kaydediliyor, uygulama kapanınca kaybolmuyor. Örnek portföy |
 | 4 | Piyasa verisi ✅ | Telefonda gerçek ve canlı fiyatlar |
 | 5 | Portföy (ana ekran) | Canlı bakiye, grafik, canlı bütçe, kaydırmalı liste |
-| 6 | İşlem ekranları ve varlık detayı | Al/Sat, para yatır/çek, varlık detay |
+| 6 | İşlem ekranları ve varlık detayı ✅ | Al/Sat, para yatır/çek, varlık detay |
 | 7 | Geçmiş | 4 alt sekmeli geçmiş ekranı |
 | 8 | Fon (Hesabım) | Varlık/Maliyet tuşlu fon ekranı |
 | 9 | Analiz | Ya Olsaydı?, performans, risk, dağılım |
@@ -172,18 +172,27 @@ APK ile doğrulanacak). İnternet kesilince son fiyatlarla çalışmaya devam ed
 **Bitiş kriteri:** Ana ekran örnek ve gerçek veriyle akıcı çalışıyor (60 fps). Ekran
 görüntüleri 4 temada paylaşıldı.
 
-## Faz 6: İşlem Ekranları ve Varlık Detayı
+## Faz 6: İşlem Ekranları ve Varlık Detayı ✅ (9 Kasım 2026, Faz 5'ten önce yapıldı)
 
-- [ ] Varlık arama (BIST / ABD / Kripto sekmeleri, son kullanılanlar)
-- [ ] Al / Sat formu:
-  - Tarihli kapanış fiyatı önerisi, kur alanı
-  - Otomatik komisyon, canlı özet
-  - Nakit kaynağı seçimi, satış ön izlemesi
-- [ ] Temettü, bölünme formları (para yatırma/çekme Faz 3'te yapıldı ✅)
-- [ ] Varlık detay:
-  - Fiyat grafiği (alış ▲ ve satış ▼ işaretleri, maliyet çizgisi)
-  - Pozisyon kartı, kur etkisi
-  - Alış/Satış sekmeleri, AL ve SAT butonları
+- [x] Varlık seçimi: BIST / ABD / Kripto sekmeleri, son kullanılanlar ve izleme listesi, internetsiz arama; örnek portföyde yalnız örnek varlıklar
+- [x] Al / Sat formu:
+  - Tarih (ve isteğe bağlı saat), adet ya da TL tutarıyla giriş
+  - Seçilen günün kapanış fiyatı ve kuru önerisi (yoksa bir kez indirilir), elle yazılan değer korunur
+  - Otomatik komisyon (BIST ‰2, ABD $1, kripto %0,1), değiştirilebilir
+  - Canlı özet tüm geçmiş yeniden oynatılarak: toplam, yeni ortalama maliyet, yeni adet, otomatik para girişi
+  - Ödeme: portföy nakdi veya dışarıdan yeni para
+  - Satış: eldeki adet, "Tümünü sat", tahmini gerçekleşen K/Z, "Hesaptan çek"
+- [x] Temettü (toplam veya hisse başına, stopaj önerisi, kur) ve bölünme/bedelsiz formları; kayıtlar düzenlenebilir
+- [x] Varlık detay:
+  - Fiyat grafiği: alış ▲, satış ▼ (işlem fiyatında), kesikli ortalama maliyet çizgisi
+  - Pozisyon kartı, ABD varlıklarında fiyat etkisi ve kur etkisi
+  - Alışlar / Satışlar / Tümü, sabit AL ve SAT butonları, izleme listesi yıldızı
+  - Kaynağın bildirdiği ama kaydedilmemiş bölünme için uyarı ve tek dokunuşla kayıt
+
+**Bitiş kriteri:** Kendi alım-satımlarını girip gerçek fiyatlarla takip edebiliyorsun ✅
+([faz6-islem-ekranlari.md](test-raporu/faz6-islem-ekranlari.md)).
+
+> **Not:** Mum grafik ve grafikteki işarete dokununca detay açılması Faz 5'teki FinChart ile gelecek.
 
 ## Faz 7: Geçmiş
 

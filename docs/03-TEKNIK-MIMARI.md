@@ -129,14 +129,17 @@ src/
     ayarlar/veri.tsx         Veri ve Yedekleme ✅
     ayarlar/kaynaklar.tsx    Veri Kaynakları ✅
     piyasalar.tsx            Piyasalar (izleme listesi, arama) ✅
-    varlik/[id].tsx          Varlık detay (Faz 6)
-    islem/nakit.tsx          Para Yatır / Para Çek formu ✅ (Faz 3'te öne alındı)
-    islem/yeni.tsx           Al / Sat / Temettü formu (Faz 6)
+    varlik/[id].tsx          Varlık detay ✅
+    islem/nakit.tsx          Para Yatır / Para Çek formu ✅
+    islem/al-sat.tsx         Al / Sat formu ✅
+    islem/temettu.tsx        Temettü formu ✅
+    islem/bolunme.tsx        Bölünme / bedelsiz formu ✅
     kilit.tsx                Kilit ekranı (Faz 10)
     baslangic/               İlk açılış akışı (Faz 10)
   components/                uygulamaya özel parçalar ✅
                              (TabBar, QuickActionSheet, HoldingRow, PreviewNote,
-                             PortfolioSheet, TxnDetailSheet, EmptyPortfolio)
+                             PortfolioSheet, TxnDetailSheet, EmptyPortfolio, MarketTicker,
+                             form/: AssetPicker, DateChoice)
   ui/                        tasarım sistemi bileşenleri ✅
   ui/charts/                 AreaChart, LineChart, Sparkline, Donut, path ✅
   theme/                     types, themes, tokens, ThemeProvider, contrast ✅
@@ -155,6 +158,7 @@ src/
                              yedek · bakım (istatistik, tümünü sil, hız testi)
     demo/                    örnek portföy: kurgusal piyasa, geçmiş, ölçütler, yazma
     view/                    ekran modeli (saf): özet, varlıklar, geçmiş, grafik, analiz
+    trade.ts                 işlem formu: komisyon, saat, ön izleme (geçmişi yeniden oynatarak)
   data/market/               piyasa verisi ✅ (Faz 4): providers/ (yahoo · binance · coingecko ·
                              isyatirim · tcmb · mock) · instruments · router · session ·
                              search + catalog/ (BIST, kripto, ABD) · http
