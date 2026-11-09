@@ -3,17 +3,17 @@ import type { TextStyle } from 'react-native';
 /**
  * Design tokens shared by every theme.
  *
- * Type: Nunito (rounded, friendly) for headings and all amounts, Nunito Sans for body copy.
- * Both families draw digits with equal widths by default, so live-updating prices never jitter.
+ * Type: Inter throughout — a neutral, highly legible face that is standard in finance apps.
+ * Every style uses tabular figures (`tnum`) so live-updating prices never jitter and
+ * columns of amounts stay aligned.
  */
 
 export const fonts = {
-  display: 'Nunito_800ExtraBold',
-  displayBlack: 'Nunito_900Black',
-  displayBold: 'Nunito_700Bold',
-  body: 'NunitoSans_400Regular',
-  bodySemiBold: 'NunitoSans_600SemiBold',
-  bodyBold: 'NunitoSans_700Bold',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semiBold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  extraBold: 'Inter_800ExtraBold',
 } as const;
 
 /** 4-pt spacing scale. */
@@ -59,25 +59,33 @@ export type TextVariant =
   | 'numM'
   | 'numS';
 
-export const typography: Record<TextVariant, TextStyle> = {
-  hero: { fontFamily: fonts.displayBlack, fontSize: 38, lineHeight: 46, letterSpacing: -0.6 },
-  title1: { fontFamily: fonts.display, fontSize: 28, lineHeight: 34, letterSpacing: -0.4 },
-  title2: { fontFamily: fonts.display, fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
-  title3: { fontFamily: fonts.displayBold, fontSize: 18, lineHeight: 24 },
-  body: { fontFamily: fonts.body, fontSize: 16, lineHeight: 22 },
-  bodyStrong: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 22 },
-  callout: { fontFamily: fonts.bodySemiBold, fontSize: 15, lineHeight: 20 },
-  subhead: { fontFamily: fonts.bodySemiBold, fontSize: 14, lineHeight: 19 },
-  footnote: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18 },
-  caption: { fontFamily: fonts.bodySemiBold, fontSize: 12, lineHeight: 16 },
-  overline: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 1.2 },
-  numXL: { fontFamily: fonts.displayBlack, fontSize: 38, lineHeight: 46, letterSpacing: -0.8 },
-  numL: { fontFamily: fonts.display, fontSize: 22, lineHeight: 28, letterSpacing: -0.3 },
-  numM: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 21 },
-  numS: { fontFamily: fonts.displayBold, fontSize: 13, lineHeight: 17 },
+const BASE_TYPOGRAPHY: Record<TextVariant, TextStyle> = {
+  hero: { fontFamily: fonts.bold, fontSize: 36, lineHeight: 44, letterSpacing: -1 },
+  title1: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, letterSpacing: -0.6 },
+  title2: { fontFamily: fonts.bold, fontSize: 22, lineHeight: 28, letterSpacing: -0.4 },
+  title3: { fontFamily: fonts.semiBold, fontSize: 17, lineHeight: 23, letterSpacing: -0.2 },
+  body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, letterSpacing: -0.1 },
+  bodyStrong: { fontFamily: fonts.semiBold, fontSize: 15, lineHeight: 21, letterSpacing: -0.1 },
+  callout: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 20, letterSpacing: -0.1 },
+  subhead: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 19 },
+  footnote: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
+  caption: { fontFamily: fonts.medium, fontSize: 12, lineHeight: 16 },
+  overline: { fontFamily: fonts.semiBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.8 },
+  numXL: { fontFamily: fonts.bold, fontSize: 36, lineHeight: 44, letterSpacing: -1 },
+  numL: { fontFamily: fonts.semiBold, fontSize: 20, lineHeight: 26, letterSpacing: -0.4 },
+  numM: { fontFamily: fonts.semiBold, fontSize: 15, lineHeight: 20, letterSpacing: -0.2 },
+  numS: { fontFamily: fonts.semiBold, fontSize: 12.5, lineHeight: 16 },
 };
 
-/** Animation timings (ms) and spring presets — soft and a little bouncy. */
+const TABULAR: TextStyle['fontVariant'] = ['tabular-nums'];
+
+/** Text styles; every one uses tabular figures (Android applies them via font features). */
+export const typography = {} as Record<TextVariant, TextStyle>;
+for (const key of Object.keys(BASE_TYPOGRAPHY) as TextVariant[]) {
+  typography[key] = { ...BASE_TYPOGRAPHY[key], fontVariant: TABULAR };
+}
+
+/** Animation timings (ms) and spring presets — soft, with a little bounce. */
 export const motion = {
   fast: 150,
   base: 250,

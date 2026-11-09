@@ -39,7 +39,7 @@ export function AssetAvatar({ symbol, market, size = 44 }: AssetAvatarProps) {
         <Text
           variant="numS"
           color={tint}
-          style={{ fontSize: size * 0.32, lineHeight: size * 0.4, fontFamily: 'Nunito_900Black' }}>
+          style={{ fontSize: size * 0.3, lineHeight: size * 0.4, fontFamily: 'Inter_700Bold' }}>
           {symbol.slice(0, 2).toUpperCase()}
         </Text>
       )}
