@@ -57,7 +57,8 @@
     "format:check": "prettier --check .",
     "test": "jest",
     "check": "npm run typecheck && npm run lint && npm test -- --ci",
-    "test:coverage": "jest --ci --coverage"
+    "test:coverage": "jest --ci --coverage",
+    "test:live": "LIVE=1 NODE_USE_ENV_PROXY=1 jest -c jest.live.config.js"
   },
   "private": true,
   "jest": {

@@ -66,7 +66,7 @@ export function demoPrices(end: string): {
 
   const assets: StoredAsset[] = [
     ...DEMO_ASSET_DEFS.map((d) => d.asset),
-    ...BENCHMARKS.map((b) => ({ id: benchmarkAssetId('demo', b.key), ...BENCHMARK_ASSET[b.key] })),
+    ...BENCHMARKS.map((b) => ({ id: benchmarkAssetId('demo', b.key)!, ...BENCHMARK_ASSET[b.key] })),
   ];
   const closes: [string, string, number][] = [];
   for (const d of DEMO_ASSET_DEFS) {
@@ -74,7 +74,7 @@ export function demoPrices(end: string): {
   }
   const usd = fxAssetId('demo', 'USD');
   for (const b of BENCHMARKS) {
-    const assetId = benchmarkAssetId('demo', b.key);
+    const assetId = benchmarkAssetId('demo', b.key)!;
     if (assetId === usd) continue; // the rate itself, written below
     bench[b.key].forEach((c, i) => closes.push([assetId, market.dates[i], c]));
   }

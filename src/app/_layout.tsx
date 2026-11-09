@@ -14,6 +14,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useMarketStore } from '@/state/market';
 import { usePortfolioStore } from '@/state/portfolio';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 import { space } from '@/theme/tokens';
@@ -41,6 +42,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
   }, [ready]);
+
+  // Market data starts once the stored figures are on screen.
+  const startMarket = useMarketStore((s) => s.start);
+  useEffect(() => {
+    if (dataStatus === 'ready') startMarket();
+  }, [dataStatus, startMarket]);
 
   if (!ready) return null;
 

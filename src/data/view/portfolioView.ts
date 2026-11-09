@@ -52,6 +52,8 @@ export interface Holding {
   spark: number[];
   /** No price yet: valued at the last trade price. */
   stale: boolean;
+  /** Source and time of the price, when it came from market data. */
+  quote?: QuoteInfo;
 }
 
 export interface Summary {
@@ -114,12 +116,23 @@ export interface BenchmarkSeries {
   prices: number[];
 }
 
+export interface QuoteInfo {
+  /** When the price was set at the source (epoch ms). */
+  time: number;
+  source: string;
+  delayMinutes: number;
+  /** A daily closing value (central bank rate, yesterday's close), not a live price. */
+  endOfDay: boolean;
+}
+
 export interface PortfolioData {
   portfolio: Portfolio;
   /** Manual + automatic records in processing order. */
   txns: Transaction[];
   assets: ReadonlyMap<string, StoredAsset>;
   quotes: Record<string, Quote>;
+  /** Where and when each live price came from (assets and their currencies). */
+  quoteInfo?: Record<string, QuoteInfo>;
   sparks: Record<string, number[]>;
   series: SeriesPoint[];
   benchmarks: BenchmarkSeries[];
@@ -199,6 +212,7 @@ export function buildPortfolioView(data: PortfolioData): PortfolioView {
       weight: p.weight.toNumber(),
       spark: sparks[p.assetId] ?? [],
       stale: p.stale,
+      quote: data.quoteInfo?.[p.assetId],
     };
   });
 

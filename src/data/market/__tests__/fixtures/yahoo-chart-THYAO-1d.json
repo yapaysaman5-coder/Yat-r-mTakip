@@ -1,0 +1,72 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "TRY",
+          "symbol": "THYAO.IS",
+          "exchangeName": "IST",
+          "fullExchangeName": "Istanbul",
+          "instrumentType": "EQUITY",
+          "firstTradeDate": 957940200,
+          "regularMarketTime": 1794234704,
+          "hasPrePostMarketData": false,
+          "gmtoffset": 10800,
+          "timezone": "TRT",
+          "exchangeTimezoneName": "Europe/Istanbul",
+          "regularMarketPrice": 308.75,
+          "regularMarketChangePercent": 3.175,
+          "fulldayPrice": 308.75,
+          "fulldayChange": 9.5,
+          "fulldayChangePercent": 3.175,
+          "fiftyTwoWeekHigh": 355.5,
+          "fiftyTwoWeekLow": 242.2,
+          "regularMarketDayHigh": 309.75,
+          "regularMarketDayLow": 298.25,
+          "regularMarketVolume": 42933317,
+          "longName": "Türk Hava Yollari Anonim Ortakligi",
+          "shortName": "TURK HAVA YOLLARI",
+          "chartPreviousClose": 299.25,
+          "priceHint": 2,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "TRT",
+              "start": 1794205800,
+              "end": 1794205800,
+              "gmtoffset": 10800
+            },
+            "regular": {
+              "timezone": "TRT",
+              "start": 1794205800,
+              "end": 1794236400,
+              "gmtoffset": 10800
+            },
+            "post": {
+              "timezone": "TRT",
+              "start": 1794236400,
+              "end": 1794236400,
+              "gmtoffset": 10800
+            }
+          },
+          "dataGranularity": "1d",
+          "range": "1d",
+          "validRanges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        },
+        "timestamp": [1794234704],
+        "indicators": {
+          "quote": [
+            {
+              "low": [298.25],
+              "volume": [42933317],
+              "high": [309.75],
+              "open": [301.5],
+              "close": [308.75]
+            }
+          ],
+          "adjclose": [{ "adjclose": [308.75] }]
+        }
+      }
+    ],
+    "error": null
+  }
+}

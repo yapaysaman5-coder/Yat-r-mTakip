@@ -42,21 +42,22 @@ const DEMO_IDS: Record<string, string> = {
   usd: 'demo:USDTRY',
 };
 
-const REAL_IDS: Record<string, string> = {
-  gold: 'COMMODITY:GAUTRY',
-  btc: 'CRYPTO:BTCTRY',
-  deposit: 'CUSTOM:DEPOSIT',
-  cpi: 'CUSTOM:CPI',
+/** Real series (prices from market data; USD ones are converted to TRY day by day). */
+const REAL_IDS: Record<string, string | undefined> = {
+  gold: 'COMMODITY:GAU',
+  btc: 'CRYPTO:BTC',
+  deposit: undefined, // needs the deposit-rate table (Phase 9)
+  cpi: undefined, // needs the CPI table (Phase 9)
   ndx: 'INDEX:NDX',
   spx: 'INDEX:SPX',
   xu030: 'INDEX:XU030',
   xu100: 'INDEX:XU100',
-  silver: 'COMMODITY:XAGTRY',
+  silver: 'COMMODITY:XAG',
   eur: 'FX:EURTRY',
   rut: 'INDEX:RUT',
   usd: 'FX:USDTRY',
 };
 
-export function benchmarkAssetId(kind: PortfolioKind, key: string): string {
+export function benchmarkAssetId(kind: PortfolioKind, key: string): string | undefined {
   return (kind === 'demo' ? DEMO_IDS : REAL_IDS)[key];
 }

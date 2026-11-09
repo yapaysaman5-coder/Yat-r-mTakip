@@ -81,6 +81,50 @@ export const MIGRATIONS: readonly Migration[] = [
       ) WITHOUT ROWID;
     `,
   },
+  {
+    version: 2,
+    description: 'Live quotes, price download state, corporate actions and the watchlist',
+    sql: `
+      CREATE TABLE quote (
+        asset_id      TEXT PRIMARY KEY,
+        price         REAL NOT NULL,
+        prev_close    REAL,
+        time          INTEGER NOT NULL,
+        source        TEXT NOT NULL,
+        delay_minutes INTEGER NOT NULL DEFAULT 0,
+        end_of_day    INTEGER NOT NULL DEFAULT 0,
+        fetched_at    INTEGER NOT NULL
+      ) WITHOUT ROWID;
+
+      CREATE TABLE price_sync (
+        asset_id   TEXT PRIMARY KEY,
+        first_date TEXT,
+        last_date  TEXT,
+        source     TEXT,
+        synced_at  INTEGER NOT NULL,
+        error      TEXT
+      ) WITHOUT ROWID;
+
+      CREATE TABLE corporate_action (
+        asset_id TEXT NOT NULL,
+        date     TEXT NOT NULL,
+        type     TEXT NOT NULL CHECK (type IN ('SPLIT', 'DIVIDEND')),
+        value    TEXT NOT NULL,
+        source   TEXT,
+        PRIMARY KEY (asset_id, date, type)
+      ) WITHOUT ROWID;
+
+      CREATE TABLE watchlist (
+        asset_id   TEXT PRIMARY KEY,
+        sort_order INTEGER NOT NULL
+      ) WITHOUT ROWID;
+
+      INSERT INTO watchlist (asset_id, sort_order) VALUES
+        ('INDEX:XU100', 0), ('FX:USDTRY', 1), ('FX:EURTRY', 2), ('COMMODITY:GAU', 3),
+        ('CRYPTO:BTC', 4), ('INDEX:SPX', 5), ('INDEX:NDX', 6), ('COMMODITY:XAG', 7),
+        ('INDEX:XU030', 8), ('CRYPTO:ETH', 9);
+    `,
+  },
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;

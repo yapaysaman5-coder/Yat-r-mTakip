@@ -57,10 +57,14 @@ describe('migrations', () => {
     );
     expect(tables.map((t) => t.name)).toEqual([
       'asset',
+      'corporate_action',
       'portfolio',
       'portfolio_snapshot',
       'price_daily',
+      'price_sync',
+      'quote',
       'txn',
+      'watchlist',
     ]);
   });
 
@@ -68,9 +72,13 @@ describe('migrations', () => {
     const db = await freshDb();
     const next = [
       ...MIGRATIONS,
-      { version: 2, description: 'test', sql: 'ALTER TABLE portfolio ADD COLUMN icon TEXT;' },
+      {
+        version: SCHEMA_VERSION + 1,
+        description: 'test',
+        sql: 'ALTER TABLE portfolio ADD COLUMN icon TEXT;',
+      },
     ];
-    expect(await migrate(db, next)).toBe(2);
+    expect(await migrate(db, next)).toBe(SCHEMA_VERSION + 1);
     expect((await listPortfolios(db)).map((p) => p.name)).toEqual(['Ana Portföy']);
   });
 
@@ -79,15 +87,32 @@ describe('migrations', () => {
     const broken = [
       ...MIGRATIONS,
       {
-        version: 2,
+        version: SCHEMA_VERSION + 1,
         description: 'broken',
         sql: 'ALTER TABLE portfolio ADD COLUMN icon TEXT; SELECT * FROM missing_table;',
       },
     ];
     await expect(migrate(db, broken)).rejects.toThrow();
-    expect(await schemaVersion(db)).toBe(1);
+    expect(await schemaVersion(db)).toBe(SCHEMA_VERSION);
     const cols = await db.all<{ name: string }>('PRAGMA table_info(portfolio)');
     expect(cols.map((c) => c.name)).not.toContain('icon');
+  });
+
+  it('upgrades a version 1 database with its data', async () => {
+    const db = openNodeDriver();
+    await migrate(db, MIGRATIONS.slice(0, 1));
+    await insertPortfolio(db, {
+      id: 'p1',
+      name: 'Ana Portföy',
+      kind: 'user',
+      sortOrder: 0,
+      seriesDirtyFrom: null,
+      createdAt: NOW,
+    });
+    expect(await migrate(db)).toBe(SCHEMA_VERSION);
+    expect((await listPortfolios(db)).map((p) => p.id)).toEqual(['p1']);
+    const watch = await db.all<{ asset_id: string }>('SELECT asset_id FROM watchlist');
+    expect(watch.length).toBeGreaterThan(5);
   });
 
   it('refuses a database written by a newer app version', async () => {

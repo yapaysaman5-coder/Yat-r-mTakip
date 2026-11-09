@@ -1,0 +1,23 @@
+{
+  "bitcoin": {
+    "try": 3740127,
+    "try_24h_change": -1.6203896010302186,
+    "usd": 74536,
+    "usd_24h_change": -1.6940975032151782,
+    "last_updated_at": 1794234475
+  },
+  "ethereum": {
+    "try": 106326,
+    "try_24h_change": -5.1082927528066415,
+    "usd": 2118.95,
+    "usd_24h_change": -5.179387450656881,
+    "last_updated_at": 1794234475
+  },
+  "pax-gold": {
+    "try": 206381,
+    "try_24h_change": 1.574038938937203,
+    "usd": 4112.91,
+    "usd_24h_change": 1.4979377092588229,
+    "last_updated_at": 1794234475
+  }
+}

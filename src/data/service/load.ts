@@ -4,6 +4,7 @@ import { BENCHMARKS, benchmarkAssetId } from '../benchmarks';
 import type { SqlDriver } from '../db/driver';
 import { DEFAULT_ENGINE, fxAssetId, type EngineOptions } from '../engine';
 import { getAssets } from '../repo/assets';
+import { loadQuotes } from '../repo/market';
 import { getPortfolio } from '../repo/portfolios';
 import { latestCloses, loadCloses } from '../repo/prices';
 import type { BenchmarkSeries, PortfolioData } from '../view/portfolioView';
@@ -13,8 +14,9 @@ import { refreshSeries } from './series';
  * Reads everything a portfolio's screens need: records (with derived automatic ones), the
  * daily value cache (refreshed from the first stale day), today's prices and benchmarks.
  *
- * Until live quotes arrive (Phase 4) "today's price" is the latest stored close, and the
- * previous close is the one before it, only when the latest close is from today.
+ * "Today's price" is the latest stored close (a live quote is stored as that day's close).
+ * The previous close is the source's own figure when the live quote is from today, else the
+ * close before; when the latest close is not from today, today's change is zero.
  */
 export async function loadPortfolioData(
   db: SqlDriver,
@@ -33,13 +35,18 @@ export async function loadPortfolioData(
   );
   const fxIds = currencies.map((c) => fxAssetId(portfolio.kind, c));
   const recent = await latestCloses(db, [...assetIds, ...fxIds], 8);
+  const live = await loadQuotes(db, [...assetIds, ...fxIds]);
 
   const lastTwo = (id: string) => {
     const list = recent[id] ?? [];
     const latest = list[list.length - 1];
     if (!latest) return null;
-    const prev = latest.date === today && list.length > 1 ? list[list.length - 2] : latest;
-    return { now: latest.close, prev: prev.close };
+    if (latest.date !== today) return { now: latest.close, prev: latest.close };
+    const q = live.get(id);
+    if (q && q.prevClose !== null && trDay(q.time) === today) {
+      return { now: latest.close, prev: q.prevClose };
+    }
+    return { now: latest.close, prev: (list.length > 1 ? list[list.length - 2] : latest).close };
   };
 
   const quotes: Record<string, Quote> = {};
@@ -62,21 +69,63 @@ export async function loadPortfolioData(
   const benchmarks: BenchmarkSeries[] = [];
   if (points.length) {
     const dates = points.map((p) => p.date);
-    const ids = BENCHMARKS.map((b) => benchmarkAssetId(portfolio.kind, b.key));
-    const closes = await loadCloses(db, ids, dates[0]);
-    BENCHMARKS.forEach((b, k) => {
-      const byDay = closes[ids[k]];
-      const known = Object.keys(byDay).sort();
-      if (known.length === 0) return;
-      // Carry the last close forward; before the first close use the first one.
-      let last = byDay[known[0]];
-      benchmarks.push({
-        key: b.key,
-        name: b.name,
-        prices: dates.map((d) => (last = byDay[d] ?? last)),
-      });
+    const wanted = BENCHMARKS.flatMap((b) => {
+      const id = benchmarkAssetId(portfolio.kind, b.key);
+      return id ? [{ ...b, id }] : [];
     });
+    const benchAssets = await getAssets(
+      db,
+      wanted.map((w) => w.id),
+    );
+    const fxFor = (currency: string) => fxAssetId(portfolio.kind, currency);
+    const extraFx = [
+      ...new Set(
+        [...benchAssets.values()].filter((a) => a.currency !== 'TRY').map((a) => fxFor(a.currency)),
+      ),
+    ];
+    const closes = await loadCloses(db, [...wanted.map((w) => w.id), ...extraFx], dates[0]);
+    /** Daily values on the portfolio's days, carrying the last close (first one before it). */
+    const align = (byDay: Record<string, number>) => {
+      const known = Object.keys(byDay).sort();
+      if (known.length === 0) return null;
+      let last = byDay[known[0]];
+      return dates.map((d) => (last = byDay[d] ?? last));
+    };
+    for (const w of wanted) {
+      const prices = align(closes[w.id] ?? {});
+      if (!prices) continue;
+      const currency = benchAssets.get(w.id)?.currency ?? 'TRY';
+      if (currency !== 'TRY') {
+        // A USD index is what a TRY saver would have had: converted at each day's rate.
+        const fx = align(closes[fxFor(currency)] ?? {});
+        if (!fx) continue;
+        benchmarks.push({ key: w.key, name: w.name, prices: prices.map((p, i) => p * fx[i]) });
+      } else {
+        benchmarks.push({ key: w.key, name: w.name, prices });
+      }
+    }
   }
 
-  return { portfolio, txns, assets, quotes, sparks, series: points, benchmarks, today, engine };
+  const quoteInfo: PortfolioData['quoteInfo'] = {};
+  for (const [id, q] of live) {
+    quoteInfo[id] = {
+      time: q.time,
+      source: q.source,
+      delayMinutes: q.delayMinutes,
+      endOfDay: q.endOfDay,
+    };
+  }
+
+  return {
+    portfolio,
+    txns,
+    assets,
+    quotes,
+    quoteInfo,
+    sparks,
+    series: points,
+    benchmarks,
+    today,
+    engine,
+  };
 }
