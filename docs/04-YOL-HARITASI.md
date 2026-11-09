@@ -63,6 +63,19 @@ geçiş yapılıyor. Ekran görüntüleri paylaşıldı ✅
 > belirtilir. Gerçek hesaplar Faz 2–4'te bağlanır. Grafikler bu fazda statiktir. Parmakla
 > gezinilen GPU grafiği (FinChart) Faz 5'te gelir.
 
+## Faz 1.1: Geri Bildirim Revizyonu ✅ (9 Kasım 2026)
+
+- [x] Yazı tipi Nunito → **Inter** (daha sade, profesyonel), eşit genişlikli rakamlar
+- [x] Hesabım ekranından pay değeri ve pay sayısı kaldırıldı. Yerine Maliyet, Kâr/Zarar ve Bugün
+- [x] Analiz: **Performans Karnesi** (Bugün, TWR, XIRR, Alpha) ve dokununca açılan açıklamalar
+- [x] Analiz: profesyonel karşılaştırma grafiği:
+  - Dokun-kaydır imleç
+  - Eksenler ve ızgara
+  - ₺/% modu, dönem seçimi, seri seçimi
+- [x] Analiz > Performans: Beta, volatilite, Sharpe, Sortino, maks. düşüş, en iyi/kötü ay, dönemsel tablo, aylık harita
+- [x] Hesap fonksiyonları ve testleri: XIRR, risk ölçüleri, Alpha, Ya Olsaydı simülasyonu (Faz 2'den öne alındı)
+- [x] **GitHub'da APK derleme** ve indirme sayfası (Faz 11'den öne alındı), uygulama simgesi
+
 ## Faz 2: Hesaplama Motoru
 
 - [ ] Ondalık yardımcıları, işlem tipleri ve doğrulama
@@ -71,8 +84,9 @@ geçiş yapılıyor. Ekran görüntüleri paylaşıldı ✅
 - [ ] Kur etkisi ayrıştırması, günlük değişim
 - [ ] Bölünme / bedelsiz, temettü
 - [ ] Değer serisi (günlük ve gün içi), LTTB seyreltme
-- [ ] Pay değeri ve TWR, XIRR, risk metrikleri, risk değeri, reel getiri
-- [ ] Ya Olsaydı simülasyonu
+- [ ] TWR (iç birim değer yöntemi), reel getiri
+- [x] XIRR, risk metrikleri, Alpha, risk seviyesi *(Faz 1.1'de yapıldı)*
+- [x] Ya Olsaydı simülasyonu *(Faz 1.1'de yapıldı; Faz 2'de ondalık hassasiyetle sağlamlaştırılacak)*
 - [ ] Test senaryoları T1–T14 ve değişmez kurallar
 
 **Bitiş kriteri:** Tüm testler başarılı. `src/domain` kapsamı ≥ %95. Test raporu paylaşıldı.
@@ -142,7 +156,7 @@ görüntüleri 4 temada paylaşıldı.
 
 ## Faz 8: Fon (Hesabım)
 
-- [ ] Fon büyüklüğü, pay değeri, pay sayısı, risk değeri kartı
+- [ ] Toplam varlık, maliyet, K/Z, bugün ve risk seviyesi kartı (gerçek veriyle)
 - [ ] **Varlık** ve **Maliyet** tuşları, animasyonlu halka grafik
 - [ ] Varlık ve maliyet listeleri, maliyet-değer karşılaştırma çubukları
 - [ ] Getiri tablosu, en büyük 5 pozisyon
@@ -174,7 +188,8 @@ görüntüleri 4 temada paylaşıldı.
 
 - [ ] Uygulama adı, ikon, açılış ekranı
 - [ ] Geliştirme derlemesine geçiş, veritabanı şifrelemesi (SQLCipher)
-- [ ] EAS Build: Android APK ve iOS TestFlight
+- [x] Android APK derleme hattı (GitHub Actions) *(Faz 1.1'de yapıldı)*
+- [ ] Play Store için gizli anahtarla imzalama
 - [ ] Son kontrol listesi: veri doğruluğu, çevrimdışı, yedek/geri yükleme, tema kontrastları
 
 ## Faz 12+: Sonraki Sürümler

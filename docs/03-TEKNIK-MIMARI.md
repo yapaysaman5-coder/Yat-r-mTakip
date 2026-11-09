@@ -64,7 +64,7 @@ Sürümler 8 Kasım 2026'da npm'den kontrol edilmiştir. Yerel modüller `npx ex
 | Ekran görüntüsü engeli | `expo-screen-capture` | SDK 58 |
 | Bulanıklaştırma | `expo-blur` | SDK 58 |
 | Dosya, paylaşma, belge seçici | `expo-file-system`, `expo-sharing`, `expo-document-picker` | SDK 58 |
-| Yazı tipi ✅ | `@expo-google-fonts/nunito`, `@expo-google-fonts/nunito-sans` | 0.4 |
+| Yazı tipi ✅ | `@expo-google-fonts/inter` (Inter 400–800, eşit genişlikli rakamlar) | 0.4 |
 | Simgeler ✅ | `lucide-react-native` | 1.70 |
 | Test ✅ | `jest`, `jest-expo`, `@testing-library/react-native` | 30 / 58 |
 | Kod kalitesi ✅ | `eslint` + `eslint-config-expo`, `prettier` | 9 / 3 |
@@ -77,6 +77,12 @@ animasyonu, ölçüt katmanı. Tam kontrol ancak kendi bileşenimizle mümkün.
 **Faz 1 notu:** Önizleme ekranlarındaki statik grafikler (alan, çoklu çizgi, mini trend, halka)
 `react-native-svg` ile çizildi. Mini trend ve halka grafik bu haliyle kalır. Ana ekrandaki büyük
 grafik Faz 5'te Skia tabanlı, parmakla gezinilen FinChart ile değiştirilecek.
+
+**Karşılaştırma grafiği (Faz 1.1):** Analiz ekranındaki `ComparisonChart` `react-native-svg` +
+Gesture Handler v3 ile yazıldı. Özellikleri: dokun-kaydır imleç, sıralı bilgi kutusu, sıkı değer
+ekseni, tarih ekseni, ızgara, referans çizgisi. Çizgiler en fazla 140 noktaya seyreltilir.
+İmleç yalnızca tarih değiştiğinde yeniden çizilir. Android'de akıcılık telefonda doğrulanacak.
+Gerekirse aynı arayüzle Skia'ya taşınır.
 
 **Alt sayfa kararı:** `@gorhom/bottom-sheet`'in Gesture Handler v3 ile uyumu belirsiz olduğu için
 alt sayfa kendi bileşenimiz olarak yazıldı. Özellikleri: yay animasyonu, aşağı çekerek kapatma,
@@ -133,8 +139,10 @@ src/
   lib/                       storage (kalıcı ayarlar), haptics ✅
   i18n/tr.ts                 arayüz metinleri ✅
   utils/format.ts            Türkçe biçimlendiriciler ✅
-  demo/data.ts               Faz 1 önizlemesi için örnek veri ✅ (gerçek veri gelince kalkar)
-  domain/                    hesaplama motoru + testler (Faz 2)
+  demo/                      önizleme için örnek veri ✅ (gerçek veri gelince kalkar)
+                             analysis.ts: nakit akışları gerçek formüllerle simüle edilir
+  domain/                    hesaplama motoru + testler
+                             (metrics.ts, whatIf.ts ✅ · gerisi Faz 2)
   data/db/                   şema, migration, repository (Faz 3)
   data/market/               yahoo · binance · coingecko · tcmb · mock (Faz 4)
   hooks/                     usePortfolio, useQuotes, useSeries (Faz 3–5)
@@ -156,7 +164,7 @@ Zaman damgaları UTC ISO-8601'dir, gösterimde Europe/Istanbul'a çevrilir.
 | `price_intraday` | provider_symbol, ts, close | 1G/1H için, süreli önbellek |
 | `fx_daily` | pair, date, rate | USD/TRY, EUR/TRY |
 | `corporate_action` | provider_symbol, date, type (`SPLIT`/`DIVIDEND`), ratio, amount | Bölünme tespiti |
-| `portfolio_snapshot` | portfolio_id, date, value, cash, net_invested, nav, units | Günlük değer ve pay değeri önbelleği |
+| `portfolio_snapshot` | portfolio_id, date, value, cash, net_invested, nav, units | Günlük değer önbelleği. `nav`/`units` yalnızca TWR iç hesabı içindir, ekranda gösterilmez |
 | `inflation_monthly` | yyyymm, index | TÜFE |
 | `watchlist` | asset_id, sort_order | İzleme listesi |
 | `alert` *(P2)* | id, asset_id, condition, value, active | Fiyat alarmı |
@@ -271,9 +279,23 @@ veya sağlık kontrolünden geçemezse otomatik olarak yedeğe geçilir.
 | `npm run check` | Tip kontrolü + lint + testler |
 | `npm run format` | Kodu Prettier ile biçimlendir |
 
-**Telefonda deneme:** İki seçenek var.
+**Telefonda deneme (önerilen): GitHub'dan APK.**
 
-1. **Expo Go (önerilen başlangıç):**
+`.github/workflows/android-apk.yml` iş akışı uygulama kodu her değiştiğinde çalışır:
+
+1. Kontroller (tip, lint, test)
+2. `expo prebuild` ile yerel Android projesi
+3. `gradlew assembleRelease` (arm64)
+4. APK, iş akışı çıktısı olarak ve **"android-latest"** sürüm sayfasında yayınlanır
+
+Özellikler:
+
+- `versionCode` derleme numarasından gelir, böylece yeni APK eskisinin üzerine güncelleme olarak kurulur.
+- İmza şimdilik şablonun sabit hata ayıklama anahtarıyla yapılır. Kişisel kurulum için yeterlidir. Play Store için gizli anahtarla imzalama Faz 11'de eklenecek.
+
+**Diğer seçenekler:**
+
+1. **Expo Go (bilgisayarla geliştirme):**
    - Bilgisayarınızda depoyu açıp `npx expo start` çalıştırırsınız.
    - Telefondaki Expo Go uygulamasıyla QR kodu okutursunuz.
 2. **EAS (Expo bulut derlemesi):**

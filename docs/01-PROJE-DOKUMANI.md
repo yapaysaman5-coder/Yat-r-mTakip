@@ -4,7 +4,7 @@
 > **Tarih:** 8 Kasım 2026
 > **Platform:** Android telefon (kod iOS ile de uyumlu), tamamen cihaz üzerinde çalışır
 > **Durum:** Kararlar onaylandı ([Bölüm 13](#13-onaylanan-kararlar)). Geliştirme [Yol Haritası](04-YOL-HARITASI.md) sırasıyla ilerliyor.
-> **Tasarım tonu:** Profesyonel, biraz neşeli, biraz yumuşak.
+> **Tasarım tonu:** Profesyonel ve sade yazı tipi; renkler ve şekiller biraz neşeli, biraz yumuşak.
 
 Diğer dokümanlar:
 
@@ -39,8 +39,8 @@ Diğer dokümanlar:
 ## 1. Vizyon
 
 **Tek cümleyle:** Türk yatırımcı için BIST, ABD borsaları ve kripto paraları tek yerde
-toplayan, portföyü **bir yatırım fonu gibi raporlayan**, tamamen telefonda çalışan ve verisi
-cihazda kalan profesyonel bir portföy takip uygulaması.
+toplayan, **profesyonel yatırım ölçülerini (TWR, XIRR, Alpha, risk) kişisel portföye uygulayan**,
+tamamen telefonda çalışan ve verisi cihazda kalan bir portföy takip uygulaması.
 
 ### Temel İlkeler
 
@@ -48,7 +48,7 @@ cihazda kalan profesyonel bir portföy takip uygulaması.
 2. **Akıcılık.** Grafikler ve listeler GPU ile çizilir, 60/120 fps hedeflenir. Her dokunuşa anında ve titreşimli (haptic) geri bildirim verilir.
 3. **Türk yatırımcıya özel.** TL ve USD bazında çift bakış, kur etkisi ayrıştırması, enflasyona (TÜFE) göre reel getiri, bedelsiz sermaye artırımı desteği ve `1.234.567,89 ₺` sayı biçimi.
 4. **Gizlilik.** Hesap açma ve sunucu gerekmez. Bütün veri telefonda kalır ve telefonun kendi şifrelemesiyle korunur. Yayın sürümünde veritabanı ayrıca şifrelenir. Yedekleme tamamen kullanıcının kontrolündedir.
-5. **Fon kalitesinde sunum.** Portföy, profesyonel bir fon bülteni dilinde sunulur: pay değeri, getiri tablosu, risk göstergesi, karşılaştırma ölçütleri.
+5. **Profesyonel ölçüler, kişisel portföy.** Bu bir fon değil, kişisel portföydür. Fon raporlarındaki işe yarar ölçüler (TWR, XIRR, Alpha, Beta, risk seviyesi, dönemsel getiri tablosu) kişisel portföye uygulanır. Pay değeri, pay sayısı gibi fon kavramları gösterilmez.
 
 ### Kapsam Dışı (v1)
 
@@ -71,7 +71,7 @@ cihazda kalan profesyonel bir portföy takip uygulaması.
 | **Kubera** | Tüm net varlığın tek ekranda görünmesi, sade ve premium his | Kraliyet teması. İleride nakit, altın ve mevduat gibi diğer varlık türleri |
 | **Robinhood / Revolut** | Grafikte parmakla gezinme, iki parmakla aralık ölçme, titreşim | Grafik etkileşim modeli (bkz. [Bölüm 7](#7-grafik-tasarımı)) |
 | **Stock Events** | Temettü takvimi, olay akışı | Faz 2'de temettü takvimi ve bildirimleri |
-| **Portfolio Performance / Ghostfolio** (açık kaynak) | Fon mantığıyla performans hesabı, FIFO ve ortalama maliyet seçimi | Pay değeri (birim fiyat) yöntemi, maliyet yöntemi ayarı |
+| **Portfolio Performance / Ghostfolio** (açık kaynak) | Fon mantığıyla performans hesabı, FIFO ve ortalama maliyet seçimi | Para akışından arındırılmış getiri (TWR) hesabı, maliyet yöntemi ayarı |
 | **CoinStats / CoinGecko** | 7/24 canlı kripto fiyatları, çok sayıda coin | Gerçek zamanlı kripto akışı (WebSocket) |
 | **Midas** | Türk kullanıcıya uygun sade "Hesabım" ekranı | "Fon" sekmesinde hesap özeti mantığı |
 | **Fintables** | BIST ve fon karşılaştırma, haftalık, aylık, 3 aylık ve yıllık getiri karşılaştırması | Getiri tablosu dönemleri, Türk piyasasına özgü veri sunumu |
@@ -98,8 +98,8 @@ cihazda kalan profesyonel bir portföy takip uygulaması.
 | 5 | Geçmiş ekranları | Geçmiş sekmesi: İşlemler, Gerçekleşen K/Z, Nakit Hareketleri, Aylık Ekstre | [6.5](#65-geçmiş-sekmesi) |
 | 6 | 3-4 tema, biri mavi tonlarında | 4 tema: **Okyanus (mavi)**, Gece, Gün, Kraliyet. Bunlara ek olarak sistem ayarına uyan otomatik mod | [8](#8-tema-sistemi) |
 | 7 | Ekranda portföy ve üstte canlı bakiye | Her temada üstte sabit canlı bakiye, altında portföy listesi | [6.1](#61-portföy-ana-ekran) |
-| 8 | Alt barda fon ekranı, hesabım + varlık/maliyet, iki ayrı tuş | **Fon** sekmesi: portföyün fon gibi sunulduğu "Hesabım" ekranı. **Varlık** ve **Maliyet** iki ayrı tuş | [6.6](#66-fon-sekmesi-hesabım) |
-| 9 | Aynı tutarı aynı tarihlerde BIST100, BIST30, altın, gümüş, S&P500, Russell, BTC, Dolar/TL, NASDAQ'a yatırsaydım | **Ya Olsaydı?** ekranı: para akışlarınız bire bir simüle edilir. Lig tablosu, çoklu grafik ve fon düzeyinde metrikler sunulur | [6.7](#67-analiz-sekmesi-ya-olsaydı) |
+| 8 | Alt barda fon ekranı, hesabım + varlık/maliyet, iki ayrı tuş | **Fon** sekmesi: kişisel portföyün "Hesabım" özeti. **Varlık** ve **Maliyet** iki ayrı tuş | [6.6](#66-fon-sekmesi-hesabım) |
+| 9 | Aynı tutarı aynı tarihlerde BIST100, BIST30, altın, gümüş, S&P500, Russell, BTC, Dolar/TL, NASDAQ'a yatırsaydım | **Ya Olsaydı?** ekranı: para akışlarınız bire bir simüle edilir. Lig tablosu, çoklu grafik ve fon düzeyinde metrikler sunulur | [6.7](#67-analiz-sekmesi) |
 | 10 | Ayarlar ekranı | Görünüm, para birimi, hesaplama, veri, güvenlik, bildirim ve yedekleme ayarları | [6.8](#68-ayarlar) |
 | 11 | Ana ekranda canlı bütçe: yatırılan ve çekilen para | **Canlı Bütçe** kartı: Yatırılan, Çekilen, Net Yatırılan, Nakit ve Net K/Z | [6.1](#61-portföy-ana-ekran) |
 | 12 | 1G, 1H, 1A, 3A, 6A, 1Y ve özel tarih aralığında bakiye grafiği | Skia (GPU) tabanlı grafik. Ek olarak YB (yılbaşından beri) ve Tümü seçenekleri | [7](#7-grafik-tasarımı) |
@@ -120,6 +120,7 @@ Profesyonel uygulamalarda olan ama isteklerinizde geçmeyen özellikler aşağı
 | **Komisyon desteği** | BIST, ABD ve kripto için varsayılan komisyon oranları. Maliyete otomatik eklenir | P0 |
 | **Ağırlıklı ortalama ve FIFO maliyet** | Türk aracı kurumları ortalama maliyet gösterir, vergi hesabı FIFO kullanır. İkisi de ayarlanabilir | P0 |
 | **TWR ve XIRR getiri** | Profesyonel performans ölçümü (bkz. Bölüm 2, ders 1) | P0 |
+| **Alpha, Beta, Sharpe, Sortino, maks. düşüş** | Riske göre performans ve ölçüte (BIST 100) göre fazla getiri. Analiz > Performans Karnesi | P0 |
 | **Kur etkisi ayrıştırması** | ABD hissesinde kazancın ne kadarı hisseden, ne kadarı dolardan geldi? | P1 |
 | **Bedelsiz / bölünme işlemi** | BIST'te çok sık görülür. Desteklenmezse adet ve maliyet yanlış çıkar. Veri kaynağından tespit edilip uygulama önerilir | P0 |
 | **Temettü kaydı** | Getiriyi doğru hesaplamak için gerekli. İlk sürümde manuel girilir | P1 |
@@ -172,7 +173,7 @@ Profesyonel uygulamalarda olan ama isteklerinizde geçmeyen özellikler aşağı
 | **Portföy** | Canlı bakiye, grafik, canlı bütçe, varlık listesi |
 | **Analiz** | Ya Olsaydı? karşılaştırması, performans, risk, dağılım |
 | **＋ (orta tuş)** | Hızlı işlem: Al, Sat, Para Yatır, Para Çek, Temettü |
-| **Fon** | Hesabım: portföyün fon bülteni. **Varlık** ve **Maliyet** tuşları |
+| **Fon** | Hesabım: toplam varlık, maliyet, K/Z. **Varlık** ve **Maliyet** tuşları |
 | **Geçmiş** | İşlemler, Gerçekleşen K/Z, Nakit Hareketleri, Aylık Ekstre |
 
 **Ayarlar**, Portföy ekranının sağ üst köşesindeki ⚙ simgesinden açılır. Bu, Revolut ve
@@ -477,42 +478,43 @@ Geçmiş sekmesi dört alt sekmeden oluşur:
 
 ### 6.6 Fon Sekmesi (Hesabım)
 
-Portföyünüz, profesyonel bir yatırım fonu gibi sunulur. Fonlar performansı **pay değeri**
-(birim fiyat) ile ölçer: ilk para girişinde pay değeri 1,0000 ₺'dir. Sonraki para girişleri
-o günün pay değerinden yeni pay alır, para çekişleri pay iade eder. Böylece para girip
-çıkması getiriyi bozmaz. Detaylı hesap: [02-HESAPLAMA-MOTORU](02-HESAPLAMA-MOTORU.md).
+Bu ekran **kişisel portföyünüzün hesap özetidir**, bir yatırım fonu değildir. Pay değeri ve
+pay sayısı gibi fon kavramları **gösterilmez**. Fon raporlarından yalnızca işe yarayan
+özellikler alınır: dönemsel getiri tablosu, risk seviyesi, yoğunlaşma ölçüsü.
 
 ```
 ┌──────────────────────────────────────┐
-│ HESABIM                              │
-│ Ana Portföy Fonu          ● Canlı    │
+│ ANA PORTFÖY                          │
+│ Hesabım                              │
 │                                      │
-│ Fon Büyüklüğü        ₺1.284.562,40   │
-│ Pay Değeri  ₺1,200762  ▲ %0,98 bugün │
-│ Pay Sayısı           1.069.789,12    │
-│ Risk Değeri   ■■■■■□□  5 / 7         │
+│ TOPLAM VARLIK             ● CANLI    │
+│ ₺1.284.562,40                        │
+│ ┌──────────┬──────────┬──────────┐   │
+│ │ Maliyet  │ Kâr/Zarar│ Bugün    │   │
+│ │₺1.017.759│+₺266.803 │+₺10.119  │   │
+│ │poz.+nakit│ ▲%26,2   │ ▲%0,79   │   │
+│ └──────────┴──────────┴──────────┘   │
+│ Risk Seviyesi  ■■■■■■□  6 / 7        │
 │                                      │
 │ ┌─────────────────┬────────────────┐ │
 │ │  [  VARLIK  ]   │    MALİYET     │ │
 │ └─────────────────┴────────────────┘ │
 │                                      │
 │        ╭─────────╮   ● BIST   %48    │
-│      ╱   ₺1,28   ╲   ● ABD    %34    │
+│      ╱   ₺1,26   ╲   ● ABD    %34    │
 │      ╲    Mn     ╱   ● Kripto %18    │
 │        ╰─────────╯                   │
 │                                      │
 │ Varlık      Değer       Pay    K/Z   │
-│ THYAO    ₺312.400   %24,3  ▲%8,8     │
-│ AAPL     ₺198.230   %15,4  ▲%31,0    │
-│ BTC      ₺142.800   %11,1  ▲%54,2    │
+│ THYAO    ₺312.400   %24,8  ▲%8,8     │
+│ NVDA     ₺224.655   %17,8  ▲%52,7    │
 │ ...                                  │
-│ Nakit     ₺24.150    %1,9            │
 │                                      │
-│ GETİRİ TABLOSU (Pay Değeri)          │
+│ DÖNEMSEL GETİRİ (TWR)                │
 │ 1A    3A    6A    YB    1Y    Tümü   │
-│ %3,1  %9,4  %14,0 %18,2 %22,5 %20,1  │
+│ %3,4  %2,3  %21,4 %26,8 %28,3 %18,5  │
 │                                      │
-│ EN BÜYÜK 5 POZİSYON  %68,2           │
+│ EN BÜYÜK 5 POZİSYONUN PAYI  %86,1    │
 └──────────────────────────────────────┘
 ```
 
@@ -522,117 +524,118 @@ o günün pay değerinden yeni pay alır, para çekişleri pay iade eder. Böyle
 |---|---|---|
 | Halka grafik | Güncel piyasa değerine göre dağılım | Ödenen maliyete göre dağılım |
 | Liste sütunları | Değer, portföy payı %, K/Z % | Ort. maliyet, toplam maliyet, maliyet payı %, başa baş fiyatı |
-| Özet | Fon büyüklüğü | Toplam maliyet, değer farkı (₺ ve %) |
-| Ek | Getiri tablosu, en büyük 5 pozisyon, risk değeri | Maliyet ve değer karşılaştırma çubukları (her varlık için yan yana) |
+| Özet | Toplam varlık | Toplam maliyet, değer farkı (₺ ve %) |
+| Ek | Dönemsel getiri, en büyük 5 pozisyon, risk seviyesi | Maliyet ve değer karşılaştırma çubukları (her varlık için yan yana) |
 
 Ek detaylar:
 
 - Tuşlar arasında geçiş yaparken halka grafik dilimleri yeni oranlara **animasyonla** akar.
 - Halkanın bir dilimine dokununca ilgili piyasa (BIST, ABD, Kripto) vurgulanır ve liste o piyasaya filtrelenir.
-- **Risk değeri (1-7):** Avrupa fon standardındaki (UCITS SRRI) ve TEFAS'taki risk ölçeğine benzer şekilde, pay değerinin yıllık oynaklığından hesaplanır.
+- **Dönemsel getiri:** Zaman ağırlıklı (TWR) hesaplanır, yani para yatırıp çekmeniz yüzdeyi bozmaz. Hesap yöntemi [02-HESAPLAMA-MOTORU §8](02-HESAPLAMA-MOTORU.md)'de.
+- **Risk seviyesi (1-7):** Portföyün yıllık dalgalanmasından (volatilite) hesaplanır. Avrupa fon standardındaki (UCITS SRRI) bantlar kullanılır.
 
-### 6.7 Analiz Sekmesi: "Ya Olsaydı?"
+### 6.7 Analiz Sekmesi
 
-Analiz sekmesinin ilk ve en önemli ekranıdır. Cevapladığı soru şudur:
-**"Portföyüme yatırdığım her parayı, aynı tarihlerde ve aynı tutarlarda başka bir yatırım
-aracına yatırsaydım bugün ne kadarım olurdu?"**
+Analiz sekmesi üç bölümden oluşur. En üstte her zaman görünen bir **Performans Karnesi**
+bulunur, altında üç alt sekme yer alır: **Ya Olsaydı?**, **Performans** ve **Dağılım**.
+
+#### Performans Karnesi
+
+Profesyonel yatırım uygulamalarındaki dört temel ölçü tek bakışta görünür. Her birine
+dokununca sade Türkçe bir açıklama, güncel değer ve hesap formülü açılır.
+
+| Ölçü | Ne anlatır |
+|---|---|
+| **Bugün** | Dünkü kapanışa göre bugünkü değişim (₺ ve %) |
+| **TWR** (zaman ağırlıklı getiri) | Para yatırıp çekmenin etkisi çıkarılmış getiri. Seçimlerinizin başarısını ölçer, fon ve endekslerle adil karşılaştırma sağlar |
+| **XIRR** (yıllık para ağırlıklı getiri) | Paranızın ne zaman girip çıktığını hesaba katan, cebinize giren gerçek yıllık getiri. Excel XIRR ile aynı |
+| **Alpha** (yıllık, Jensen alfası) | Aldığınız piyasa riskine (beta) göre ölçütün (varsayılan BIST 100) ne kadar üstünde getiri sağladığınız. Pozitif = ölçütü yendiniz |
+
+#### Ya Olsaydı?
+
+Cevapladığı soru: **"Portföyüme yatırdığım her parayı, aynı tarihlerde ve aynı tutarlarda
+başka bir yatırım aracına yatırsaydım bugün ne kadarım olurdu?"**
 
 ```
 ┌──────────────────────────────────────┐
-│ Analiz                               │
-│ [Ya Olsaydı?] Performans Risk Dağılım│
+│ PERFORMANS KARNESİ                   │
+│ Bugün +%0,79   TWR +%18,5            │
+│ XIRR +%13,1    Alpha +%7,5           │
 │                                      │
-│ Para girişlerin aynı tarih ve        │
-│ tutarlarla şunlara yatırılsaydı:     │
-│ Dönem   Tümü (12.01.2025 → bugün) 📅 │
-│ Birim   [₺ TL]   $ USD               │
+│ [Ya Olsaydı?]  Performans  Dağılım   │
 │                                      │
-│ ╭──────────────────────────────────╮ │
-│ │            ── Portföyüm (kalın)  │ │
-│ │  ╱‾‾‾╲╱‾‾  ── Gram Altın         │ │
-│ │ ╱  ╱‾‾‾‾‾  ── BIST 100           │ │
-│ │╱──╱─ ─ ─ ─ ─ Net yatırılan       │ │
-│ ╰──────────────────────────────────╯ │
-│ [Değer ₺]  Getiri %                  │
+│ 1A 3A 6A YB 1Y [Tümü]                │
+│ [₺ Değer]  % Getiri                  │
+│ ╭──────────────────────────╮         │
+│ │   ┊08.12.2025┊           │ 1,5 Mn  │
+│ │   ┊Altın ₺1,15 Mn       ╱│         │
+│ │  ╱┊Portföy ₺1,05 Mn ╱‾‾╯ │ 1 Mn    │
+│ │ ╱ ┊ ...         ╱‾‾╯     │         │
+│ │╱─ ┊─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │ 500 B   │
+│ ╰──────────────────────────╯         │
+│ Oca '25   Ağu '25   Nis '26  Kas '26 │
+│ - - Net yatırılan · dokun ve kaydır  │
 │                                      │
-│ LİG TABLOSU      Bugünkü Değer  Fark │
-│ 1 🥇 Gram Altın   ₺1.412.300 +127,7B │
-│ 2 🥈 Bitcoin      ₺1.398.120 +113,6B │
-│ 3 🥉 PORTFÖYÜM    ₺1.284.562     -   │
-│ 4    Nasdaq 100   ₺1.261.400  -23,2B │
-│ 5    S&P 500      ₺1.240.110  -44,5B │
-│ 6    BIST 30      ₺1.198.700  -85,9B │
-│ 7    BIST 100     ₺1.187.240  -97,3B │
-│ 8    Gram Gümüş   ₺1.176.800 -107,8B │
-│ 9    Russell 2000 ₺1.160.300 -124,3B │
-│ 10   Dolar/TL     ₺1.150.900 -133,7B │
+│ GRAFİKTE GÖSTER                      │
+│ [●Portföyüm] [●BIST 100] [●Altın]    │
+│ [●S&P 500] [●Dolar/TL] ○Bitcoin ...  │
 │                                      │
-│ ✦ Portföyün 9 seçenekten 7'sini      │
-│   geride bıraktı.                    │
+│ LİG TABLOSU          Bugünkü Değer   │
+│ 🥇 Gram Altın   ₺1.412.300 ▲₺127.738 │
+│ 🥈 Bitcoin      ₺1.398.120 ▲₺113.558 │
+│ 🥉 Mevduat      ₺1.358.500  ▲₺73.938 │
+│ 4  TÜFE         ₺1.315.700  ▲₺31.138 │
+│ 5  PORTFÖYÜM    ₺1.284.562     SEN   │
+│ ...                                  │
+│                                      │
+│ ✦ 12 seçenekten 8'ini geride bıraktın│
 │ ✦ En iyi seçenek Gram Altın olurdu   │
-│   (+₺127.738, yıllık +6,1 puan).     │
-│ ✦ Enflasyona göre reel getirin %4,2. │
+│ ✦ Enflasyona göre reel getirin -%2,4 │
 └──────────────────────────────────────┘
 ```
 
-**Varsayılan ölçütler (sizin listeniz):**
+**Grafik (profesyonel karşılaştırma grafiği):**
+
+| Özellik | Açıklama |
+|---|---|
+| **Dokun ve kaydır** | Dikey imleç çıkar. Bilgi kutusunda o tarih ve görünen her serinin değeri büyükten küçüğe sıralı listelenir. Her tarih geçişinde hafif titreşim verilir |
+| **₺ Değer / % Getiri** | Değer modunda tutarlar ve net yatırılan para çizgisi gösterilir. Getiri modunda seriler 0 çizgisine göre yüzde olarak karşılaştırılır. Seçilen dönemin başına göre yeniden hesaplanır, para girişleri dikkate alınır |
+| **Dönem** | 1A, 3A, 6A, YB, 1Y, Tümü (özel aralık Faz 9) |
+| **Seri seçimi** | 13 seçenekten en fazla 6'sı aynı anda gösterilir. Portföyüm her zaman görünür ve kalın çizgiyle, altında yumuşak dolguyla çizilir |
+| **Eksenler** | Sağda yuvarlak değerli fiyat ekseni (veriye sıkı oturan aralık), altta tarih ekseni, ince kesikli ızgara |
+| **Renkler** | Her ölçütün sabit bir rengi vardır. Örneğin Gram Altın her grafikte aynı altın rengindedir. Açık temada daha koyu tonlar kullanılır |
+
+**Ölçütler (13 seçenek):**
 
 | Ölçüt | Açıklama |
 |---|---|
-| BIST 100 | XU100 endeksi |
-| BIST 30 | XU030 endeksi |
-| Gram Altın | Ons altın × USD/TRY ÷ 31,1035 |
-| Gram Gümüş | Ons gümüş × USD/TRY ÷ 31,1035 |
-| S&P 500 | ABD'nin en büyük 500 şirketi (₺'ye çevrilmiş) |
-| Russell 2000 | ABD küçük şirketler endeksi (₺'ye çevrilmiş) |
-| Nasdaq 100 | ABD teknoloji ağırlıklı endeks (₺'ye çevrilmiş) |
+| BIST 100 / BIST 30 | XU100 / XU030 endeksleri |
+| Gram Altın / Gram Gümüş | Ons fiyatı × USD/TRY ÷ 31,1035 |
+| S&P 500, Nasdaq 100, Russell 2000 | ABD endeksleri (₺'ye çevrilmiş) |
 | Bitcoin | BTC (₺'ye çevrilmiş) |
-| Dolar/TL | Parayı dolara çevirip bekletmek |
+| Dolar/TL, Euro/TL | Parayı dövize çevirip bekletmek |
+| TÜFE | Paranın alım gücünü koruması için gereken değer |
+| Mevduat | Kullanıcının girdiği yıllık faiz oranıyla |
 
-**Önerilen ek ölçütler** (ayarlardan açılıp kapatılabilir): Euro/TL, TÜFE (enflasyon: paranın
-alım gücünü koruması için gereken değer), Mevduat (kullanıcının girdiği yıllık faiz oranıyla),
-Ethereum, Nasdaq Bileşik.
+**Ayarlar (Faz 9):**
 
-**Bir ölçüte dokununca açılan detay kartı:** Fon bültenlerindeki gibi aşağıdaki metrikler
-yan yana iki sütunda gösterilir: **Portföyüm** ve **Ölçüt**.
-
-| Metrik | Ne anlatır |
-|---|---|
-| Bugünkü değer ve K/Z (₺) | Aynı para akışıyla ulaşılacak son değer |
-| Toplam getiri (%) | Net yatırılana göre kazanç |
-| Yıllık getiri (XIRR) | Para giriş zamanlarını hesaba katan yıllıklandırılmış getiri |
-| Zaman ağırlıklı getiri (TWR) | Para akışından bağımsız performans |
-| Maksimum düşüş | Zirveden görülen en büyük kayıp |
-| Volatilite (yıllık) | Dalgalanma |
-| Sharpe oranı | Risk başına getiri |
-| En iyi ve en kötü ay | Aylık getiri uçları |
-| Aylık getiri ısı haritası | Ay ay hangisi daha iyiydi |
-| Korelasyon ve Beta (BIST 100'e göre) | Portföyün piyasayla ne kadar birlikte hareket ettiği |
-
-**Ayarlar:**
-
-- **Dönem:** Tümü, 1Y, YB, 6A veya özel tarih aralığı.
-- **Para birimi:** TL veya USD. USD seçilince tüm akışlar dolar bazında simüle edilir. TL'nin değer kaybını dışlayan "gerçek" karşılaştırma budur.
-- **Karşılaştırma bazı:**
-  - *Para giriş/çıkışları* (varsayılan)
-  - *Alım/satım tutarları*: her alış, ölçüte yatırım; her satış, ölçütten çekiş sayılır.
+- **Para birimi:** TL veya USD. USD seçilince tüm akışlar dolar bazında simüle edilir.
+- **Karşılaştırma bazı:** *Para giriş/çıkışları* (varsayılan) veya *alım/satım tutarları*.
 - **Temettü dahil:** Mümkün olan ölçütlerde temettü dahil (toplam getiri) seri kullanılır.
 
-**Diğer Analiz alt sekmeleri:**
+#### Performans
 
-- **Performans:**
-  - TWR ve XIRR
-  - Dönemsel getiri tablosu
-  - Aylık getiri ısı haritası (yıl × ay)
-  - En çok kazandıran ve kaybettiren varlıklar
-  - Gerçekleşen ve gerçekleşmemiş K/Z dağılımı
-- **Risk:**
-  - Düşüş (drawdown) grafiği
-  - Volatilite, Sharpe, Sortino ve Beta
-  - Yoğunlaşma uyarısı: "Tek varlık portföyün %25'inden fazla"
-- **Dağılım:**
-  - Piyasa, para birimi, sektör ve varlık bazında dağılım
-  - **Isı haritası:** Kutu büyüklüğü = ağırlık, renk = günlük veya toplam değişim
+| Bölüm | İçerik |
+|---|---|
+| **Risk ve getiri kutuları** | Beta, volatilite (yıllık) ve risk seviyesi, Sharpe, Sortino, maksimum düşüş, en iyi ay, en kötü ay. Hepsi dokununca açıklanır |
+| **Dönemsel getiri tablosu** | 1A, 3A, 6A, YB, 1Y ve Tümü için portföy (TWR), BIST 100 ve aradaki fark (puan) |
+| **Aylık getiri haritası** | Yıl × ay ızgarası. Yeşil kazanç, kırmızı kayıp, renk koyuluğu hareketin büyüklüğü |
+| *Sonra (Faz 9)* | Düşüş grafiği, en çok kazandıran ve kaybettiren varlıklar, gerçekleşen/gerçekleşmemiş K/Z dağılımı, yoğunlaşma uyarısı |
+
+#### Dağılım (Faz 9)
+
+- Piyasa, para birimi, sektör ve varlık bazında dağılım.
+- **Isı haritası:** Kutu büyüklüğü = ağırlık, renk = günlük veya toplam değişim.
 
 ### 6.8 Ayarlar
 
@@ -685,7 +688,7 @@ yan yana iki sütunda gösterilir: **Portföyüm** ve **Ölçüt**.
 ## 7. Grafik Tasarımı
 
 Uygulamanın imza öğesi, bakiye grafiğidir. Hedef: Robinhood ve Revolut akıcılığında,
-fon bülteni ciddiyetinde bir grafik.
+profesyonel bir yatırım uygulaması ciddiyetinde bir grafik.
 
 ### Görsel Yapı
 
@@ -738,7 +741,7 @@ fon bülteni ciddiyetinde bir grafik.
 canlı bakiye, altında portföy. Temalar yalnızca renk, gölge ve vurgu karakterini değiştirir.
 Varsayılan tema **Okyanus**'tur.
 
-**Tasarım tonu:** Profesyonel ama **biraz neşeli, biraz yumuşak**:
+**Tasarım tonu:** Profesyonel. Yazı tipi sade (Inter), renk ve şekiller **biraz neşeli, biraz yumuşak**:
 
 - Bakiye kartı canlı bir degrade ile öne çıkar.
 - Köşeler cömert yuvarlaklıktadır, gölgeler dağınık ve yumuşaktır.
@@ -771,21 +774,20 @@ Varsayılan tema **Okyanus**'tur.
 
 ### Tipografi
 
-- **Yazı tipi:**
-  - Başlıklar ve tüm tutarlar için **Nunito**. Yuvarlak hatlıdır, istenen yumuşak ve neşeli hissi verir.
-  - Gövde metni için **Nunito Sans**. Aynı ailenin sade kardeşidir, profesyonel okunurluk sağlar.
-  - İki ailede de Türkçe karakterler ve ₺ işareti tamdır.
-- **Rakamlar:** Her iki yazı tipinde rakamlar **varsayılan olarak eşit genişliktedir**. Ayrı bir ayar gerekmeden (Android'de de) canlı değişen fiyatlarda rakamlar titremez, sütunlar hizalı kalır. Bu, yazı tipi dosyaları incelenerek doğrulandı.
+- **Yazı tipi:** **Inter**. Sade, nötr ve finans uygulamalarında standart bir yazı tipidir.
+  Türkçe karakterler ve ₺ işareti tamdır. *(İlk denemedeki yuvarlak hatlı Nunito "fazla
+  yumuşak" bulunduğu için 9 Kasım 2026'da değiştirildi.)*
+- **Rakamlar:** Tüm yazı stillerinde **eşit genişlikli rakam** (tabular figures, `tnum`) açıktır. Canlı değişen fiyatlarda rakamlar titremez, sütunlar hizalı kalır. Android bunu yazı tipi özelliği olarak uygular.
 
 | Ölçek | Boyut / Kalınlık | Kullanım |
 |---|---|---|
-| Büyük bakiye | 38 / Nunito Black | Toplam değer |
-| Başlık 1 | 28 / Nunito ExtraBold | Ekran başlıkları |
-| Başlık 2–3 | 22–18 / Nunito | Bölüm ve kart başlıkları |
-| Gövde | 16 / Nunito Sans | Liste satırları |
-| Tutar | 22–13 / Nunito Bold | Değerler, rozetler |
-| Alt bilgi | 13–12 / Nunito Sans | Adet, fiyat, açıklamalar |
-| Etiket | 11 / Nunito Sans Bold, BÜYÜK HARF, geniş aralık | "TOPLAM DEĞER", "CANLI BÜTÇE" |
+| Büyük bakiye | 36 / Inter Bold, sıkı harf aralığı | Toplam değer |
+| Başlık 1 | 28 / Inter Bold | Ekran başlıkları |
+| Başlık 2–3 | 22–17 / Inter Bold–SemiBold | Bölüm ve kart başlıkları |
+| Gövde | 15 / Inter Regular | Liste satırları |
+| Tutar | 20–12,5 / Inter SemiBold | Değerler, rozetler |
+| Alt bilgi | 13–12 / Inter Regular–Medium | Adet, fiyat, açıklamalar |
+| Etiket | 11 / Inter SemiBold, BÜYÜK HARF, geniş aralık | "TOPLAM DEĞER", "CANLI BÜTÇE" |
 
 ### Düzen ve Ritim
 
@@ -867,13 +869,23 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 1 | **Telefon** | Android. Testler ve kurulum (APK) Android'e göre yapılır. Kod iOS ile de uyumlu kalır |
 | 2 | **Teknoloji** | Expo (React Native) + TypeScript |
 | 3 | **Alt bar düzeni** | Portföy · Analiz · ＋ · Fon · Geçmiş. Ayarlar sağ üstte ⚙ |
-| 4 | **"Fon" ekranı** | Portföyün fon gibi sunulduğu Hesabım ekranı (pay değeri, Varlık/Maliyet tuşları) |
+| 4 | **"Fon" ekranı** | Kişisel portföyün Hesabım özeti (Varlık/Maliyet tuşları). Fon kavramları (pay değeri vb.) gösterilmez, bkz. 9 Kasım revizyonu |
 | 5 | **Varsayılan tema** | Okyanus (mavi) |
 | 6 | **Maliyet yöntemi** | Ağırlıklı ortalama varsayılan, FIFO ayardan seçilebilir |
 | 7 | **Nakit takibi** | Otomatik para yatırma açık |
 | 8 | **BIST verisi** | Ücretsiz kaynakla 15 dk gecikmeli başlanır, lisanslı canlı kaynak sonra eklenebilir |
 | 9 | **Ek ölçütler** | TÜFE, Euro/TL ve Mevduat eklendi |
 | 10 | **Uygulama adı** | Çalışma adı "Yatırım Takip". Kesin ad yayın öncesi seçilecek |
+
+### 9 Kasım 2026 revizyonu (Faz 1 geri bildirimi)
+
+| # | İstek | Karar |
+|---|---|---|
+| 11 | APK'yı GitHub'dan indirmek | GitHub Actions her uygulama değişikliğinde APK derler ve "Android · son sürüm" sayfasında yayınlar ([README](../README.md#android-telefonda-kurulum)) |
+| 12 | Yazı stili daha normal olsun | Nunito → **Inter** |
+| 13 | Analiz grafiği daha profesyonel olsun | Dokun-kaydır imleç ve bilgi kutusu, eksenler, ₺/% modu, dönem seçimi, seri seçimi, net yatırılan çizgisi ([6.7](#67-analiz-sekmesi)) |
+| 14 | Pay adedi, pay tutarı olmasın, bu bir fon değil | Hesabım ekranında pay değeri ve pay sayısı kaldırıldı. Yerine Maliyet, Kâr/Zarar ve Bugün gösterilir. TWR hesabı arka planda aynı yöntemle yapılır ama pay kavramı ekranda görünmez |
+| 15 | Alpha, TWR, XIRR, Bugün | Analiz'in en üstüne **Performans Karnesi** eklendi. Performans sekmesine Beta, Sharpe, Sortino, volatilite, maks. düşüş, en iyi/kötü ay, dönemsel tablo ve aylık harita eklendi. Hesap fonksiyonları yazıldı ve test edildi |
 
 ---
 

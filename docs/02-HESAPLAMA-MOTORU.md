@@ -2,6 +2,10 @@
 
 > Uygulamadaki her rakamın nasıl hesaplandığını tanımlar. Kod bu dokümana göre yazılır ve
 > buradaki örnek hesaplar otomatik test olarak koda eklenir.
+>
+> **Durum (9 Kasım 2026):** Bölüm 9 (XIRR), 10 (risk ve alpha) ve 12 (Ya Olsaydı?) fonksiyonları
+> yazıldı ve test edildi (`src/domain/metrics.ts`, `src/domain/whatIf.ts`). T3, T4 ve T11
+> testleri geçiyor. Diğer bölümler Faz 2'de.
 > Ana doküman: [01-PROJE-DOKUMANI.md](01-PROJE-DOKUMANI.md)
 
 ## İçindekiler
@@ -13,7 +17,7 @@
 5. [Kâr / Zarar](#5-kâr--zarar)
 6. [Nakit ve Canlı Bütçe](#6-nakit-ve-canlı-bütçe)
 7. [Portföy Değer Serisi (Grafik Verisi)](#7-portföy-değer-serisi)
-8. [Pay Değeri ve Zaman Ağırlıklı Getiri (TWR)](#8-pay-değeri-ve-zaman-ağırlıklı-getiri-twr)
+8. [Zaman Ağırlıklı Getiri (TWR)](#8-zaman-ağırlıklı-getiri-twr)
 9. [Para Ağırlıklı Getiri (XIRR)](#9-para-ağırlıklı-getiri-xirr)
 10. [Risk Metrikleri](#10-risk-metrikleri)
 11. [Reel Getiri (Enflasyon)](#11-reel-getiri)
@@ -213,10 +217,14 @@ Her gün d için (ilk işlemden bugüne):
   - Geçmiş tarihli bir işlem eklenir veya düzenlenirse yalnızca **o tarihten sonraki** günler yeniden hesaplanır (artımlı hesap).
 - **Görselleştirme:** Grafiğe gönderilmeden önce seri, LTTB algoritmasıyla şekli bozulmadan ~300 noktaya indirilir.
 
-## 8. Pay Değeri ve Zaman Ağırlıklı Getiri (TWR)
+## 8. Zaman Ağırlıklı Getiri (TWR)
 
 Yatırım fonlarının kullandığı **birimleştirme (unitization)** yöntemidir. Para giriş ve
-çıkışlarının getiriyi bozmasını engeller. Fon ekranındaki pay değeri buradan gelir.
+çıkışlarının getiriyi bozmasını engeller.
+
+> **Not:** Aşağıdaki "pay değeri" ve "pay sayısı" yalnızca **iç hesap** değişkenleridir.
+> Uygulama bir fon değil, kişisel portföydür. Bu kavramlar hiçbir ekranda gösterilmez.
+> Kullanıcı yalnızca sonuçları görür: TWR, dönemsel getiri tablosu, risk ölçüleri.
 
 ```
 Başlangıç: ilk para girişi F₁ → payDeğeri = 1,000000 ; paySayısı = F₁
@@ -273,7 +281,7 @@ CF: para yatırma → negatif (yatırımcının cebinden çıkar)
 
 ## 10. Risk Metrikleri
 
-Tüm risk metrikleri **pay değeri serisinden** hesaplanır. Böylece para giriş/çıkışları riski
+Tüm risk metrikleri **(iç) pay değeri serisinden** hesaplanır. Böylece para giriş/çıkışları riski
 olduğundan yüksek göstermez.
 
 ```
@@ -287,9 +295,13 @@ sharpe           = (yıllıkGetiri − risksizFaiz) / volatilite
 sortino          = (yıllıkGetiri − risksizFaiz) / aşağı yönlü sapma
 beta             = kov(r_portföy, r_BIST100) / var(r_BIST100)
 korelasyon       = kor(r_portföy, r_BIST100)
+alpha (Jensen)   = R_p − [R_f + β × (R_m − R_f)]          (yıllık)
+fazla getiri     = TWR_portföy − getiri_ölçüt               (aynı dönem)
 ```
 
-- **Risksiz faiz:** Kullanıcı ayarlardan girer (ör. güncel politika faizi veya mevduat oranı).
+- **Risksiz faiz:** Kullanıcı ayarlardan girer (ör. güncel politika faizi veya mevduat oranı). Girilmediyse %0 kabul edilir ve bu durum ekranda belirtilir.
+- **Ölçüt:** Beta ve Alpha varsayılan olarak BIST 100'e göre hesaplanır, ayarlardan değiştirilebilir (S&P 500 TL, BIST 30 vb.).
+- **Alpha yorumu:** Pozitif alpha, portföyün aldığı piyasa riskine göre ölçütten fazla kazandırdığını gösterir. Örnek: β = 0,5 olan bir portföy, endeks %8 kazandığında riskine göre %4 beklenir. Portföy %11,5 kazandıysa alpha ≈ +%7,5'tir.
 - **Risk Değeri (1–7):** Yıllık volatiliteye göre Avrupa UCITS fon standardındaki (SRRI) bantlarla hesaplanır.
 
 | Değer | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
@@ -449,7 +461,6 @@ uyumsuzluk görülürse varlık detayında uyarı gösterilir.
 | Hisse fiyatı | 2 basamak (₺1'in altındaysa 4) |
 | Kripto fiyatı | Fiyata göre 2–8 basamak |
 | Kripto adet | En fazla 10 basamak, sondaki sıfırlar atılır |
-| Pay değeri | 6 basamak |
 | Yüzdeler | 2 basamak |
 
 ## 15. Doğrulama Kuralları ve Test Senaryoları
@@ -471,7 +482,7 @@ uyumsuzluk görülürse varlık detayında uyarı gösterilir.
 | # | Senaryo | Beklenen |
 |---|---|---|
 | T1 | Bölüm 4.3 örneği | Değerler tablo ile birebir |
-| T2 | Bölüm 8 TWR örneği | TWR %3,125, pay değeri 1,03125 |
+| T2 | Bölüm 8 TWR örneği | TWR %3,125 (iç pay değeri 1,03125) |
 | T3 | Bölüm 9 XIRR örneği | %16,09 (Excel ile aynı) |
 | T4 | Bölüm 12.4 Ya Olsaydı örneği | Değer 11.275, Net K/Z −725 |
 | T5 | Bölüm 5.2 kur ayrıştırması | 12.800 + 19.200 = 32.000 |
@@ -479,7 +490,7 @@ uyumsuzluk görülürse varlık detayında uyarı gösterilir.
 | T7 | Eldekinden fazla satış | Kayıt reddedilir |
 | T8 | Geçmiş alışı silmek sonraki satışı geçersiz kılıyor | Uyarı, kayıt tutarlılığı korunur |
 | T9 | %100 bedelsiz öncesi ve sonrası değerleme | Grafikte sıçrama yok |
-| T10 | Tüm parayı çekip yıllar sonra yeniden yatırma | Pay değeri serisi kesintisiz |
+| T10 | Tüm parayı çekip yıllar sonra yeniden yatırma | TWR serisi kesintisiz |
 | T11 | Ölçütün karşılayamadığı çekiş | `karşılanamayan` doğru, Net K/Z adil |
 | T12 | 8 ondalıklı kripto adetleri, 10.000 işlem | Kuruş hatası yok, hesap < 200 ms |
 | T13 | Bayram tatili ve hafta sonu | Son geçerli kapanış kullanılır |

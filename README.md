@@ -1,10 +1,13 @@
 # Yatırım Takip
 
-BIST, ABD borsaları ve kripto paraları tek yerde takip eden, portföyü bir yatırım fonu gibi
-raporlayan, tamamen telefonda çalışan profesyonel portföy takip uygulaması.
+BIST, ABD borsaları ve kripto paraları tek yerde takip eden, profesyonel yatırım ölçülerini
+(TWR, XIRR, Alpha, risk) kişisel portföye uygulayan, tamamen telefonda çalışan portföy takip
+uygulaması.
 
-> **Durum:** Faz 1 tamamlandı. Proje iskeleti, 4 tema, tasarım sistemi ve ekran önizlemeleri hazır.
-> Sıradaki adım: Faz 2 (hesaplama motoru). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md).
+> **Durum:** Faz 1 ve geri bildirim revizyonu (Faz 1.1) tamamlandı. Tasarım sistemi, 4 tema,
+> Analiz (Performans Karnesi, etkileşimli karşılaştırma grafiği) hazır, APK GitHub'da derleniyor.
+> Ekranlar şimdilik örnek veri gösterir. Sıradaki adım: Faz 2 (hesaplama motoru).
+> Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md).
 
 ![Dört tema](docs/onizleme/faz1/1-temalar-ana-ekran.jpg)
 
@@ -26,10 +29,14 @@ raporlayan, tamamen telefonda çalışan profesyonel portföy takip uygulaması.
 - **İşlemler:**
   - Manuel alış/satış girişi
   - Sağa/sola kaydırarak düzenle, al, sat, sil
-- **Fon (Hesabım):** Pay değeri ve iki ayrı tuşla **Varlık** / **Maliyet** görünümü
+- **Fon (Hesabım):** Toplam varlık, maliyet, kâr/zarar ve iki ayrı tuşla **Varlık** / **Maliyet** görünümü
+- **Analiz:**
+  - Performans Karnesi: Bugün, TWR, XIRR, Alpha
+  - Beta, Sharpe, Sortino, volatilite, maksimum düşüş
+  - Dokun-kaydır karşılaştırma grafiği
 - **Ya Olsaydı?:**
   - Aynı tutarları aynı tarihlerde şunlara yatırsaydınız ne olurdu: BIST 100, BIST 30, altın, gümüş, S&P 500, Russell 2000, Nasdaq, Bitcoin, Dolar/TL, Euro/TL, TÜFE, mevduat
-  - Fon düzeyinde metriklerle karşılaştırma
+  - Lig tablosu ve dokun-kaydır grafikle karşılaştırma
 - **Temalar:** 4 tema: Okyanus (mavi), Gece, Gün, Kraliyet. Hepsi WCAG AA kontrast testinden geçer
 - **Gizlilik:** Veriler telefonda kalır, gizlilik modu, parmak izi kilidi (Faz 10)
 
@@ -45,13 +52,25 @@ npm run web        # Tarayıcıda önizleme
 npm run check      # Tip kontrolü + lint + testler
 ```
 
-### Android telefonda deneme
+### Android telefonda kurulum
+
+**APK'yı GitHub'dan indirin (bilgisayar gerekmez):**
+
+1. Telefonda GitHub'a giriş yapın.
+2. Bu depoda **Releases → "Android · son sürüm"** sayfasını açın. Doğrudan bağlantı: `github.com/yapaysaman5-coder/Yat-r-mTakip/releases/tag/android-latest`
+3. `YatirimTakip-<numara>.apk` dosyasına dokunup indirin.
+4. İndirilen dosyayı açın. Android "bilinmeyen uygulamaları yükle" izni isterse izin verin, sonra **Yükle**'ye dokunun.
+5. Yeni bir sürüm çıktığında aynı sayfadan indirip kurun. Eski sürümün üzerine güncelleme olarak kurulur.
+
+APK, uygulama kodu her değiştiğinde GitHub Actions ile otomatik derlenir (`.github/workflows/android-apk.yml`).
+
+**Geliştirme için diğer yollar:**
 
 1. **Expo Go ile:**
    - Telefona Play Store'dan **Expo Go** uygulamasını kurun.
    - Bilgisayarda bu depoyu açıp `npm install` ve `npm start` çalıştırın.
    - Çıkan QR kodu Expo Go ile okutun.
-2. **APK ile (bilgisayarsız):** Expo hesabıyla bulutta derlenen kurulabilir APK. Bu yol yayın hazırlığında (Faz 11) kurulacak, istenirse daha önce de hazırlanabilir.
+2. **Bağlı cihaz:** `npm run android` (Android SDK kurulu bir bilgisayar gerekir).
 
 ## Yasal Uyarı
 
