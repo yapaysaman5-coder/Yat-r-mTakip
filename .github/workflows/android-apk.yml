@@ -52,11 +52,18 @@ jobs:
         run: npm run check
 
       - name: Generate native Android project
-        run: npx expo prebuild --platform android --no-install
+        run: |
+          npx expo prebuild --platform android --no-install
+          # The default 10 s download timeout for the Gradle distribution is too tight on CI.
+          sed -i 's/^networkTimeout=.*/networkTimeout=120000/' android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Build APK (arm64)
         working-directory: android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
+        run: |
+          build() { ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace; }
+          # One retry protects against transient network failures (dependency / wrapper downloads).
+          build || { echo "Build failed, retrying once in 30 s..."; sleep 30; build; }
 
       - name: Collect APK
         run: |
