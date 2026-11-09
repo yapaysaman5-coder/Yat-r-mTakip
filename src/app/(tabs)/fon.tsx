@@ -6,6 +6,7 @@ import { PreviewNote } from '@/components/PreviewNote';
 import type { Holding } from '@/data/view/portfolioView';
 import type { ReturnPeriod } from '@/domain';
 import { tr } from '@/i18n/tr';
+import { useMarketStore } from '@/state/market';
 import { usePortfolioView } from '@/state/portfolio';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
@@ -48,6 +49,9 @@ export default function AccountScreen() {
 function AccountBody() {
   const { colors } = useTheme();
   const view = usePortfolioView();
+  const online = useMarketStore((s) => s.online);
+  const mockPrices = useMarketStore((s) => s.mock);
+  const liveStatus = view.isDemo || mockPrices ? 'sample' : online === false ? 'offline' : 'live';
   const [mode, setMode] = useState<Mode>('value');
   const { summary } = view;
 
@@ -89,7 +93,7 @@ function AccountBody() {
           <Text variant="overline" tone="tertiary">
             TOPLAM VARLIK
           </Text>
-          <LiveDot status="live" />
+          <LiveDot status={liveStatus} />
         </View>
         <Money value={summary.totalValue} variant="title1" style={{ marginTop: space.xs }} />
         <View style={{ flexDirection: 'row', gap: space.sm, marginTop: space.lg }}>

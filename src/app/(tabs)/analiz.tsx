@@ -12,6 +12,7 @@ import {
   type AnalysisPeriod,
   type MonthReturn,
 } from '@/data/view/analysisView';
+import { useMarketStore } from '@/state/market';
 import { useAnalysis, usePortfolioView } from '@/state/portfolio';
 import { seriesColor } from '@/theme/chartColors';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -51,8 +52,9 @@ const CONTEXT = `Ölçüt: ${BENCHMARK_NAME} · Risksiz faiz: %0 (Ayarlar › He
 
 const pct = (r: number | null, decimals = 1) =>
   r === null ? '—' : formatPercent(r, { decimals, sign: 'always' });
+/** Values that round to zero on screen get no colour. */
 const tone = (r: number | null) =>
-  r === null ? 'primary' : r > 0 ? 'up' : r < 0 ? 'down' : 'primary';
+  r === null || Math.abs(r) < 0.00005 ? 'primary' : r > 0 ? 'up' : 'down';
 const dec2 = (n: number | null) =>
   n === null ? '—' : formatNumber(n, { minDecimals: 2, maxDecimals: 2 });
 
@@ -155,7 +157,7 @@ function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
           sub={
             m?.beta != null
               ? `${BENCHMARK_NAME}’e göre · β ${dec2(m.beta)}`
-              : 'ölçüt fiyatları Faz 4’te'
+              : 'ölçüt fiyatı bekleniyor'
           }
           onPress={() => onInfo('alpha', pct(m?.alpha ?? null))}
         />
@@ -168,12 +170,18 @@ function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
 
 function WhatIf() {
   const analysis = useAnalysis();
+  const syncing = useMarketStore((s) => s.syncing);
+  const online = useMarketStore((s) => s.online);
   if (analysis.series.length < 2) {
     return (
       <EmptyState
         icon={BarChart3}
-        title="Ölçüt fiyatları henüz yok"
-        message="Altın, BIST 100, S&P 500, Dolar/TL ve diğer seçeneklerin günlük fiyatları piyasa verisiyle (Faz 4) gelecek. Örnek portföyde kurgusal fiyatlarla deneyebilirsin."
+        title={syncing ? 'Ölçüt fiyatları indiriliyor…' : 'Ölçüt fiyatları henüz yok'}
+        message={
+          online === false
+            ? 'İnternet bağlantısı gelince altın, BIST 100, S&P 500, Dolar/TL ve diğerlerinin geçmiş fiyatları indirilecek.'
+            : 'Altın, BIST 100, S&P 500, Dolar/TL ve diğerlerinin ilk kaydından bugüne günlük fiyatları indiriliyor. Birazdan burada.'
+        }
       />
     );
   }

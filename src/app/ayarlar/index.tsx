@@ -7,6 +7,7 @@ import {
   EyeOff,
   Info,
   Layers,
+  LineChart,
   Palette,
   ShieldCheck,
   Shapes,
@@ -93,6 +94,20 @@ export default function SettingsScreen() {
           showChevron
           onPress={() => router.push('/ayarlar/veri')}
         />
+        <ListRow
+          title="Veri kaynakları"
+          subtitle="Canlı fiyatlar, kaynak durumu, yenile"
+          leading={icon(Wifi, colors.accent2, colors.accent2Soft)}
+          showChevron
+          onPress={() => router.push('/ayarlar/kaynaklar')}
+        />
+        <ListRow
+          title="Piyasalar"
+          subtitle="İzleme listesi ve sembol arama"
+          leading={icon(LineChart, colors.accent, colors.accentSoft)}
+          showChevron
+          onPress={() => router.push('/piyasalar')}
+        />
       </Group>
 
       <Group title="YAKINDA">
@@ -115,12 +130,6 @@ export default function SettingsScreen() {
           badge={<Soon phase="Faz 10" />}
         />
         <ListRow
-          title="Veri ve bağlantı"
-          subtitle="Yenileme sıklığı, veri kaynakları"
-          leading={icon(Wifi, colors.textSecondary, colors.neutralSoft)}
-          badge={<Soon phase="Faz 4" />}
-        />
-        <ListRow
           title="Güvenlik"
           subtitle="Parmak izi kilidi, ekran görüntüsü"
           leading={icon(ShieldCheck, colors.textSecondary, colors.neutralSoft)}
@@ -137,7 +146,7 @@ export default function SettingsScreen() {
       <Group title="HAKKINDA">
         <ListRow
           title="Yatırım Takip"
-          subtitle="Sürüm 0.3.0 · Faz 3 (veritabanı)"
+          subtitle="Sürüm 0.4.0 · Faz 4 (piyasa verisi)"
           leading={icon(Info, colors.accent, colors.accentSoft)}
         />
         <Text variant="caption" tone="tertiary" style={{ paddingBottom: space.md }}>

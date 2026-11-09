@@ -18,11 +18,13 @@ import { ScrollView, View } from 'react-native';
 
 import { EmptyPortfolio } from '@/components/EmptyPortfolio';
 import { HoldingRow } from '@/components/HoldingRow';
+import { MarketTicker } from '@/components/MarketTicker';
 import { PortfolioSheet } from '@/components/PortfolioSheet';
 import { PreviewNote } from '@/components/PreviewNote';
 import { homeChart, type HomeRange } from '@/data/view/chart';
 import type { Summary } from '@/data/view/portfolioView';
 import { tr } from '@/i18n/tr';
+import { useMarketStore } from '@/state/market';
 import { usePortfolioView } from '@/state/portfolio';
 import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -71,6 +73,9 @@ export default function PortfolioScreen() {
 
   const view = usePortfolioView();
   const { summary } = view;
+  const online = useMarketStore((s) => s.online);
+  const mockPrices = useMarketStore((s) => s.mock);
+  const heroStatus = view.isDemo || mockPrices ? 'sample' : online === false ? 'offline' : 'live';
   const series = homeChart(view, range);
   const holdings = view.holdings
     .filter((h) => filter === 'all' || h.market === filter)
@@ -140,6 +145,7 @@ export default function PortfolioScreen() {
       <PortfolioSheet visible={picker} onClose={() => setPicker(false)} />
       {view.isDemo ? <PreviewNote /> : null}
       {view.empty ? <EmptyPortfolio /> : null}
+      {view.empty ? <MarketTicker /> : null}
       {view.empty ? null : (
         <>
           <GradientCard colors={colors.heroGradient} padding={0}>
@@ -160,7 +166,7 @@ export default function PortfolioScreen() {
                     borderRadius: radius.pill,
                     backgroundColor: colors.heroGlass,
                   }}>
-                  <LiveDot status="live" onHero />
+                  <LiveDot status={heroStatus} onHero />
                 </View>
               </View>
               <Money value={summary.totalValue} variant="hero" color={colors.heroText} />
@@ -224,6 +230,8 @@ export default function PortfolioScreen() {
           </GradientCard>
 
           <BudgetCard summary={summary} />
+
+          <MarketTicker />
 
           <Card>
             <SectionHeader title={tr.home.allocation} style={{ marginBottom: space.md }} />
