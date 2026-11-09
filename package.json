@@ -53,13 +53,33 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest",
-    "check": "npm run typecheck && npm run lint && npm test -- --ci"
+    "check": "npm run typecheck && npm run lint && npm test -- --ci",
+    "test:coverage": "jest --ci --coverage"
   },
   "private": true,
   "jest": {
     "preset": "jest-expo",
     "testMatch": [
       "**/__tests__/**/*.test.ts?(x)"
+    ],
+    "collectCoverageFrom": [
+      "src/domain/**/*.ts",
+      "!src/domain/index.ts",
+      "!src/domain/types.ts",
+      "!src/domain/**/__tests__/**"
+    ],
+    "coverageThreshold": {
+      "./src/domain/": {
+        "lines": 95,
+        "statements": 95,
+        "functions": 95,
+        "branches": 90
+      }
+    },
+    "coverageReporters": [
+      "text",
+      "text-summary",
+      "json-summary"
     ]
   }
 }

@@ -6,7 +6,7 @@ import {
   correlation,
   jensenAlpha,
   maxDrawdown,
-  periodReturns,
+  stepReturns,
   riskLevel,
   sharpe,
   volatility,
@@ -68,7 +68,7 @@ describe('risk statistics', () => {
   });
 
   it('computes period returns and volatility', () => {
-    expect(periodReturns([100, 110, 99])).toEqual([0.10000000000000009, -0.09999999999999998]);
+    expect(stepReturns([100, 110, 99])).toEqual([0.10000000000000009, -0.09999999999999998]);
     expect(volatility([0.01, -0.01, 0.01, -0.01], 252)).toBeCloseTo(
       0.01154700538 * Math.sqrt(252),
       6,

@@ -76,8 +76,8 @@ export function xirr(cashflows: CashFlow[]): number | null {
   return (lo + hi) / 2;
 }
 
-/** Simple period returns of a series: v[i] / v[i−1] − 1. */
-export function periodReturns(series: number[]): number[] {
+/** Step-by-step returns of a series: v[i] / v[i−1] − 1. */
+export function stepReturns(series: number[]): number[] {
   const out: number[] = [];
   for (let i = 1; i < series.length; i++) out.push(series[i] / series[i - 1] - 1);
   return out;
