@@ -56,11 +56,13 @@ npm run check      # Tip kontrolü + lint + testler
 
 **APK'yı GitHub'dan indirin (bilgisayar gerekmez):**
 
-1. Telefonda GitHub'a giriş yapın.
-2. Bu depoda **Releases → "Android · son sürüm"** sayfasını açın. Doğrudan bağlantı: `github.com/yapaysaman5-coder/Yat-r-mTakip/releases/tag/android-latest`
-3. `YatirimTakip-<numara>.apk` dosyasına dokunup indirin.
-4. İndirilen dosyayı açın. Android "bilinmeyen uygulamaları yükle" izni isterse izin verin, sonra **Yükle**'ye dokunun.
-5. Yeni bir sürüm çıktığında aynı sayfadan indirip kurun. Eski sürümün üzerine güncelleme olarak kurulur.
+1. Telefonda şu sayfayı açın: <https://github.com/yapaysaman5-coder/Yat-r-mTakip/releases/tag/android-latest>
+2. `YatirimTakip-<numara>.apk` dosyasına dokunup indirin (≈ 40 MB). Doğrudan bağlantı: <https://github.com/yapaysaman5-coder/Yat-r-mTakip/releases/download/android-latest/YatirimTakip-6.apk> (numara her derlemede artar, güncel dosya için sayfayı kullanın).
+3. İndirilen dosyayı açın. Android "bilinmeyen uygulamaları yükle" izni isterse tarayıcınıza izin verin, sonra **Yükle**'ye dokunun.
+4. Yeni bir sürüm çıktığında aynı sayfadan indirip kurun. Eski sürümün üzerine güncelleme olarak kurulur.
+
+APK 64-bit ARM (arm64) telefonlar içindir, son yıllardaki tüm Android telefonlar böyledir. İmza şimdilik
+kişisel kurulum için yeterli olan geliştirme anahtarıyla yapılır. Play Store için ayrı imza Faz 11'de eklenecek.
 
 APK, uygulama kodu her değiştiğinde GitHub Actions ile otomatik derlenir (`.github/workflows/android-apk.yml`).
 
