@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ArrowDownToLine, Sparkles, WalletCards } from 'lucide-react-native';
+import { ArrowDownToLine, ShoppingCart, Sparkles, WalletCards } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { usePortfolioStore } from '@/state/portfolio';
@@ -19,12 +19,20 @@ export function EmptyPortfolio({ message }: { message?: string }) {
         title="Henüz kayıt yok"
         message={
           message ??
-          'İlk para girişini ekleyerek başla. Alış ve satış formları bir sonraki aşamada geliyor.'
+          'İlk alışını ya da para girişini ekleyerek başla. Nakit yetmezse alış için otomatik para girişi eklenir.'
         }
+      />
+      <Button
+        label="Varlık Al"
+        icon={ShoppingCart}
+        variant="buy"
+        fullWidth
+        onPress={() => router.push({ pathname: '/islem/al-sat', params: { side: 'BUY' } })}
       />
       <Button
         label="Para Yatır"
         icon={ArrowDownToLine}
+        variant="secondary"
         fullWidth
         onPress={() => router.push({ pathname: '/islem/nakit', params: { type: 'DEPOSIT' } })}
       />

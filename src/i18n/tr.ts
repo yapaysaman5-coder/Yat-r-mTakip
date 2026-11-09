@@ -29,7 +29,6 @@ export const tr = {
     withdrawHint: 'Portföyden nakit çıkar',
     dividend: 'Temettü',
     dividendHint: 'Temettü gelirini kaydet',
-    comingSoon: 'Bu ekran Faz 6’da geliyor ✨',
   },
   home: {
     totalValue: 'TOPLAM DEĞER',

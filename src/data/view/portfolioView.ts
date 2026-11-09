@@ -54,6 +54,13 @@ export interface Holding {
   stale: boolean;
   /** Source and time of the price, when it came from market data. */
   quote?: QuoteInfo;
+  unrealizedTRY: number;
+  /** null when the cost is zero. */
+  unrealizedRatio: number | null;
+  realizedTRY: number;
+  dividendsTRY: number;
+  /** Foreign assets: gain split into the asset's own move and the currency's move (TRY). */
+  fxSplit: { priceEffect: number; fxEffect: number } | null;
 }
 
 export interface Summary {
@@ -213,6 +220,13 @@ export function buildPortfolioView(data: PortfolioData): PortfolioView {
       spark: sparks[p.assetId] ?? [],
       stale: p.stale,
       quote: data.quoteInfo?.[p.assetId],
+      unrealizedTRY: p.unrealizedTRY.toNumber(),
+      unrealizedRatio: p.unrealizedRatio ? p.unrealizedRatio.toNumber() : null,
+      realizedTRY: p.realizedTRY.toNumber(),
+      dividendsTRY: p.dividendsTRY.toNumber(),
+      fxSplit: p.fxSplit
+        ? { priceEffect: p.fxSplit.priceEffect.toNumber(), fxEffect: p.fxSplit.fxEffect.toNumber() }
+        : null,
     };
   });
 

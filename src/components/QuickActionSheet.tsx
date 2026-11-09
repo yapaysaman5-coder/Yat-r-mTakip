@@ -4,6 +4,7 @@ import {
   ArrowUpFromLine,
   HandCoins,
   ShoppingCart,
+  Split,
   TrendingDown,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -12,20 +13,24 @@ import { View } from 'react-native';
 import { tr } from '@/i18n/tr';
 import { useColors } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
-import { IconWell, ListRow, PressableScale, Sheet, Text, toast } from '@/ui';
+import { IconWell, ListRow, PressableScale, Sheet, Text } from '@/ui';
 
 /** Sheet opened by the "+" button: buy / sell first, then cash movements. */
 export function QuickActionSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const colors = useColors();
   const router = useRouter();
 
-  const soon = () => {
-    onClose();
-    setTimeout(() => toast.show({ message: tr.quick.comingSoon }), 250);
-  };
   const cash = (type: 'DEPOSIT' | 'WITHDRAW') => {
     onClose();
     router.push({ pathname: '/islem/nakit', params: { type } });
+  };
+  const trade = (side: 'BUY' | 'SELL') => {
+    onClose();
+    router.push({ pathname: '/islem/al-sat', params: { side } });
+  };
+  const go = (pathname: '/islem/temettu' | '/islem/bolunme') => {
+    onClose();
+    router.push(pathname);
   };
 
   return (
@@ -37,7 +42,7 @@ export function QuickActionSheet({ visible, onClose }: { visible: boolean; onClo
           icon={ShoppingCart}
           color={colors.up}
           background={colors.upSoft}
-          onPress={soon}
+          onPress={() => trade('BUY')}
         />
         <BigTile
           label={tr.quick.sell}
@@ -45,7 +50,7 @@ export function QuickActionSheet({ visible, onClose }: { visible: boolean; onClo
           icon={TrendingDown}
           color={colors.down}
           background={colors.downSoft}
-          onPress={soon}
+          onPress={() => trade('SELL')}
         />
       </View>
       <View
@@ -85,7 +90,18 @@ export function QuickActionSheet({ visible, onClose }: { visible: boolean; onClo
             </IconWell>
           }
           showChevron
-          onPress={soon}
+          onPress={() => go('/islem/temettu')}
+        />
+        <ListRow
+          title="Bölünme / Bedelsiz"
+          subtitle="Adetin arttığı sermaye artırımı"
+          leading={
+            <IconWell background={colors.neutralSoft}>
+              <Split size={18} color={colors.textSecondary} strokeWidth={2.4} />
+            </IconWell>
+          }
+          showChevron
+          onPress={() => go('/islem/bolunme')}
         />
       </View>
     </Sheet>

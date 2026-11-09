@@ -55,7 +55,12 @@ export function TxnDetailSheet({
     if (!t) return;
     onClose();
     if (cashEditable) router.push({ pathname: '/islem/nakit', params: { type: t.type, id: t.id } });
-    else toast.show({ message: 'Alış, satış ve temettü düzenleme Faz 6’da geliyor ✨' });
+    else if (t.type === 'BUY' || t.type === 'SELL')
+      router.push({ pathname: '/islem/al-sat', params: { side: t.type, id: t.id } });
+    else if (t.type === 'DIVIDEND')
+      router.push({ pathname: '/islem/temettu', params: { id: t.id } });
+    else if (t.type === 'SPLIT') router.push({ pathname: '/islem/bolunme', params: { id: t.id } });
+    else toast.show({ message: 'Hesap ücreti düzenleme Ayarlar fazında geliyor' });
   };
 
   const rows: [string, string][] = [];
