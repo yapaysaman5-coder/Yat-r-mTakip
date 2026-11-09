@@ -141,7 +141,12 @@ describe('user portfolios', () => {
     expect(view.summary.netPnlRatio).toBeNull();
     expect(view.summary.dailyChangeRatio).toBeNull();
     expect(view.riskLevel).toBeNull();
-    expect(homeChart(view, '1A')).toEqual({ values: [], changeRatio: null });
+    expect(homeChart(view, '1A')).toEqual({
+      values: [],
+      labels: [],
+      netInvested: [],
+      changeRatio: null,
+    });
     expect(homeChart(view, '1G').values).toEqual([0, 0]);
     const a = buildAnalysis(view);
     expect(a.metrics).toBeNull();

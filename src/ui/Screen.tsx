@@ -1,7 +1,15 @@
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  RefreshControl,
+  ScrollView,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors } from '@/theme/ThemeProvider';
@@ -20,6 +28,11 @@ export interface ScreenProps {
   contentStyle?: StyleProp<ViewStyle>;
   /** Fixed below the scroll area (e.g. AL / SAT buttons). */
   footer?: ReactNode;
+  /** Vertical scroll position, for headers that change while scrolling. */
+  onScrollY?: (y: number) => void;
+  /** Pull to refresh. */
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 /** Screen container: themed background, safe-area padding, gutter and bottom room. */
@@ -30,6 +43,9 @@ export function Screen({
   scroll = true,
   contentStyle,
   footer,
+  onScrollY,
+  refreshing = false,
+  onRefresh,
 }: ScreenProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -47,7 +63,25 @@ export function Screen({
         <ScrollView
           contentContainerStyle={inner}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={32}
+          onScroll={
+            onScrollY
+              ? (e: NativeSyntheticEvent<NativeScrollEvent>) =>
+                  onScrollY(e.nativeEvent.contentOffset.y)
+              : undefined
+          }
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.accent}
+                colors={[colors.accent]}
+                progressBackgroundColor={colors.surface}
+              />
+            ) : undefined
+          }>
           {children}
         </ScrollView>
       ) : (

@@ -21,17 +21,19 @@ import { HoldingRow } from '@/components/HoldingRow';
 import { MarketTicker } from '@/components/MarketTicker';
 import { PortfolioSheet } from '@/components/PortfolioSheet';
 import { PreviewNote } from '@/components/PreviewNote';
-import { homeChart, type HomeRange } from '@/data/view/chart';
+import { customChart, homeChart, type HomeRange } from '@/data/view/chart';
 import type { Summary } from '@/data/view/portfolioView';
 import { tr } from '@/i18n/tr';
 import { useMarketStore } from '@/state/market';
-import { usePortfolioView } from '@/state/portfolio';
+import { CustomRangeSheet, ReadOut } from '@/components/HeroParts';
+import { useAnimatedNumber } from '@/lib/useAnimatedNumber';
+import { usePortfolioStore, usePortfolioView } from '@/state/portfolio';
+import { FinChart, type FinChartSelection } from '@/ui/charts/FinChart';
 import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme/ThemeProvider';
 import { GUTTER, radius, space } from '@/theme/tokens';
 import {
   AllocationBar,
-  AreaChart,
   Card,
   ChangeBadge,
   Chip,
@@ -46,7 +48,7 @@ import {
   Text,
   toast,
 } from '@/ui';
-import { formatPercent } from '@/utils/format';
+import { formatDate, formatPercent } from '@/utils/format';
 
 const RANGES: HomeRange[] = ['1G', '1H', '1A', '3A', '6A', '1Y', 'YB', 'Tümü'];
 const RANGE_LABEL: Record<HomeRange, string> = {
@@ -76,16 +78,39 @@ export default function PortfolioScreen() {
   const online = useMarketStore((s) => s.online);
   const mockPrices = useMarketStore((s) => s.mock);
   const heroStatus = view.isDemo || mockPrices ? 'sample' : online === false ? 'offline' : 'live';
-  const series = homeChart(view, range);
+  const [custom, setCustom] = useState<{ from: string; to: string } | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [sel, setSel] = useState<FinChartSelection>({ index: null, range: null });
+  const [compact, setCompact] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshMarket = useMarketStore((s) => s.refreshNow);
+  const reload = usePortfolioStore((s) => s.reload);
+  const series = custom ? customChart(view, custom.from, custom.to) : homeChart(view, range);
+  const animatedTotal = useAnimatedNumber(summary.totalValue);
+  const readIndex = sel.index !== null && sel.index < series.values.length ? sel.index : null;
+  const readRange = sel.range && sel.range[1] < series.values.length ? sel.range : null;
+  const rangeLabel = custom
+    ? `${formatDate(`${custom.from}T12:00:00Z`)} – ${formatDate(`${custom.to}T12:00:00Z`)}`
+    : RANGE_LABEL[range];
   const holdings = view.holdings
     .filter((h) => filter === 'all' || h.market === filter)
     .sort((a, b) => b.valueTRY - a.valueTRY);
 
   const soon = (what: string) => toast.show({ message: `${what} yakında geliyor ✨` });
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshMarket();
+    await reload();
+    setRefreshing(false);
+  };
+
   return (
     <Screen
       withTabBar
+      onScrollY={(y) => setCompact(y > 320)}
+      refreshing={refreshing}
+      onRefresh={view.empty ? undefined : onRefresh}
       header={
         <View
           style={{
@@ -124,7 +149,18 @@ export default function PortfolioScreen() {
             </Text>
             <ChevronDown size={18} color={colors.textSecondary} strokeWidth={2.4} />
           </PressableScale>
-          <View style={{ flex: 1 }} />
+          <View style={{ flex: 1, alignItems: 'flex-end' }}>
+            {compact && !view.empty ? (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Money value={summary.totalValue} variant="numM" />
+                {summary.dailyChangeRatio !== null ? (
+                  <Text variant="caption" tone={summary.dailyChange >= 0 ? 'up' : 'down'}>
+                    {formatPercent(summary.dailyChangeRatio, { sign: 'always' })} bugün
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
           <IconButton
             icon={privacy ? EyeOff : Eye}
             accessibilityLabel={privacy ? tr.privacy.show : tr.privacy.hide}
@@ -143,6 +179,16 @@ export default function PortfolioScreen() {
         </View>
       }>
       <PortfolioSheet visible={picker} onClose={() => setPicker(false)} />
+      <CustomRangeSheet
+        visible={customOpen}
+        onClose={() => setCustomOpen(false)}
+        first={view.series.dates[0]}
+        last={view.series.dates[view.series.dates.length - 1]}
+        onApply={(r) => {
+          setCustom(r);
+          setCustomOpen(false);
+        }}
+      />
       {view.isDemo ? <PreviewNote /> : null}
       {view.empty ? <EmptyPortfolio /> : null}
       {view.empty ? <MarketTicker /> : null}
@@ -169,24 +215,38 @@ export default function PortfolioScreen() {
                   <LiveDot status={heroStatus} onHero />
                 </View>
               </View>
-              <Money value={summary.totalValue} variant="hero" color={colors.heroText} />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: space.sm,
-                  flexWrap: 'wrap',
-                }}>
-                <ChangeBadge value={summary.dailyChange} kind="money" variant="hero" size="md" />
-                {summary.dailyChangeRatio !== null ? (
-                  <ChangeBadge value={summary.dailyChangeRatio} variant="hero" size="md" />
-                ) : null}
-                <Text variant="footnote" color={colors.heroTextSecondary}>
-                  {tr.home.today}
-                </Text>
-              </View>
+              <Money
+                value={
+                  readIndex !== null
+                    ? series.values[readIndex]
+                    : readRange
+                      ? series.values[readRange[1]]
+                      : animatedTotal
+                }
+                variant="hero"
+                color={colors.heroText}
+              />
+              {readIndex !== null || readRange ? (
+                <ReadOut chart={series} index={readIndex} range={readRange} />
+              ) : (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: space.sm,
+                    flexWrap: 'wrap',
+                  }}>
+                  <ChangeBadge value={summary.dailyChange} kind="money" variant="hero" size="md" />
+                  {summary.dailyChangeRatio !== null ? (
+                    <ChangeBadge value={summary.dailyChangeRatio} variant="hero" size="md" />
+                  ) : null}
+                  <Text variant="footnote" color={colors.heroTextSecondary}>
+                    {tr.home.today}
+                  </Text>
+                </View>
+              )}
               <Text variant="footnote" color={colors.heroTextSecondary} style={{ marginTop: 2 }}>
-                {RANGE_LABEL[range]}{' '}
+                {rangeLabel}{' '}
                 <Text variant="numS" color={colors.heroText}>
                   {series.changeRatio === null
                     ? '—'
@@ -194,14 +254,16 @@ export default function PortfolioScreen() {
                 </Text>
               </Text>
             </View>
-            <AreaChart
+            <FinChart
               values={series.values}
               baseline={series.baseline}
-              height={128}
+              height={140}
               lineColor={colors.chartLine}
               fillColor={colors.chartFill}
               baselineColor={colors.heroTextSecondary}
-              accessibilityLabel={`${RANGE_LABEL[range]} değer grafiği`}
+              guideColor={colors.heroText}
+              onSelect={setSel}
+              accessibilityLabel={`${rangeLabel} değer grafiği`}
             />
             <View
               style={{
@@ -216,15 +278,18 @@ export default function PortfolioScreen() {
                 <HeroRangeChip
                   key={r}
                   label={r}
-                  selected={r === range}
-                  onPress={() => setRange(r)}
+                  selected={!custom && r === range}
+                  onPress={() => {
+                    setCustom(null);
+                    setRange(r);
+                  }}
                 />
               ))}
               <HeroRangeChip
                 label="Özel"
                 icon={CalendarDays}
-                selected={false}
-                onPress={() => soon('Özel tarih aralığı')}
+                selected={!!custom}
+                onPress={() => setCustomOpen(true)}
               />
             </View>
           </GradientCard>
