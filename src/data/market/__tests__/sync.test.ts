@@ -13,15 +13,17 @@ import {
   loadSyncStates,
   loadWatchlist,
   removeFromWatchlist,
+  upsertQuotes,
   upsertSplits,
 } from '../../repo/market';
 import { getPortfolio, insertPortfolio } from '../../repo/portfolios';
 import { latestCloses, loadCloses } from '../../repo/prices';
 import { loadPortfolioData } from '../../service/load';
-import { marketNeeds, refreshQuotes, syncHistory } from '../../service/market';
+import { marketNeeds, refreshQuotes, storeStreamPrices, syncHistory } from '../../service/market';
 import { saveTransaction } from '../../service/transactions';
 import { buildAnalysis } from '../../view/analysisView';
 import { buildPortfolioView } from '../../view/portfolioView';
+import { instrumentFor } from '../instruments';
 import { MarketRouter } from '../router';
 import { MarketError, type MarketSource } from '../types';
 import { fakeHttp } from './fakeHttp';
@@ -262,6 +264,83 @@ describe('live quotes', () => {
     expect((await loadQuotes(db)).get('US:AAPL')?.price).toBe(252.5);
   });
 });
+
+describe('stream prices', () => {
+  it('stores the price, keeps today’s reference and starts a new day from the last price', async () => {
+    const db = openNodeDriver();
+    await migrate(db);
+    const btc = instrumentFor('CRYPTO:BTC')!;
+    const at = (iso: string) => new Date(iso).getTime();
+
+    // No earlier quote: no reference price yet (the next poll brings it).
+    await storeStreamPrices(
+      db,
+      [btc],
+      new Map([['CRYPTO:BTC', { price: 100, time: at('2026-11-09T10:00:00Z') }]]),
+      { now: NOW },
+    );
+    expect((await loadQuotes(db, ['CRYPTO:BTC'])).get('CRYPTO:BTC')).toMatchObject({
+      price: 100,
+      prevClose: null,
+      source: 'binance',
+      delayMinutes: 0,
+    });
+
+    // Same day: the stored reference stays.
+    await upsertQuote(db, 'CRYPTO:BTC', 101, 95, at('2026-11-09T10:30:00Z'));
+    await storeStreamPrices(
+      db,
+      [btc],
+      new Map([['CRYPTO:BTC', { price: 102, time: at('2026-11-09T11:00:00Z') }]]),
+      { now: NOW },
+    );
+    expect((await loadQuotes(db, ['CRYPTO:BTC'])).get('CRYPTO:BTC')).toMatchObject({
+      price: 102,
+      prevClose: 95,
+    });
+    expect((await latestCloses(db, ['CRYPTO:BTC'], 1))['CRYPTO:BTC']).toEqual([
+      { date: '2026-11-09', close: 102 },
+    ]);
+
+    // After Istanbul midnight (21:00 UTC): yesterday's last price becomes the reference.
+    const late = new Date('2026-11-09T21:30:00Z');
+    await storeStreamPrices(
+      db,
+      [btc],
+      new Map([['CRYPTO:BTC', { price: 104, time: late.getTime() }]]),
+      { now: late },
+    );
+    expect((await loadQuotes(db, ['CRYPTO:BTC'])).get('CRYPTO:BTC')).toMatchObject({
+      price: 104,
+      prevClose: 102,
+    });
+    expect((await latestCloses(db, ['CRYPTO:BTC'], 2))['CRYPTO:BTC']).toEqual([
+      { date: '2026-11-09', close: 102 },
+      { date: '2026-11-10', close: 104 },
+    ]);
+  });
+});
+
+async function upsertQuote(
+  db: ReturnType<typeof openNodeDriver>,
+  assetId: string,
+  price: number,
+  prevClose: number,
+  time: number,
+) {
+  await upsertQuotes(db, [
+    {
+      assetId,
+      price,
+      prevClose,
+      time,
+      source: 'binance',
+      delayMinutes: 0,
+      endOfDay: false,
+      fetchedAt: time,
+    },
+  ]);
+}
 
 describe('watchlist and corporate actions', () => {
   it('adds at the end, ignores duplicates and removes', async () => {

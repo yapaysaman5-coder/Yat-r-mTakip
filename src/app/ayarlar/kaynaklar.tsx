@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { SOURCE_NAME } from '@/components/marketFormat';
 import { instrumentFor } from '@/data/market/instruments';
 import { catalogSize } from '@/data/market/search';
+import type { StreamStatus } from '@/data/market/stream';
 import { useMarketStore } from '@/state/market';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
@@ -23,6 +24,13 @@ const SOURCES: { id: string; what: string; note: string }[] = [
   { id: 'tcmb', what: 'Resmi döviz kurları (son yedek)', note: 'Günde bir kez' },
 ];
 
+const STREAM_LABEL: Record<StreamStatus, string> = {
+  idle: 'Kapalı',
+  connecting: 'Bağlanıyor',
+  open: 'Bağlı (anlık)',
+  retrying: 'Yeniden bağlanıyor',
+};
+
 /** Ayarlar › Veri kaynakları: where prices come from and how each source is doing. */
 export default function SourcesScreen() {
   const { colors } = useTheme();
@@ -32,6 +40,8 @@ export default function SourcesScreen() {
   const syncing = useMarketStore((s) => s.syncing);
   const sources = useMarketStore((s) => s.sources);
   const mock = useMarketStore((s) => s.mock);
+  const stream = useMarketStore((s) => s.stream);
+  const streamCount = useMarketStore((s) => s.streamCount);
   const refreshNow = useMarketStore((s) => s.refreshNow);
   const [busy, setBusy] = useState(false);
   const sizes = catalogSize();
@@ -47,6 +57,14 @@ export default function SourcesScreen() {
           <Line
             label="Geçmiş fiyatlar"
             value={syncing ? 'İndiriliyor…' : lastSync ? formatDateTime(lastSync.at) : '—'}
+          />
+          <Line
+            label="Kripto canlı akış"
+            value={
+              mock || streamCount === 0
+                ? 'Kullanılmıyor'
+                : `${STREAM_LABEL[stream]} · ${streamCount} coin`
+            }
           />
         </View>
         {lastSync?.failed.length ? (

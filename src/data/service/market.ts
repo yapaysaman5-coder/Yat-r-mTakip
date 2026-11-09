@@ -3,9 +3,10 @@ import { addDays, trDay, type Currency } from '@/domain';
 import { BENCHMARKS, benchmarkAssetId } from '../benchmarks';
 import type { SqlDriver, SqlExecutor } from '../db/driver';
 import { fxInstrumentId, instrumentFor, type Instrument } from '../market/instruments';
-import type { MarketRouter, QuoteResult } from '../market/router';
+import type { MarketRouter, Quote, QuoteResult } from '../market/router';
 import { getAssets, upsertAssets } from '../repo/assets';
 import {
+  loadQuotes,
   loadSyncStates,
   loadWatchlist,
   saveSyncState,
@@ -225,13 +226,54 @@ export async function refreshQuotes(
 ): Promise<QuoteResult> {
   const result = await router.quotes(instruments);
   if (result.quotes.size === 0) return result;
+  await storeQuotes(db, instruments, result.quotes, now);
+  return result;
+}
+
+/**
+ * Prices from the live crypto stream (instrument id → last price and its time). The day's
+ * reference price (prevClose) is kept from the stored quote, since the stream's own open is a
+ * rolling 24-hour one.
+ */
+export async function storeStreamPrices(
+  db: SqlDriver,
+  instruments: readonly Instrument[],
+  prices: ReadonlyMap<string, { price: number; time: number }>,
+  { now = new Date() }: { now?: Date } = {},
+): Promise<void> {
+  if (prices.size === 0) return;
+  const stored = await loadQuotes(db, [...prices.keys()]);
+  const quotes = new Map<string, Quote>();
+  for (const [id, p] of prices) {
+    const prev = stored.get(id);
+    // A stored quote from an earlier day has yesterday's reference: its price is the best
+    // "start of today" we have until the next poll.
+    const sameDay = prev && trDay(prev.time) === trDay(p.time || now.getTime());
+    quotes.set(id, {
+      price: p.price,
+      prevClose: prev ? (sameDay ? prev.prevClose : prev.price) : null,
+      time: p.time,
+      source: 'binance',
+      delayMinutes: 0,
+    });
+  }
+  await storeQuotes(db, instruments, quotes, now);
+}
+
+async function storeQuotes(
+  db: SqlDriver,
+  instruments: readonly Instrument[],
+  quotes: ReadonlyMap<string, Quote>,
+  now: Date,
+): Promise<void> {
   const fetchedAt = now.getTime();
   const byId = new Map(instruments.map((i) => [i.id, i]));
   await db.transaction(async (tx) => {
     const changed = new Map<string, string>();
     const closes: [string, string, number][] = [];
-    for (const [id, q] of result.quotes) {
-      await storeInstrument(tx, byId.get(id)!, now.toISOString());
+    for (const [id, q] of quotes) {
+      const inst = byId.get(id);
+      if (inst) await storeInstrument(tx, inst, now.toISOString());
       // A price is that day's close so far; never a day in the future.
       const day = trDay(Math.min(q.time || fetchedAt, fetchedAt));
       closes.push([id, day, q.price]);
@@ -239,7 +281,7 @@ export async function refreshQuotes(
     }
     await upsertQuotes(
       tx,
-      [...result.quotes].map(([assetId, q]) => ({
+      [...quotes].map(([assetId, q]) => ({
         assetId,
         price: q.price,
         prevClose: q.prevClose,
@@ -253,5 +295,4 @@ export async function refreshQuotes(
     await upsertCloses(tx, closes);
     await markDirty(tx, changed);
   });
-  return result;
 }

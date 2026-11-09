@@ -15,12 +15,13 @@ import { isyatirim } from '../providers/isyatirim';
 import { tcmb } from '../providers/tcmb';
 import { yahoo } from '../providers/yahoo';
 import { MarketRouter } from '../router';
+import { PriceStream, streamablePairs, type SocketLike, type StreamPrice } from '../stream';
 import { migrate } from '../../db/migrations';
 import { openNodeDriver } from '../../db/nodeDriver';
 import { upsertAssets } from '../../repo/assets';
 import { insertPortfolio } from '../../repo/portfolios';
 import { loadPortfolioData } from '../../service/load';
-import { marketNeeds, refreshQuotes, syncHistory } from '../../service/market';
+import { marketNeeds, refreshQuotes, storeStreamPrices, syncHistory } from '../../service/market';
 import { saveTransaction } from '../../service/transactions';
 import { buildAnalysis } from '../../view/analysisView';
 import { buildPortfolioView } from '../../view/portfolioView';
@@ -166,5 +167,46 @@ live('real sources', () => {
     expect(view.holdings).toHaveLength(3);
     expect(view.series.values.at(-1)).toBeCloseTo(view.summary.totalValue, 4);
     expect(analysis.series.length).toBeGreaterThan(5);
+
+    // The live socket, as on the phone: the coins among the live instruments.
+    const pairs = streamablePairs(live);
+    expect([...pairs.values()]).toEqual(['CRYPTO:BTC', 'CRYPTO:ETH']); // held + watchlist
+    const last = new Map<string, { price: number; time: number }>();
+    const stream = new PriceStream({
+      connect: (url) => new WebSocket(url) as unknown as SocketLike,
+      onPrices: (ps) => ps.forEach((p) => last.set(pairs.get(p.pair)!, p)),
+    });
+    stream.watch(pairs.keys());
+    for (let i = 0; i < 75 && last.size < 2; i++) await new Promise((r) => setTimeout(r, 200));
+    stream.stop();
+    const polled = view.holdings.find((h) => h.symbol === 'BTC')!;
+    await storeStreamPrices(db, live, last, { now: new Date() });
+    const after = buildPortfolioView((await loadPortfolioData(db, 'main', { now: new Date() }))!);
+    const btc = after.holdings.find((h) => h.symbol === 'BTC')!;
+    console.log(
+      `akış: BTC ${polled.price} → ${btc.price} USD (gün başı ${btc.prevClose}), toplam ₺${after.summary.totalValue.toFixed(2)}`,
+    );
+    expect(btc.price).toBe(last.get('CRYPTO:BTC')!.price);
+    expect(btc.prevClose).toBe(polled.prevClose); // the day's reference is kept
+    expect(after.series.values.at(-1)).toBeCloseTo(after.summary.totalValue, 4);
   }, 180_000);
+
+  it('receives crypto prices over the stream', async () => {
+    const got: StreamPrice[] = [];
+    const statuses: string[] = [];
+    const stream = new PriceStream({
+      connect: (url) => new WebSocket(url) as unknown as SocketLike,
+      onPrices: (p) => got.push(...p),
+      onStatus: (s) => statuses.push(s),
+    });
+    stream.watch(['BTCUSDT', 'ETHUSDT']);
+    const started = Date.now();
+    while (new Set(got.map((p) => p.pair)).size < 2 && Date.now() - started < 15_000)
+      await new Promise((r) => setTimeout(r, 200));
+    stream.stop();
+    console.log('stream', statuses.join(' → '), got.slice(0, 3));
+    expect(statuses).toContain('open');
+    expect(new Set(got.map((p) => p.pair))).toEqual(new Set(['BTCUSDT', 'ETHUSDT']));
+    expect(got.every((p) => p.price > 0 && Math.abs(p.time - Date.now()) < 60_000)).toBe(true);
+  }, 20_000);
 });
