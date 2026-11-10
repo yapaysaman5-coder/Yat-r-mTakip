@@ -50,6 +50,11 @@ export function Text({
   const colors = useColors();
   return (
     <RNText
+      // Large system text sizes are welcome, but numbers and titles must keep their layout.
+      maxFontSizeMultiplier={
+        rest.maxFontSizeMultiplier ??
+        (variant.startsWith('num') || variant.startsWith('title') ? 1.25 : 1.6)
+      }
       {...rest}
       style={[
         typography[variant],

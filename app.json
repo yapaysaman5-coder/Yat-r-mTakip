@@ -2,7 +2,7 @@
   "expo": {
     "name": "Yatırım Takip",
     "slug": "yatirim-takip",
-    "version": "0.1.0",
+    "version": "0.10.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yatirimtakip",
@@ -36,6 +36,12 @@
           "backgroundColor": "#0B1830",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Uygulama kilidini açmak için Face ID kullanılır."
         }
       ]
     ],

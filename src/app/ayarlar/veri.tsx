@@ -1,6 +1,7 @@
 import {
   Database,
   Download,
+  FileSpreadsheet,
   Gauge,
   RefreshCw,
   Sparkles,
@@ -23,6 +24,7 @@ import {
   type BackupSummary,
 } from '@/data/service/backup';
 import { dataStats, engineSpeedTest, wipeAll, type DataStats } from '@/data/service/maintenance';
+import { csvFileName, transactionsCsv } from '@/data/view/csv';
 import { pickBackupFile, shareBackupFile } from '@/lib/backupFile';
 import { usePortfolioStore } from '@/state/portfolio';
 import { useSettings } from '@/state/settings';
@@ -67,6 +69,7 @@ function settingsSnapshot() {
 export default function DataScreen() {
   const { colors } = useTheme();
   const portfolios = usePortfolioStore((s) => s.portfolios);
+  const view = usePortfolioStore((s) => s.view);
   const loadMs = usePortfolioStore((s) => s.loadMs);
   const reload = usePortfolioStore((s) => s.reload);
   const [stats, setStats] = useState<DataStats | null>(null);
@@ -107,6 +110,16 @@ export default function DataScreen() {
     run('export', async () => {
       const file = await exportBackup(await getDatabase(), { settings: settingsSnapshot() });
       await shareBackupFile(backupFileName(), JSON.stringify(file, null, 1));
+    });
+
+  const onCsv = () =>
+    run('csv', async () => {
+      if (!view) return;
+      await shareBackupFile(csvFileName(view), transactionsCsv(view), {
+        mimeType: 'text/csv',
+        title: 'İşlemleri kaydet veya gönder',
+        uti: 'public.comma-separated-values-text',
+      });
     });
 
   const onPick = () =>
@@ -202,6 +215,13 @@ export default function DataScreen() {
           leading={icon(Upload, colors.accent, colors.accentSoft)}
           showChevron
           onPress={onExport}
+        />
+        <ListRow
+          title="İşlemleri CSV olarak dışa aktar"
+          subtitle={`${view?.portfolio.name ?? 'Portföy'}: tüm kayıtlar, Excel ve Google E-Tablolar için`}
+          leading={icon(FileSpreadsheet, colors.up, colors.upSoft)}
+          showChevron
+          onPress={onCsv}
         />
         <ListRow
           title="Yedekten geri yükle"

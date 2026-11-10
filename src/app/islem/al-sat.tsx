@@ -12,7 +12,7 @@ import {
 } from '@/components/form/DateChoice';
 import { priceDecimals, toInput } from '@/components/form/numbers';
 import { getDatabase } from '@/data/database';
-import { DEFAULT_ENGINE, fxAssetId } from '@/data/engine';
+import { fxAssetId } from '@/data/engine';
 import { getMarketRouter } from '@/data/market';
 import { instrumentFor } from '@/data/market/instruments';
 import { closeOnDay, ensureAsset, type DayClose } from '@/data/service/trade';
@@ -20,7 +20,8 @@ import { defaultFee, feeRule, previewTrade, tradeTime } from '@/data/trade';
 import type { StoredAsset } from '@/data/types';
 import { trDay, type Transaction } from '@/domain';
 import { issueText, rejectionText } from '@/i18n/rejections';
-import { usePortfolioStore, usePortfolioView } from '@/state/portfolio';
+import { currentEngine, usePortfolioStore, usePortfolioView } from '@/state/portfolio';
+import { useSettings } from '@/state/settings';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
 import {
@@ -64,6 +65,7 @@ export default function TradeScreen() {
   const params = useLocalSearchParams<{ side?: string; assetId?: string; id?: string }>();
   const view = usePortfolioView();
   const save = usePortfolioStore((s) => s.save);
+  const fees = useSettings((s) => s.fees);
   const remove = usePortfolioStore((s) => s.remove);
 
   const editing = params.id ? view.history.find((h) => h.id === params.id)?.source : undefined;
@@ -144,7 +146,7 @@ export default function TradeScreen() {
         10 ** unitDecimals(asset.market)
       : num(quantity);
   const gross = qtyN && priceN ? qtyN * priceN : 0;
-  const autoFee = asset ? defaultFee(asset.market, gross) : 0;
+  const autoFee = asset ? defaultFee(asset.market, gross, fees) : 0;
   const feeN = feeTouched ? (num(fee) ?? 0) : autoFee;
 
   const ts = asset && day ? tradeTime(asset.market, day, now, date.time) : null;
@@ -164,7 +166,7 @@ export default function TradeScreen() {
         }
       : null;
   const existing = view.data.txns.filter((t) => !t.isAuto);
-  const preview = draft ? previewTrade(existing, draft, DEFAULT_ENGINE) : null;
+  const preview = draft ? previewTrade(existing, draft, currentEngine()) : null;
   const held =
     preview?.quantityBefore.toNumber() ??
     view.holdings.find((h) => h.assetId === asset?.id)?.quantity ??
@@ -371,8 +373,8 @@ export default function TradeScreen() {
         placeholder="0,00"
         keyboardType="decimal-pad"
         hint={
-          !feeTouched && asset && feeRule(asset.market)
-            ? `${feeRule(asset.market)} · değiştirebilirsin`
+          !feeTouched && asset && feeRule(asset.market, fees)
+            ? `${feeRule(asset.market, fees)} · değiştirebilirsin`
             : undefined
         }
       />

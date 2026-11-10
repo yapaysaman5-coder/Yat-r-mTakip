@@ -948,6 +948,16 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 45 | **Yoğunlaşma uyarısı** | Tek varlık hesabın %25'ini veya en büyük 3 varlık %60'ını geçince |
 | 46 | **Sektör** | BIST: İş Yatırım listesi; ABD: GICS sektörleri (katalogdaki hisseler), ETF'ler türüne göre |
 
+### 10 Kasım 2026: Faz 10'da verilen kararlar
+
+| # | Konu | Karar |
+|---|---|---|
+| 47 | **Otomatik para girişi** | Kapatılamaz: geçmiş alışların nakit tutarlılığı buna dayanıyor |
+| 48 | **Kilit** | Açmak için önce doğrulama; her açılış kilitli; yedek olarak telefon şifresi. Ekran kilidi olmayan telefonda açılmaz |
+| 49 | **Ekran koruması** | Android'de tek ayar: ekran görüntüsü engeli ve uygulama değiştiricide boş kart birlikte (FLAG_SECURE) |
+| 50 | **CSV biçimi** | Türkçe Excel için ";" ayraç, ondalık virgül, UTF-8 BOM; otomatik kayıtlar işaretli |
+| 51 | **Portföy silme** | Kayıtlarıyla birlikte, onaylı; son kendi portföyü silinemez |
+
 ---
 
 ## 14. Yasal Uyarı

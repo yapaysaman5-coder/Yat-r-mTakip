@@ -23,14 +23,13 @@ export function useTxnActions() {
   const edit = (item: HistoryItem) => {
     const t = item.source;
     if (!t) return;
-    if (t.type === 'DEPOSIT' || t.type === 'WITHDRAW')
+    if (t.type === 'DEPOSIT' || t.type === 'WITHDRAW' || t.type === 'FEE')
       router.push({ pathname: '/islem/nakit', params: { type: t.type, id: t.id } });
     else if (t.type === 'BUY' || t.type === 'SELL')
       router.push({ pathname: '/islem/al-sat', params: { side: t.type, id: t.id } });
     else if (t.type === 'DIVIDEND')
       router.push({ pathname: '/islem/temettu', params: { id: t.id } });
     else if (t.type === 'SPLIT') router.push({ pathname: '/islem/bolunme', params: { id: t.id } });
-    else toast.show({ message: 'Hesap ücreti düzenleme Ayarlar fazında geliyor' });
   };
 
   const del = async (item: HistoryItem) => {

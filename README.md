@@ -4,13 +4,13 @@ BIST, ABD borsaları ve kripto paraları tek yerde takip eden, profesyonel yatı
 (TWR, XIRR, Alpha, risk) kişisel portföye uygulayan, tamamen telefonda çalışan portföy takip
 uygulaması.
 
-> **Durum:** Faz 1–9 tamamlandı: tasarım, hesaplama motoru, veritabanı, piyasa verisi, ana
-> ekran, işlem ekranları, geçmiş, hesap özeti, analiz. Kendi alış, satış, temettü ve bölünmelerini girip BIST, ABD ve kripto
+> **Durum:** Faz 1–10 tamamlandı: tasarım, hesaplama motoru, veritabanı, piyasa verisi, ana
+> ekran, işlem ekranları, geçmiş, hesap özeti, analiz, ayarlar ve güvenlik. Kendi alış, satış, temettü ve bölünmelerini girip BIST, ABD ve kripto
 > varlıklarını gerçek fiyatlarla takip edebilirsin; kripto fiyatları anlık akar. Sıradaki adım:
-> Faz 10 (Ayarlar, güvenlik ve cila). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
+> Faz 11 (yayına hazırlık). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
 > test raporları: [Faz 2](docs/test-raporu/faz2-hesaplama-motoru.md),
 > [Faz 3](docs/test-raporu/faz3-veritabani.md), [Faz 4](docs/test-raporu/faz4-piyasa-verisi.md),
-> [Faz 5](docs/test-raporu/faz5-ana-ekran.md), [Faz 6](docs/test-raporu/faz6-islem-ekranlari.md), [Faz 7](docs/test-raporu/faz7-gecmis.md), [Faz 8](docs/test-raporu/faz8-hesabim.md), [Faz 9](docs/test-raporu/faz9-analiz.md).
+> [Faz 5](docs/test-raporu/faz5-ana-ekran.md), [Faz 6](docs/test-raporu/faz6-islem-ekranlari.md), [Faz 7](docs/test-raporu/faz7-gecmis.md), [Faz 8](docs/test-raporu/faz8-hesabim.md), [Faz 9](docs/test-raporu/faz9-analiz.md), [Faz 10](docs/test-raporu/faz10-ayarlar-guvenlik.md).
 
 ![Dört tema](docs/onizleme/faz5/1-dort-tema.jpg)
 

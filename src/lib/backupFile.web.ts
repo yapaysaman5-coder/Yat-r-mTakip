@@ -1,6 +1,10 @@
 /** Web preview: download the backup and read a picked file with the browser's own dialogs. */
-export async function shareBackupFile(name: string, text: string): Promise<void> {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+export async function shareBackupFile(
+  name: string,
+  text: string,
+  { mimeType = 'application/json' }: { mimeType?: string; title?: string; uti?: string } = {},
+): Promise<void> {
+  const url = URL.createObjectURL(new Blob([text], { type: mimeType }));
   const a = document.createElement('a');
   a.href = url;
   a.download = name;

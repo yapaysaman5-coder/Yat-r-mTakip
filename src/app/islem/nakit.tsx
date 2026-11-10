@@ -11,7 +11,7 @@ import { radius, space } from '@/theme/tokens';
 import { Button, Chip, Screen, SegmentedControl, StackHeader, Text, TextField, toast } from '@/ui';
 import { formatDate, formatMoney, parseDecimalInput } from '@/utils/format';
 
-type CashType = 'DEPOSIT' | 'WITHDRAW';
+type CashType = 'DEPOSIT' | 'WITHDRAW' | 'FEE';
 type DateChoice = 'today' | 'yesterday' | 'other';
 
 /** "09.11.2026" → "2026-11-09" (null if not a real date). */
@@ -41,8 +41,9 @@ export default function CashFormScreen() {
   const yesterday = trDay(now.getTime() - 86_400_000);
   const initialDay = editing ? trDay(editing.ts) : today;
 
+  const initialType = editing?.type ?? params.type;
   const [type, setType] = useState<CashType>(
-    (editing?.type ?? params.type) === 'WITHDRAW' ? 'WITHDRAW' : 'DEPOSIT',
+    initialType === 'WITHDRAW' || initialType === 'FEE' ? initialType : 'DEPOSIT',
   );
   const [amount, setAmount] = useState(
     editing?.amount ? formatMoney(editing.amount).replace('₺', '') : '',
@@ -59,6 +60,8 @@ export default function CashFormScreen() {
 
   const day = choice === 'today' ? today : choice === 'yesterday' ? yesterday : parseDay(otherDay);
   const deposit = type === 'DEPOSIT';
+  const fee = type === 'FEE';
+  const title = fee ? 'Hesap Ücreti' : deposit ? 'Para Yatır' : 'Para Çek';
 
   const submit = async () => {
     const value = parseDecimalInput(amount);
@@ -94,7 +97,7 @@ export default function CashFormScreen() {
         const max = Number(value) + Number(issue.cash ?? 0);
         setErrors({
           form: own
-            ? `Nakit yetmiyor: o tarihte en fazla ${formatMoney(Math.max(0, max))} çekebilirsin.`
+            ? `Nakit yetmiyor: o tarihte en fazla ${formatMoney(Math.max(0, max))} ${fee ? 'düşülebilir' : 'çekebilirsin'}.`
             : rejectionText(r, view.history),
         });
       } else if (r.code === 'INVALID') {
@@ -109,17 +112,16 @@ export default function CashFormScreen() {
         ? 'Kayıt güncellendi'
         : deposit
           ? 'Para girişi eklendi'
-          : 'Para çıkışı eklendi',
+          : fee
+            ? 'Hesap ücreti eklendi'
+            : 'Para çıkışı eklendi',
       tone: 'success',
     });
     router.back();
   };
 
   return (
-    <Screen
-      header={
-        <StackHeader title={editing ? 'Kaydı Düzenle' : deposit ? 'Para Yatır' : 'Para Çek'} />
-      }>
+    <Screen header={<StackHeader title={editing ? 'Kaydı Düzenle' : title} />}>
       <SegmentedControl
         value={type}
         onChange={(t) => {
@@ -129,6 +131,7 @@ export default function CashFormScreen() {
         options={[
           { key: 'DEPOSIT', label: 'Para Yatır' },
           { key: 'WITHDRAW', label: 'Para Çek' },
+          { key: 'FEE', label: 'Ücret' },
         ]}
       />
 
@@ -149,7 +152,9 @@ export default function CashFormScreen() {
         <Text variant="footnote" style={{ flex: 1 }}>
           {deposit
             ? `${view.portfolio.name} portföyüne nakit eklenir. Canlı Bütçe’de “Yatırılan” olarak görünür.`
-            : `Portföyden nakit çıkar. Şu an kullanılabilir nakit: ${formatMoney(view.summary.cash)}.`}
+            : fee
+              ? `Saklama, hesap işletim gibi bir ücret: nakitten düşer ve Net K/Z’yi azaltır (yatırılan paraya dokunmaz). Kullanılabilir nakit: ${formatMoney(view.summary.cash)}.`
+              : `Portföyden nakit çıkar. Şu an kullanılabilir nakit: ${formatMoney(view.summary.cash)}.`}
         </Text>
       </View>
 
@@ -210,7 +215,7 @@ export default function CashFormScreen() {
         label="Not (isteğe bağlı)"
         value={note}
         onChangeText={setNote}
-        placeholder="ör. maaş, kira, birikim"
+        placeholder={fee ? 'ör. saklama ücreti' : 'ör. maaş, kira, birikim'}
         maxLength={120}
       />
 
@@ -224,7 +229,7 @@ export default function CashFormScreen() {
       ) : null}
 
       <Button
-        label={editing ? 'Kaydet' : deposit ? 'Para Yatır' : 'Para Çek'}
+        label={editing ? 'Kaydet' : title}
         variant={deposit ? 'primary' : 'secondary'}
         onPress={submit}
         disabled={busy}

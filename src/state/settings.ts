@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { kvStorage } from '@/lib/storage';
+import type { EngineOptions } from '@/data/engine';
+import { DEFAULT_FEES, type FeeSettings } from '@/data/fees';
 import type { ThemePreference } from '@/theme/types';
 
 /** What the change badge on a holding row shows; tapping the badge cycles through these. */
@@ -28,6 +30,21 @@ interface SettingsState {
   whatIfCurrency: 'TRY' | 'USD';
   /** "Ya Olsaydı?" replays money in/out (flows) or the buys and sells (trades). */
   whatIfBasis: 'flows' | 'trades';
+  /** Cost basis method (Ayarlar › Hesaplama). */
+  costMethod: EngineOptions['method'];
+  fees: FeeSettings;
+  /** Yearly risk-free rate for Sharpe, Sortino and Alpha. */
+  riskFree: number;
+  /** Biometric / device lock (Ayarlar › Güvenlik). */
+  lockEnabled: boolean;
+  /** Lock after this many seconds in the background (0 = right away). */
+  lockAfter: 0 | 60 | 300;
+  /** Start with amounts hidden. */
+  startHidden: boolean;
+  /** Block screenshots and hide the app in the app switcher. */
+  secureScreen: boolean;
+  /** The first-run welcome was shown. */
+  onboarded: boolean;
   /** Portfolio shown on the screens (null: the first one). */
   activePortfolioId: string | null;
 
@@ -38,6 +55,14 @@ interface SettingsState {
   cycleChangeDisplay: () => void;
   cycleHoldingSort: () => void;
   setDepositRate: (rate: number) => void;
+  setCostMethod: (m: EngineOptions['method']) => void;
+  setFees: (f: FeeSettings) => void;
+  setRiskFree: (r: number) => void;
+  setLockEnabled: (v: boolean) => void;
+  setLockAfter: (v: 0 | 60 | 300) => void;
+  setStartHidden: (v: boolean) => void;
+  setSecureScreen: (v: boolean) => void;
+  setOnboarded: (v: boolean) => void;
   setWhatIfCurrency: (c: 'TRY' | 'USD') => void;
   setWhatIfBasis: (b: 'flows' | 'trades') => void;
   setActivePortfolioId: (id: string | null) => void;
@@ -55,6 +80,14 @@ export const useSettings = create<SettingsState>()(
       depositRate: 0.4,
       whatIfCurrency: 'TRY',
       whatIfBasis: 'flows',
+      costMethod: 'average',
+      fees: DEFAULT_FEES,
+      riskFree: 0,
+      lockEnabled: false,
+      lockAfter: 60,
+      startHidden: false,
+      secureScreen: false,
+      onboarded: false,
       activePortfolioId: null,
 
       setThemePreference: (themePreference) => set({ themePreference }),
@@ -72,6 +105,14 @@ export const useSettings = create<SettingsState>()(
           return { holdingSort: HOLDING_SORT_CYCLE[(i + 1) % HOLDING_SORT_CYCLE.length] };
         }),
       setDepositRate: (depositRate) => set({ depositRate }),
+      setCostMethod: (costMethod) => set({ costMethod }),
+      setFees: (fees) => set({ fees }),
+      setRiskFree: (riskFree) => set({ riskFree }),
+      setLockEnabled: (lockEnabled) => set({ lockEnabled }),
+      setLockAfter: (lockAfter) => set({ lockAfter }),
+      setStartHidden: (startHidden) => set({ startHidden }),
+      setSecureScreen: (secureScreen) => set({ secureScreen }),
+      setOnboarded: (onboarded) => set({ onboarded }),
       setWhatIfCurrency: (whatIfCurrency) => set({ whatIfCurrency }),
       setWhatIfBasis: (whatIfBasis) => set({ whatIfBasis }),
       setActivePortfolioId: (activePortfolioId) => set({ activePortfolioId }),
@@ -90,6 +131,14 @@ export const useSettings = create<SettingsState>()(
         depositRate: s.depositRate,
         whatIfCurrency: s.whatIfCurrency,
         whatIfBasis: s.whatIfBasis,
+        costMethod: s.costMethod,
+        fees: s.fees,
+        riskFree: s.riskFree,
+        lockEnabled: s.lockEnabled,
+        lockAfter: s.lockAfter,
+        startHidden: s.startHidden,
+        secureScreen: s.secureScreen,
+        onboarded: s.onboarded,
         activePortfolioId: s.activePortfolioId,
       }),
     },

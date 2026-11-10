@@ -3,16 +3,20 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 /** Writes the backup to a temporary file and opens the phone's share menu (Drive, e-posta…). */
-export async function shareBackupFile(name: string, text: string): Promise<void> {
+export async function shareBackupFile(
+  name: string,
+  text: string,
+  { mimeType = 'application/json', title = 'Yedeği kaydet veya gönder', uti = 'public.json' } = {},
+): Promise<void> {
   const file = new File(Paths.cache, name);
   if (file.exists) file.delete();
   file.create();
   await file.write(text);
   if (!(await Sharing.isAvailableAsync())) throw new Error('Paylaşım bu cihazda kullanılamıyor.');
   await Sharing.shareAsync(file.uri, {
-    mimeType: 'application/json',
-    dialogTitle: 'Yedeği kaydet veya gönder',
-    UTI: 'public.json',
+    mimeType,
+    dialogTitle: title,
+    UTI: uti,
   });
 }
 

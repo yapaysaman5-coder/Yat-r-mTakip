@@ -62,6 +62,8 @@ export interface AnalysisOptions {
   currency: 'TRY' | 'USD';
   /** Replay the money put in and taken out, or the buys and sells (positions only). */
   basis: 'flows' | 'trades';
+  /** Yearly risk-free rate for Sharpe, Sortino and Alpha (Ayarlar › Hesaplama). */
+  riskFree?: number;
 }
 
 export const DEFAULT_ANALYSIS: AnalysisOptions = { currency: 'TRY', basis: 'flows' };
@@ -79,8 +81,6 @@ export interface AnalysisView {
   metrics: Metrics | null;
   riskFree: number;
 }
-
-const RISK_FREE = 0; // Ayarlar › Hesaplama (Phase 10)
 
 export function buildAnalysis(
   view: PortfolioView,
@@ -137,15 +137,15 @@ export function buildAnalysis(
   ) as Record<AnalysisPeriod, number>;
 
   return {
-    options: { currency, basis: options.basis },
+    options: { currency, basis: options.basis, riskFree: options.riskFree ?? 0 },
     usdAvailable,
     dates,
     netInvested,
     periodStart,
     series: [me, ...benchmarks],
     mainBenchmark: main,
-    metrics: n >= 2 ? computeMetrics(view, main) : null,
-    riskFree: RISK_FREE,
+    metrics: n >= 2 ? computeMetrics(view, main, options.riskFree ?? 0) : null,
+    riskFree: options.riskFree ?? 0,
   };
 }
 
@@ -155,7 +155,11 @@ export function periodReturn(s: ComparedSeries, start: number): number {
   return p[start] > 0 ? p[p.length - 1] / p[start] - 1 : 0;
 }
 
-function computeMetrics(view: PortfolioView, main: ComparedSeries | null): Metrics {
+function computeMetrics(
+  view: PortfolioView,
+  main: ComparedSeries | null,
+  riskFree: number,
+): Metrics {
   const { dates, values, flows, unitValues } = view.series;
   const last = dates.length - 1;
   const days = last;
@@ -175,7 +179,7 @@ function computeMetrics(view: PortfolioView, main: ComparedSeries | null): Metri
   if (main) {
     const benchTotal = main.prices[last] / main.prices[0] - 1;
     b = beta(rMe, stepReturns(main.prices));
-    alpha = jensenAlpha(twrAnnual, annualize(benchTotal, days), b, RISK_FREE);
+    alpha = jensenAlpha(twrAnnual, annualize(benchTotal, days), b, riskFree);
     excess = twr - benchTotal;
   }
 
@@ -200,8 +204,8 @@ function computeMetrics(view: PortfolioView, main: ComparedSeries | null): Metri
     beta: b,
     excessReturn: excess,
     volatility: vol,
-    sharpe: sharpe(twrAnnual, RISK_FREE, vol),
-    sortino: sortino(rMe, twrAnnual, RISK_FREE, 365),
+    sharpe: sharpe(twrAnnual, riskFree, vol),
+    sortino: sortino(rMe, twrAnnual, riskFree, 365),
     maxDrawdown: maxDrawdown(unitValues),
     riskLevel: riskLevel(vol),
     bestMonth: pick((m, a) => m.ratio > a.ratio),

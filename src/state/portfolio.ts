@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import { ensureStarterData, getDatabase } from '@/data/database';
-import { DEFAULT_ENGINE } from '@/data/engine';
+import type { EngineOptions } from '@/data/engine';
 import { listPortfolios } from '@/data/repo/portfolios';
 import { loadPortfolioData } from '@/data/service/load';
 import {
@@ -48,6 +48,11 @@ interface PortfolioState {
 
 let loading: Promise<void> | null = null;
 
+/** The calculation choices from Ayarlar › Hesaplama. */
+export function currentEngine(): EngineOptions {
+  return { method: useSettings.getState().costMethod, autoDeposit: true };
+}
+
 async function load(set: (s: Partial<PortfolioState>) => void) {
   const started = Date.now();
   const db = await getDatabase();
@@ -60,7 +65,7 @@ async function load(set: (s: Partial<PortfolioState>) => void) {
     portfolios[0];
   const data = active
     ? await loadPortfolioData(db, active.id, {
-        engine: DEFAULT_ENGINE,
+        engine: currentEngine(),
         depositRate: useSettings.getState().depositRate,
       })
     : null;
@@ -104,7 +109,9 @@ export const usePortfolioStore = create<PortfolioState>()((set, get) => ({
   save: async (txn) => {
     const view = get().view;
     if (!view) return { ok: false, rejection: { code: 'NOT_FOUND' } };
-    const result = await saveTransaction(await getDatabase(), view.portfolio.id, txn);
+    const result = await saveTransaction(await getDatabase(), view.portfolio.id, txn, {
+      engine: currentEngine(),
+    });
     if (result.ok) await get().reload();
     return result;
   },
@@ -112,7 +119,9 @@ export const usePortfolioStore = create<PortfolioState>()((set, get) => ({
   removeMany: async (ids) => {
     const view = get().view;
     if (!view) return { ok: false, rejection: { code: 'NOT_FOUND' } };
-    const result = await deleteTransactions(await getDatabase(), view.portfolio.id, ids);
+    const result = await deleteTransactions(await getDatabase(), view.portfolio.id, ids, {
+      engine: currentEngine(),
+    });
     if (result.ok) await get().reload();
     return result;
   },
@@ -120,7 +129,9 @@ export const usePortfolioStore = create<PortfolioState>()((set, get) => ({
   restoreMany: async (txns) => {
     const view = get().view;
     if (!view) return { ok: false, rejection: { code: 'NOT_FOUND' } };
-    const result = await restoreTransactions(await getDatabase(), view.portfolio.id, txns);
+    const result = await restoreTransactions(await getDatabase(), view.portfolio.id, txns, {
+      engine: currentEngine(),
+    });
     if (result.ok) await get().reload();
     return result;
   },
@@ -128,7 +139,9 @@ export const usePortfolioStore = create<PortfolioState>()((set, get) => ({
   remove: async (id) => {
     const view = get().view;
     if (!view) return { ok: false, rejection: { code: 'NOT_FOUND' } };
-    const result = await deleteTransaction(await getDatabase(), view.portfolio.id, id);
+    const result = await deleteTransaction(await getDatabase(), view.portfolio.id, id, {
+      engine: currentEngine(),
+    });
     if (result.ok) await get().reload();
     return result;
   },
@@ -144,7 +157,7 @@ export function usePortfolioView(): PortfolioView {
 /** Analiz figures for the active portfolio (TL, money in/out), computed once per loaded view. */
 const analysisCache = new WeakMap<PortfolioView, Map<string, AnalysisView>>();
 function analysisFor(view: PortfolioView, options: AnalysisOptions): AnalysisView {
-  const key = `${options.currency}:${options.basis}`;
+  const key = `${options.currency}:${options.basis}:${options.riskFree ?? 0}`;
   let byKey = analysisCache.get(view);
   if (!byKey) analysisCache.set(view, (byKey = new Map()));
   let a = byKey.get(key);
@@ -156,7 +169,8 @@ function analysisFor(view: PortfolioView, options: AnalysisOptions): AnalysisVie
 }
 
 export function useAnalysis(): AnalysisView {
-  return analysisFor(usePortfolioView(), DEFAULT_ANALYSIS);
+  const riskFree = useSettings((s) => s.riskFree);
+  return analysisFor(usePortfolioView(), { ...DEFAULT_ANALYSIS, riskFree });
 }
 
 /** "Ya Olsaydı?" with the person's choices (TL/USD, money in/out or buys/sells). */
@@ -164,5 +178,6 @@ export function useWhatIfAnalysis(): AnalysisView {
   const view = usePortfolioView();
   const currency = useSettings((s) => s.whatIfCurrency);
   const basis = useSettings((s) => s.whatIfBasis);
-  return analysisFor(view, { currency, basis });
+  const riskFree = useSettings((s) => s.riskFree);
+  return analysisFor(view, { currency, basis, riskFree });
 }

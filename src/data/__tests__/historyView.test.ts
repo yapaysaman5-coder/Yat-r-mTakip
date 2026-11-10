@@ -17,6 +17,7 @@ import {
   holdingText,
   monthRecords,
 } from '../view/historyView';
+import { csvFileName, transactionsCsv } from '../view/csv';
 import { buildPortfolioView } from '../view/portfolioView';
 
 const NOW = new Date('2026-11-09T13:00:00Z');
@@ -168,5 +169,21 @@ describe('monthly statement', () => {
     expect(c.total.dividends).toBeCloseTo(view.summary.dividends, 4);
     expect(c.total.commissions).toBeCloseTo(view.summary.commissions, 4);
     expect(c.total.accountFees).toBeCloseTo(view.summary.accountFees, 4);
+  });
+});
+
+describe('CSV export', () => {
+  it('writes every record for a Turkish spreadsheet, oldest first', async () => {
+    const view = await handView();
+    const csv = transactionsCsv(view);
+    expect(csv.startsWith('﻿Tarih;Saat;İşlem;Varlık')).toBe(true);
+    const lines = csv.trim().split('\r\n');
+    expect(lines).toHaveLength(1 + 7);
+    expect(lines[1]).toBe('2026-09-01;12:00;Para Yatırma;;;;;TRY;;;;10000;;;');
+    expect(lines[2]).toBe('2026-09-02;12:00;Alış;THYAO;BIST;50;100;TRY;;;;-5000;;;');
+    expect(lines[3]).toBe('2026-10-15;12:00;Satış;THYAO;BIST;20;120;TRY;;;;2400;400;;');
+    expect(lines[4]).toBe('2026-10-20;12:00;Temettü;THYAO;BIST;;;TRY;;;45;255;;;');
+    expect(lines[6]).toBe('2026-11-04;12:00;Hesap Ücreti;;;;;TRY;;;;-50;;;');
+    expect(csvFileName(view)).toBe('yatirim-takip-ana-islemler-2026-11-09.csv');
   });
 });

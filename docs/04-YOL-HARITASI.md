@@ -253,14 +253,17 @@ K/Z ile birebir aynı ([faz7-gecmis.md](test-raporu/faz7-gecmis.md)).
 
 > **Sonraya kalanlar:** Temettü dahil endeks serileri (kaynak yok); vadeli/değişken mevduat faizi.
 
-## Faz 10: Ayarlar, Güvenlik ve Cila
+## Faz 10: Ayarlar, Güvenlik ve Cila ✅ (10 Kasım 2026)
 
-- [ ] Tüm ayar grupları (01-PROJE-DOKUMANI §6.8)
-- [ ] Face ID / parmak izi kilidi, otomatik kilit, arka planda bulanıklaştırma, ekran görüntüsü engeli
-- [ ] CSV dışa aktarma (yedekleme ve tüm verileri silme Faz 3'te yapıldı ✅)
-- [ ] İlk açılış akışı, boş durumlar, yükleniyor durumları
-- [ ] Yatay tam ekran grafik ve mum grafik
-- [ ] Erişilebilirlik (ekran okuyucu, dinamik yazı boyutu, kontrast) ve performans ölçümü
+- [x] Ayar grupları: Hesaplama (ortalama/FIFO, komisyonlar, risksiz faiz, mevduat faizi), Güvenlik ve gizlilik, Portföyler, Hakkında
+- [x] Parmak izi / yüz kilidi (yedek: telefon şifresi), otomatik kilit, tutarları gizli açma, ekran koruması (ekran görüntüsü engeli ve uygulama değiştiricide boş kart)
+- [x] CSV dışa aktarma; hesap ücreti kaydı ekleme ve düzenleme
+- [x] İlk açılış akışı (hoş geldin, tema, ilk portföy; ilk kayıt ya da örnek portföy)
+- [x] Erişilebilirlik: tüm düğmelerde ekran okuyucu etiketleri; büyük sistem yazı boyutu desteklenir (rakam ve başlıklarda sınırlı)
+- [ ] Yatay tam ekran grafik ve mum grafik → sonraki sürüm (açılış/en yüksek/en düşük fiyatların saklanması gerekiyor)
+
+**Bitiş kriteri:** Ayarlar ve güvenlik çalışıyor ✅ ([faz10-ayarlar-guvenlik.md](test-raporu/faz10-ayarlar-guvenlik.md)).
+Kilit ve ekran koruması telefonda APK ile doğrulanacak.
 
 ## Faz 11: Yayına Hazırlık
 

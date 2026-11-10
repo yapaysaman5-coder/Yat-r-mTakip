@@ -14,6 +14,8 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppLock } from '@/components/AppLock';
+import { FirstRun } from '@/components/FirstRun';
 import { useMarketStore } from '@/state/market';
 import { usePortfolioStore } from '@/state/portfolio';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -57,6 +59,8 @@ export default function RootLayout() {
         <ThemeProvider>
           {dataStatus === 'error' ? <DataError /> : <RootStack />}
           <ToastHost />
+          {dataStatus === 'ready' ? <FirstRun /> : null}
+          <AppLock />
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

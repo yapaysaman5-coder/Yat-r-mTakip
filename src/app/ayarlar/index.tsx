@@ -32,6 +32,8 @@ export default function SettingsScreen() {
   const togglePrivacy = useSettings((s) => s.togglePrivacyMode);
   const haptics = useSettings((s) => s.hapticsEnabled);
   const setHaptics = useSettings((s) => s.setHapticsEnabled);
+  const costMethod = useSettings((s) => s.costMethod);
+  const lockEnabled = useSettings((s) => s.lockEnabled);
 
   const themeLabel =
     preference === 'system'
@@ -110,30 +112,36 @@ export default function SettingsScreen() {
         />
       </Group>
 
-      <Group title="YAKINDA">
-        <ListRow
-          title="Para birimi ve biçim"
-          subtitle="Ana para birimi, kısaltmalar"
-          leading={icon(CircleDollarSign, colors.textSecondary, colors.neutralSoft)}
-          badge={<Soon phase="Faz 10" />}
-        />
+      <Group title="HESAP">
         <ListRow
           title="Portföyler"
-          subtitle="Ekle, yeniden adlandır, sırala"
-          leading={icon(Layers, colors.textSecondary, colors.neutralSoft)}
-          badge={<Soon phase="Faz 10" />}
+          subtitle="Ekle, yeniden adlandır, sil, seç"
+          leading={icon(Layers, colors.accent, colors.accentSoft)}
+          showChevron
+          onPress={() => router.push('/ayarlar/portfoyler')}
         />
         <ListRow
           title="Hesaplama"
-          subtitle="Maliyet yöntemi, komisyonlar, ölçütler"
-          leading={icon(Calculator, colors.textSecondary, colors.neutralSoft)}
-          badge={<Soon phase="Faz 10" />}
+          subtitle={`${costMethod === 'fifo' ? 'FIFO' : 'Ağırlıklı ortalama'} · komisyonlar · risksiz faiz`}
+          leading={icon(Calculator, colors.accent2, colors.accent2Soft)}
+          showChevron
+          onPress={() => router.push('/ayarlar/hesaplama')}
         />
         <ListRow
-          title="Güvenlik"
-          subtitle="Parmak izi kilidi, ekran görüntüsü"
-          leading={icon(ShieldCheck, colors.textSecondary, colors.neutralSoft)}
-          badge={<Soon phase="Faz 10" />}
+          title="Güvenlik ve gizlilik"
+          subtitle={lockEnabled ? 'Kilit açık' : 'Parmak izi kilidi, ekran koruması'}
+          leading={icon(ShieldCheck, colors.up, colors.upSoft)}
+          showChevron
+          onPress={() => router.push('/ayarlar/guvenlik')}
+        />
+      </Group>
+
+      <Group title="SONRAKİ SÜRÜMLER">
+        <ListRow
+          title="Para birimi ve biçim"
+          subtitle="Ana para birimini dolar yapma, kısaltmalar"
+          leading={icon(CircleDollarSign, colors.textSecondary, colors.neutralSoft)}
+          badge={<Soon phase="Sonra" />}
         />
         <ListRow
           title="Bildirimler"
@@ -146,8 +154,10 @@ export default function SettingsScreen() {
       <Group title="HAKKINDA">
         <ListRow
           title="Yatırım Takip"
-          subtitle="Sürüm 0.4.0 · Faz 4 (piyasa verisi)"
+          subtitle="Sürüm, veri kaynakları, gizlilik, yasal uyarı, lisanslar"
           leading={icon(Info, colors.accent, colors.accentSoft)}
+          showChevron
+          onPress={() => router.push('/ayarlar/hakkinda')}
         />
         <Text variant="caption" tone="tertiary" style={{ paddingBottom: space.md }}>
           Uygulama kişisel takip amaçlıdır. Gösterilen bilgiler yatırım tavsiyesi değildir. Veriler

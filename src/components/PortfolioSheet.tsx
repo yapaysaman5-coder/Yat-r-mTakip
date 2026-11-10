@@ -1,14 +1,16 @@
-import { Check, Sparkles, WalletCards } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Check, Settings2, Sparkles, WalletCards } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { usePortfolioStore } from '@/state/portfolio';
 import { useColors } from '@/theme/ThemeProvider';
 import { radius, space } from '@/theme/tokens';
-import { IconWell, ListRow, Sheet, Text } from '@/ui';
+import { Button, IconWell, ListRow, Sheet } from '@/ui';
 
 /** Portfolio picker opened from the name at the top of the home screen. */
 export function PortfolioSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const colors = useColors();
+  const router = useRouter();
   const portfolios = usePortfolioStore((s) => s.portfolios);
   const activeId = usePortfolioStore((s) => s.view?.portfolio.id);
   const select = usePortfolioStore((s) => s.select);
@@ -54,9 +56,17 @@ export function PortfolioSheet({ visible, onClose }: { visible: boolean; onClose
           );
         })}
       </View>
-      <Text variant="caption" tone="tertiary" style={{ marginTop: space.md }}>
-        Yeni portföy ekleme ve düzenleme Ayarlar’a geliyor (Faz 10).
-      </Text>
+      <Button
+        label="Portföyleri yönet"
+        icon={Settings2}
+        variant="secondary"
+        fullWidth
+        onPress={() => {
+          onClose();
+          router.push('/ayarlar/portfoyler');
+        }}
+        style={{ marginTop: space.md }}
+      />
     </Sheet>
   );
 }

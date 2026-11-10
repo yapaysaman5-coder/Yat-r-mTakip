@@ -31,6 +31,16 @@ describe('trade form helpers', () => {
     expect(defaultDividendTax('US')).toBe(0.2);
   });
 
+  it('uses the commissions set in Ayarlar › Hesaplama', () => {
+    const fees = { bistRate: 0.0015, usPerOrder: 0.5, cryptoRate: 0.00075 };
+    expect(defaultFee('BIST', 10_000, fees)).toBe(15);
+    expect(defaultFee('US', 10_000, fees)).toBe(0.5);
+    expect(defaultFee('CRYPTO', 10_000, fees)).toBe(7.5);
+    expect(feeRule('BIST', fees)).toBe('‰1,5 otomatik');
+    expect(feeRule('US', fees)).toBe('$0,5 otomatik');
+    expect(feeRule('CRYPTO', fees)).toBe('%0,075 otomatik');
+  });
+
   it('places past trades in the session, today at the current time, or at a given time', () => {
     expect(tradeTime('BIST', '2026-11-05', NOW)).toBe('2026-11-05T08:00:00.000Z'); // 11:00 TR
     expect(tradeTime('US', '2026-11-05', NOW)).toBe('2026-11-05T15:00:00.000Z'); // 18:00 TR

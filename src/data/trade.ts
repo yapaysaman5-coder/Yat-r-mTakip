@@ -15,6 +15,7 @@ import {
 } from '@/domain';
 
 import type { EngineOptions } from './engine';
+import { DEFAULT_FEES, type FeeSettings } from './fees';
 import { newLedgerIssues } from './service/transactions';
 
 /**
@@ -22,29 +23,37 @@ import { newLedgerIssues } from './service/transactions';
  * history with the draft in it, so what the form shows is exactly what will be saved.
  */
 
-/** Default commissions (Ayarlar › Hesaplama, Phase 10): BIST ‰2, US $1 per order, crypto 0,1 %. */
-export function defaultFee(market: Market, gross: number): number {
+export { DEFAULT_FEES, type FeeSettings } from './fees';
+
+export function defaultFee(
+  market: Market,
+  gross: number,
+  fees: FeeSettings = DEFAULT_FEES,
+): number {
   if (!(gross > 0)) return 0;
   switch (market) {
     case 'BIST':
-      return round(gross * 0.002, 2);
+      return round(gross * fees.bistRate, 2);
     case 'US':
-      return 1;
+      return fees.usPerOrder;
     case 'CRYPTO':
-      return round(gross * 0.001, 2);
+      return round(gross * fees.cryptoRate, 2);
     default:
       return 0;
   }
 }
 
-export function feeRule(market: Market): string | null {
+const num = (n: number, max: number) =>
+  String(Math.round(n * 10 ** max) / 10 ** max).replace('.', ',');
+
+export function feeRule(market: Market, fees: FeeSettings = DEFAULT_FEES): string | null {
   switch (market) {
     case 'BIST':
-      return '‰2 otomatik';
+      return '‰' + num(fees.bistRate * 1000, 3) + ' otomatik';
     case 'US':
-      return '$1 otomatik';
+      return '$' + num(fees.usPerOrder, 2) + ' otomatik';
     case 'CRYPTO':
-      return '%0,1 otomatik';
+      return '%' + num(fees.cryptoRate * 100, 3) + ' otomatik';
     default:
       return null;
   }
