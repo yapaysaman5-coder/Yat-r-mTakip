@@ -4,13 +4,14 @@ BIST, ABD borsaları ve kripto paraları tek yerde takip eden, profesyonel yatı
 (TWR, XIRR, Alpha, risk) kişisel portföye uygulayan, tamamen telefonda çalışan portföy takip
 uygulaması.
 
-> **Durum:** Faz 1–10 tamamlandı: tasarım, hesaplama motoru, veritabanı, piyasa verisi, ana
-> ekran, işlem ekranları, geçmiş, hesap özeti, analiz, ayarlar ve güvenlik. Kendi alış, satış, temettü ve bölünmelerini girip BIST, ABD ve kripto
+> **Durum:** Faz 1–10 ve Bilim Paketi tamamlandı: tasarım, hesaplama motoru, veritabanı, piyasa
+> verisi, ana ekran, işlem ekranları, geçmiş, hesap özeti, analiz, ayarlar, güvenlik ve
+> araştırmaya dayalı ölçümler (davranış, beceri, risk, faktör, plan, hedef). Kendi alış, satış, temettü ve bölünmelerini girip BIST, ABD ve kripto
 > varlıklarını gerçek fiyatlarla takip edebilirsin; kripto fiyatları anlık akar. Sıradaki adım:
 > Faz 11 (yayına hazırlık). Ayrıntılar: [yol haritası](docs/04-YOL-HARITASI.md),
 > test raporları: [Faz 2](docs/test-raporu/faz2-hesaplama-motoru.md),
 > [Faz 3](docs/test-raporu/faz3-veritabani.md), [Faz 4](docs/test-raporu/faz4-piyasa-verisi.md),
-> [Faz 5](docs/test-raporu/faz5-ana-ekran.md), [Faz 6](docs/test-raporu/faz6-islem-ekranlari.md), [Faz 7](docs/test-raporu/faz7-gecmis.md), [Faz 8](docs/test-raporu/faz8-hesabim.md), [Faz 9](docs/test-raporu/faz9-analiz.md), [Faz 10](docs/test-raporu/faz10-ayarlar-guvenlik.md).
+> [Faz 5](docs/test-raporu/faz5-ana-ekran.md), [Faz 6](docs/test-raporu/faz6-islem-ekranlari.md), [Faz 7](docs/test-raporu/faz7-gecmis.md), [Faz 8](docs/test-raporu/faz8-hesabim.md), [Faz 9](docs/test-raporu/faz9-analiz.md), [Faz 10](docs/test-raporu/faz10-ayarlar-guvenlik.md), [Bilim Paketi](docs/test-raporu/bilim-paketi.md).
 
 ![Dört tema](docs/onizleme/faz5/1-dort-tema.jpg)
 
@@ -40,6 +41,12 @@ uygulaması.
 - **Ya Olsaydı?:**
   - Aynı tutarları aynı tarihlerde şunlara yatırsaydınız ne olurdu: BIST 100, BIST 30, altın, gümüş, S&P 500, Russell 2000, Nasdaq, Bitcoin, Dolar/TL, Euro/TL, TÜFE, mevduat
   - Lig tablosu ve dokun-kaydır grafikle karşılaştırma
+- **Bilim Paketi:** Ölçüm + okunuş + kaynak; öneri yok
+  - Davranış Aynası: yatkınlık etkisi (Odean 1998), aldıkların/sattıkların, zamanlama farkı, işlem sıklığı ve maliyet
+  - Beceri mi şans mı?: Olasılıksal Sharpe (PSR), gereken kayıt süresi (MinTRL), alpha t istatistiği
+  - Portföy sağlığı: riske katkı, çeşitlendirme oranı, korelasyon matrisi; Fama–French 5 faktör + momentum
+  - Yatırım planı ve hedefler: hedef dağılım, sapma bandı, yeni parayla dengeleme, Monte Carlo hedef olasılığı (bugünün lirasıyla)
+  - Bilim Rehberi: 24 bulgu, kanıt düzeyi ve DOI'li kaynakça
 - **Temalar:** 4 tema: Okyanus (mavi), Gece, Gün, Kraliyet. Hepsi WCAG AA kontrast testinden geçer
 - **Gizlilik:** Veriler telefonda kalır (SQLite), gizlilik modu, parmak izi kilidi (Faz 10)
 - **Yedekleme:** Tek dosya JSON yedek, paylaş menüsüyle Drive'a veya e-postaya; denetimli geri yükleme

@@ -135,8 +135,9 @@ describe('what the app needs prices for', () => {
   it('covers held assets, their currency, benchmarks and the watchlist; never the example', async () => {
     const { db } = await setup();
     const needs = await marketNeeds(db, NOW);
-    expect(needs.historyFrom.get('US:AAPL')).toBe('2026-10-20');
-    expect(needs.historyFrom.get('FX:USDTRY')).toBe('2026-09-30'); // watchlist reaches further back
+    // Held assets reach back for the risk and factor analyses: US stocks 1100 days.
+    expect(needs.historyFrom.get('US:AAPL')).toBe('2023-11-05');
+    expect(needs.historyFrom.get('FX:USDTRY')).toBe('2023-11-05');
     // Benchmarks start at the first record (the watchlist ones reach 40 days back anyway).
     expect(needs.historyFrom.get('INDEX:RUT')).toBe('2026-10-01');
     expect(needs.historyFrom.get('INDEX:SPX')).toBe('2026-09-30');
@@ -155,8 +156,8 @@ describe('history download', () => {
     expect(first.failed.size).toBe(0);
     expect(first.synced).toContain('US:AAPL');
     const aapl = (await loadCloses(db, ['US:AAPL']))['US:AAPL'];
-    expect(Object.keys(aapl)).toHaveLength(21); // 20 Oct – 9 Nov
-    expect((await getPortfolio(db, 'main'))?.seriesDirtyFrom).toBe('2026-09-30');
+    expect(Object.keys(aapl)).toHaveLength(1101); // 5 Nov 2023 – 9 Nov 2026
+    expect((await getPortfolio(db, 'main'))?.seriesDirtyFrom).toBe('2023-11-05');
     expect((await getPortfolio(db, 'demo'))?.seriesDirtyFrom).toBeNull();
 
     // An hour later nothing is fetched again.
@@ -174,7 +175,7 @@ describe('history download', () => {
       {
         id: '',
         type: 'BUY',
-        ts: '2026-10-05T15:00:00Z',
+        ts: '2023-06-05T15:00:00Z',
         assetId: 'US:AAPL',
         quantity: '1',
         price: '230',
@@ -186,7 +187,10 @@ describe('history download', () => {
     await syncHistory(db, router, await marketNeeds(db, NOW), {
       now: new Date(NOW.getTime() + 3_600_000),
     });
-    expect(yahoo.requests).toEqual(['history AAPL 2026-10-05 2026-10-19']);
+    // Only the older days: of the asset, and of the benchmarks that start at the first record.
+    expect(yahoo.requests).toContain('history AAPL 2023-06-05 2023-11-04');
+    expect(yahoo.requests).toContain('history XU100.IS 2023-06-05 2026-09-29');
+    expect(yahoo.requests.filter((r) => r.startsWith('history AAPL'))).toHaveLength(1);
 
     // Next day: the last days are refreshed.
     yahoo.requests.length = 0;

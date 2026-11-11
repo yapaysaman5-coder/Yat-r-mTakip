@@ -503,3 +503,133 @@ uyumsuzluk görülürse varlık detayında uyarı gösterilir.
 | T12 | 8 ondalıklı kripto adetleri, 10.000 işlem | Kuruş hatası yok, hesap < 200 ms |
 | T13 | Bayram tatili ve hafta sonu | Son geçerli kapanış kullanılır |
 | T14 | USD bazlı raporlama | Akışlar tarihli kurla çevrilir |
+
+## 16. Bilim Paketi (11 Kasım 2026)
+
+Kişinin kendi işlemlerini ve portföyünü, finans araştırmalarında kullanılan yöntemlerle ölçer.
+Hiçbiri öneri değildir: ölçüm, okunuşu ve dayandığı kaynak gösterilir (SPK kuralları gereği
+kişiye özel al/sat yönlendirmesi yapılmaz). Kaynakların listesi Bilim Rehberi'ndedir
+(`src/science/guide.ts`), sayıların doğrulaması [bilim-paketi.md](test-raporu/bilim-paketi.md)
+raporundadır.
+
+### 16.1 Varlık Fiyat Geçmişi
+
+Portföyün tuttuğu her varlığın günlük kapanışları tek bir takvim ızgarasına dizilir
+(`loadAssetHistory`): hafta sonu ve tatillerde son kapanış taşınır, bölünmeler bugünkü adede göre
+düzeltilir (`adjusted`), döviz varlıklar o günün kuru ile TL'ye çevrilir. Izgara, ilk kayıt ile
+bugünden 1100 gün öncesinin erken olanından başlar. Risk ve faktör analizleri için fiyat geçmişi
+ilk kayıttan önceye de indirilir: her varlık için 400 gün, ABD hisseleri için 1100 gün
+(`RISK_LOOKBACK_DAYS`, `FACTOR_LOOKBACK_DAYS`).
+
+### 16.2 Davranış Aynası
+
+**Yatkınlık etkisi (Odean 1998).** Satış yapılan her gün, o sabah elde olan her pozisyon ortalama
+maliyetine göre sınıflanır: o gün satılanlar *gerçekleşen kâr (RK) / zarar (RZ)*, tutulanlar o
+günün kapanışına göre *kâğıt üzerinde kâr (KK) / zarar (KZ)*.
+
+```
+PGR = RK ÷ (RK + KK)        PLR = RZ ÷ (RZ + KZ)        Fark = PGR − PLR
+t = Fark ÷ √( PGR(1−PGR)/(RK+KK) + PLR(1−PLR)/(RZ+KZ) )
+```
+
+Okuma için en az 5 kâr ve 5 zarar gözlemi gerekir. Fark > 0 ve t ≥ 2: “kârdakileri belirgin
+biçimde daha kolay satıyorsun”.
+
+**Aldıkların ve sattıkların (Odean 1999).** Her alış ve satıştan 30, 91, 182 ve 365 gün sonra
+varlığın TL fiyatının işlem fiyatına göre değişimi (sonraki bölünmeler dahil) ölçülür; alışların
+ve satışların ortalaması karşılaştırılır.
+
+**Sattıktan sonra.** Satılan adetlerin bugünkü TL değeri − satıştan gelen tutar; ayrıca 3 ay
+sonraki ortalama fiyat değişimi ile portföyün aynı pencerelerdeki zaman ağırlıklı getirisi.
+
+**Zamanlama farkı (Morningstar “Mind the Gap”).** Para ağırlıklı getiri − zaman ağırlıklı getiri.
+Bir yıldan uzun geçmişte yıllık XIRR − yıllık TWR; daha kısada dönem getirileri.
+
+**İşlem sıklığı ve maliyet (Barber ve Odean 2000).**
+
+```
+Devir hızı (yıllık)   = min(Σ alış, Σ satış) ÷ ortalama portföy değeri ÷ yıl
+Yıllık maliyet oranı  = (komisyonlar + hesap ücretleri) ÷ ortalama değer ÷ yıl
+20 yıllık maliyet payı = 1 − (1 − yıllık maliyet oranı)^20
+```
+
+Devir: %30 altı düşük, %30–%100 orta, üstü yüksek (kaba ölçek).
+
+### 16.3 Beceri mi, Şans mı?
+
+Günlük portföy getirileri rₜ, risksiz faizin günlük karşılığı r_f = (1+R_f)^(1/365) − 1,
+fazla getiri xₜ = rₜ − r_f. En az 20 getiri gerekir.
+
+```
+SR  = ortalama(x) ÷ std(x)                     (günlük Sharpe)
+γ₃  = çarpıklık, γ₄ = basıklık (normal dağılımda 3)
+PSR = Φ( SR · √(n−1) ÷ √(1 − γ₃·SR + (γ₄−1)/4 · SR²) )
+MinTRL = 1 + (1 − γ₃·SR + (γ₄−1)/4 · SR²) · (z₀.₉₅ ÷ SR)²   (gün; SR > 0 ise)
+```
+
+(Bailey ve López de Prado 2012.) Alpha: xₜ'nin BIST 100 fazla getirisine EKK regresyonu
+(xₜ = α + β·bₜ + εₜ); yıllık alpha = α·365, t = α ÷ SE(α), “alpha > 0 olasılığı” = Φ(t)
+(normal yaklaşım). t, √n ile büyüdüğü için kanıt süresi ≈ (1,96 · SE(α)·√n ÷ α)² gün.
+Okuma: PSR ≥ %95 ve (t yoksa veya t ≥ 1,96) → “şansla açıklanamayacak kadar güçlü”; PSR ≤ %50 ve
+t ≤ 0 → “karşılığı görülmüyor”; aksi “henüz ayırmak mümkün değil”.
+
+### 16.4 Portföy Sağlığı
+
+Bugünkü pozisyonlar ve ağırlıkları (wᵢ = değer ÷ toplam, nakit dahil toplam; nakit risksiz),
+son 365 takvim gününde tüm pozisyonların ortak günlük TL getirileri (en az 30 gün).
+
+```
+Σ      = kovaryans matrisi × 365
+σₚ²    = wᵀ Σ w
+Riske katkıᵢ = wᵢ · (Σw)ᵢ ÷ σₚ²                 (toplamı 1)
+Çeşitlendirme oranı = Σ wᵢσᵢ ÷ σₚ              (1 = fayda yok)
+Etkin pozisyon      = 1 ÷ Σ (wᵢ / Σw)²
+Riski taşıyan       = 1 ÷ Σ (riske katkıᵢ)²
+```
+
+Korelasyon matrisi en büyük 8 pozisyon için gösterilir.
+
+### 16.5 Yatırım Planı ve Yeniden Dengeleme
+
+Plan: sınıf hedefleri (BIST, ABD, Kripto, Nakit; toplam %100), sapma bandı (±3/5/10 puan), tek
+pozisyon sınırı, risk profili, vade, gözden geçirme sıklığı (6/12 ay).
+
+```
+sapmaᵢ        = ağırlıkᵢ − hedefᵢ        (bant dışı: |sapma| > bant)
+plana göre farkᵢ = hedefᵢ × toplam − değerᵢ
+Plana uyum    = 1 − Σ |sapmaᵢ| ÷ 2
+```
+
+**Yeni parayla dengeleme:** yeni para C ile toplam T' = T + C; açıkᵢ = max(0, hedefᵢ·T' − değerᵢ).
+C, açıklarla orantılı dağıtılır (açıklar C'den küçükse önce açıklar kapanır, kalan hedeflere
+göre). Satış yapılmaz.
+
+### 16.6 Hedef Planlama (Monte Carlo)
+
+Her şey bugünün lirasıyla (reel): aylık ekleme enflasyonla artar. Yıllık beklenen reel getiri μ
+ve oynaklık σ ile aylık lognormal getiri:
+
+```
+s_yıl = √ln(1 + σ²/(1+μ)²)     m_yıl = ln(1+μ) − s_yıl²/2      (E[1+R] = 1+μ)
+gₖ = exp(m_yıl/12 + s_yıl/√12 · Zₖ),   Zₖ ~ N(0,1)
+```
+
+Her senaryoda bitiş değeri doğrusal yazılır: `a = başlangıç · Πgₖ`, `b = Σ (katkı başına büyüme)`
+(ödeme ay başında), `bitiş = a + C·b`. Böylece %80 olasılık için gereken aylık tutar tam bulunur:
+`C₈₀ = (hedef − a)/b` dağılımının %80'lik dilimi. Varsayılan 4.000 senaryo, sabit tohum
+(aynı girdi aynı sonuç). Profiller: Temkinli %2 / %6, Dengeli %4 / %11, Büyüme %5 / %17
+(karşılaştırma: dünya hisseleri 1900–2024 reel %5,2, tahviller %1,7; Dimson, Marsh, Staunton).
+Vergi, komisyon ve kur farkı dahil değildir.
+
+### 16.7 Faktör Analizi (Fama–French 5 + Momentum)
+
+Kenneth French veri kütüphanesinden günlük faktörler (yüzde → ondalık). ABD pozisyonlarının
+bugünkü ağırlıklarıyla dolar getirisi (önceki faktör gününden), risksiz faiz düşülerek:
+
+```
+r − RF = α + β₁(Mkt−RF) + β₂SMB + β₃HML + β₄RMW + β₅CMA + β₆MOM + ε     (EKK)
+```
+
+En az 60 ortak işlem günü. |t| ≥ 2 olan yüklemeler “belirgin” sayılır; yıllık alpha = α·252.
+Örnek portföyde ve web önizlemesinde fiyatlar kurgusal olduğu için faktörler de kurgusaldır
+(`demoFactors`).

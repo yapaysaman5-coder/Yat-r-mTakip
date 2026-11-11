@@ -683,6 +683,48 @@ başka bir yatırım aracına yatırsaydım bugün ne kadarım olurdu?"**
 - Uygulama logosu, Face ID / parmak izi istemi ve yedek olarak cihaz şifresi.
 - Arka plana alındığında uygulama içeriği bulanıklaştırılır. Bu sayede uygulama değiştiricide tutarlar görünmez.
 
+### 6.12 Bilim Paketi: Davranış Aynası, Beceri, Portföy Sağlığı, Faktörler, Bilim Rehberi
+
+Amaç: dünyada bilimsel olarak test edilmiş yatırım bilgisini, kişinin **kendi portföyü üzerinde
+ölçerek** göstermek. Her ölçümün altında okunuşu (renkli kutu) ve dayandığı araştırmaya giden
+“Bilim: …” bağlantısı vardır. Hiçbir yerde al/sat önerisi yoktur. Formüller:
+[02-HESAPLAMA-MOTORU.md §16](02-HESAPLAMA-MOTORU.md#16-bilim-paketi-11-kasım-2026).
+
+- **Analiz › Davranış** (yeni dördüncü bölüm):
+  - *Yatkınlık etkisi:* kârdakileri ve zarardakileri satma oranı (PGR / PLR), fark ve t istatistiği.
+  - *Aldıkların ve sattıkların:* işlemlerden 1 ay, 3 ay, 6 ay ve 1 yıl sonra fiyat değişimi.
+  - *Sattıktan sonra ne oldu?:* satılan adetlerin bugünkü değeri ve son satışların 3 ay sonrası.
+  - *Zamanlama farkı:* para ağırlıklı ve zaman ağırlıklı getiri farkı.
+  - *İşlem sıklığı ve maliyet:* aylık işlem, devir hızı, yıllık maliyet oranı, 20 yıllık maliyet payı.
+- **Analiz › Performans › Beceri mi, şans mı?:** Olasılıksal Sharpe (PSR), %95 güven için gereken
+  kayıt süresi (MinTRL), BIST 100'e göre alpha, t istatistiği ve kanıt için gereken süre.
+- **Analiz › Dağılım:**
+  - *Portföy sağlığı:* yıllık oynaklık, çeşitlendirme oranı, etkin pozisyon sayısı ve her varlığın
+    riske katkısı (çubuk) ile ağırlığı (çizgi).
+  - *Korelasyon matrisi:* en büyük 8 pozisyon.
+  - *Faktör analizi:* ABD hisseleri için Fama–French 5 faktör ve momentum yüklemeleri, t, R², alpha.
+- **Bilim Rehberi** (`/rehber`; Analiz başlığındaki kitap simgesi ve Ayarlar › Yatırım Bilimi):
+  - 24 bulgu, 5 konu: Davranış, Getiri, Risk, Maliyet, Plan.
+  - Her kartta bulgu, “Ne anlama geliyor?”, kanıt düzeyi (güçlü / orta / tartışmalı) ve tam kaynakça
+    (DOI bağlantılı).
+  - “Portföyünde ölç” düğmesi ilgili ölçüme gider.
+
+### 6.13 Yatırım Planı ve Hedefler
+
+- **Plan** (`/plan`; Fon sekmesindeki “Yatırım planı” kartı ve Ayarlar):
+  - Kişinin kendi yazdığı hedef dağılım (BIST / ABD / Kripto / Nakit), sapma bandı, tek pozisyon
+    sınırı, risk profili, vade ve gözden geçirme takvimi.
+  - Ekran şunları gösterir: plana uyum yüzdesi, bant dışı sınıflar, sınıf başına “plana göre fark”,
+    yeni paranın satış yapmadan plana yaklaştıran dağılımı, sınırı aşan pozisyonlar ve gözden
+    geçirme zamanı (“Yaptım” ile kapatılır).
+  - Uygulama hedef ve varlık önermez; “Bugünkü dağılım” düğmesi başlangıç için mevcut dağılımı
+    doldurur.
+- **Hedefler** (`/plan/hedef`): ad, hedef tutar ve aylık ekleme bugünün lirasıyla, süre, varsayım
+  profili (Temkinli / Dengeli / Büyüme / Özel). Sonuçlar:
+  - Hedefe ulaşma olasılığı (4.000 senaryo).
+  - Yelpaze grafiği: %10–%90 aralığı, orta senaryo ve hedef çizgisi.
+  - Yatırılanın altında bitme olasılığı ve %80 olasılık için gereken aylık tutar.
+
 ---
 
 ## 7. Grafik Tasarımı
@@ -957,6 +999,23 @@ Renk tek başına anlam taşımaz. Yön her zaman ▲/▼ işaretiyle de göster
 | 49 | **Ekran koruması** | Android'de tek ayar: ekran görüntüsü engeli ve uygulama değiştiricide boş kart birlikte (FLAG_SECURE) |
 | 50 | **CSV biçimi** | Türkçe Excel için ";" ayraç, ondalık virgül, UTF-8 BOM; otomatik kayıtlar işaretli |
 | 51 | **Portföy silme** | Kayıtlarıyla birlikte, onaylı; son kendi portföyü silinemez |
+
+### 11 Kasım 2026: Bilim paketi
+
+Kullanıcının isteği: “Dünyada bilimsel olarak test edilmiş ve doğru kabul edilmiş yatırım
+bilgilerini uygulamaya üst düzey profesyonel ekleyelim.” Seçenekler A–G'nin tamamı istendi.
+
+| # | Karar | Sonuç |
+|---|---|---|
+| 52 | **Bilgi biçimi** | Ölçüm + okunuş + kaynak. Öneri yok (SPK). Sayılar yalnızca kaynağıyla doğrulandıysa yazılır |
+| 53 | **Kanıt düzeyi** | Her bulguda güçlü / orta / tartışmalı etiketi |
+| 54 | **Davranış Aynası** | Analiz'de ayrı bölüm. Yatkınlık için en az 5 kâr ve 5 zarar gözlemi gerekir |
+| 55 | **Beceri sınaması** | PSR + MinTRL + alpha t istatistiği. En az 20 günlük getiri |
+| 56 | **Risk geçmişi** | Fiyatlar ilk kayıttan önceye de indirilir: 400 gün (ABD 1100 gün) |
+| 57 | **Faktör verisi** | Kenneth French kütüphanesinden haftalık kontrol, son 5 yıl, telefonda saklanır |
+| 58 | **Plan** | Hedefleri kişi yazar; uygulama yalnızca sapmayı ve yeni paranın dağılımını hesaplar |
+| 59 | **Hedef planlama** | Reel (bugünün lirası), aylık lognormal, 4.000 senaryo, sabit tohum |
+| 60 | **Plan ve hedeflerin saklanması** | Ayarlarda, portföy başına; yedek dosyasına dahil |
 
 ---
 

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Yatırım Takip",
     "slug": "yatirim-takip",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yatirimtakip",

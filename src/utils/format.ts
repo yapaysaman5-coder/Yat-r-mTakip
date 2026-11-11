@@ -314,3 +314,9 @@ export function parseDecimalInput(input: string): string | null {
   const canonical = new D(normalized).toFixed();
   return negative && canonical !== '0' ? `-${canonical}` : canonical;
 }
+
+/** A typed number as a JS number (NaN when it is not one); same rules as parseDecimalInput. */
+export function parseNumberInput(input: string): number {
+  const v = parseDecimalInput(input);
+  return v === null ? NaN : Number(v);
+}

@@ -11,6 +11,7 @@ const SOURCES: [string, string][] = [
   ['Kripto', 'Binance (anlık akış), yedek CoinGecko'],
   ['Döviz ve altın', 'Yahoo Finance, Binance, İş Yatırım, TCMB (gösterge kur)'],
   ['TÜFE', 'TCMB sitesindeki TÜİK aylık değişimleri (ayda bir)'],
+  ['Faktör verisi', 'Kenneth R. French Data Library, Dartmouth (Fama–French, ayda bir)'],
 ];
 
 const LICENSES = [
@@ -19,6 +20,7 @@ const LICENSES = [
   'react-native-svg (MIT)',
   'Zustand (MIT)',
   'decimal.js (MIT)',
+  'fflate (MIT)',
   'Lucide ikonları (ISC)',
   'Inter yazı tipi (SIL Open Font License 1.1)',
 ];

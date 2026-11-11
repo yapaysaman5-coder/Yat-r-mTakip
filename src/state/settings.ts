@@ -4,6 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { kvStorage } from '@/lib/storage';
 import type { EngineOptions } from '@/data/engine';
 import { DEFAULT_FEES, type FeeSettings } from '@/data/fees';
+import type { Goal } from '@/data/view/goalView';
+import type { InvestmentPlan } from '@/data/view/planView';
 import type { ThemePreference } from '@/theme/types';
 
 /** What the change badge on a holding row shows; tapping the badge cycles through these. */
@@ -47,6 +49,10 @@ interface SettingsState {
   onboarded: boolean;
   /** Portfolio shown on the screens (null: the first one). */
   activePortfolioId: string | null;
+  /** Investment plan per portfolio (Plan screen). */
+  plans: Record<string, InvestmentPlan>;
+  /** Goals per portfolio (Hedef planlama). */
+  goals: Record<string, Goal[]>;
 
   setThemePreference: (preference: ThemePreference) => void;
   setColorBlindSafe: (value: boolean) => void;
@@ -66,6 +72,8 @@ interface SettingsState {
   setWhatIfCurrency: (c: 'TRY' | 'USD') => void;
   setWhatIfBasis: (b: 'flows' | 'trades') => void;
   setActivePortfolioId: (id: string | null) => void;
+  setPlan: (portfolioId: string, plan: InvestmentPlan | null) => void;
+  setGoals: (portfolioId: string, goals: Goal[]) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -89,6 +97,8 @@ export const useSettings = create<SettingsState>()(
       secureScreen: false,
       onboarded: false,
       activePortfolioId: null,
+      plans: {},
+      goals: {},
 
       setThemePreference: (themePreference) => set({ themePreference }),
       setColorBlindSafe: (colorBlindSafe) => set({ colorBlindSafe }),
@@ -116,6 +126,14 @@ export const useSettings = create<SettingsState>()(
       setWhatIfCurrency: (whatIfCurrency) => set({ whatIfCurrency }),
       setWhatIfBasis: (whatIfBasis) => set({ whatIfBasis }),
       setActivePortfolioId: (activePortfolioId) => set({ activePortfolioId }),
+      setPlan: (id, plan) =>
+        set((s) => {
+          const plans = { ...s.plans };
+          if (plan) plans[id] = plan;
+          else delete plans[id];
+          return { plans };
+        }),
+      setGoals: (id, goals) => set((s) => ({ goals: { ...s.goals, [id]: goals } })),
     }),
     {
       name: 'settings',
@@ -140,6 +158,8 @@ export const useSettings = create<SettingsState>()(
         secureScreen: s.secureScreen,
         onboarded: s.onboarded,
         activePortfolioId: s.activePortfolioId,
+        plans: s.plans,
+        goals: s.goals,
       }),
     },
   ),

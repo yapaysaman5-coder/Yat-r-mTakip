@@ -10,6 +10,7 @@ import { addDays, trDay } from '@/domain';
 import { createHttp } from '../http';
 import { instrumentFor } from '../instruments';
 import { binance } from '../providers/binance';
+import { fetchBytes, frenchFactors } from '../providers/french';
 import { coingecko } from '../providers/coingecko';
 import { isyatirim } from '../providers/isyatirim';
 import { tcmb } from '../providers/tcmb';
@@ -286,5 +287,14 @@ live('real sources', () => {
     expect(h.stale).toBe(false);
     expect(h.quote?.source).toBe('coingecko');
     expect(sync.failed.has(first.assetId)).toBe(false);
+  }, 60_000);
+  it('downloads the Fama–French factors from the French data library', async () => {
+    const rows = await frenchFactors(fetchBytes, addDays(trDay(new Date()), -400));
+    console.log(
+      `Fama–French: ${rows.length} gün, ${rows[0]?.date} – ${rows.at(-1)?.date}`,
+      rows.at(-1),
+    );
+    expect(rows.length).toBeGreaterThan(200);
+    expect(Math.abs(rows.at(-1)!.values['Mkt-RF'])).toBeLessThan(0.2);
   }, 60_000);
 });

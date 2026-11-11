@@ -265,6 +265,21 @@ K/Z ile birebir aynı ([faz7-gecmis.md](test-raporu/faz7-gecmis.md)).
 **Bitiş kriteri:** Ayarlar ve güvenlik çalışıyor ✅ ([faz10-ayarlar-guvenlik.md](test-raporu/faz10-ayarlar-guvenlik.md)).
 Kilit ve ekran koruması telefonda APK ile doğrulanacak.
 
+## Bilim Paketi ✅ (11 Kasım 2026)
+
+Dünyada bilimsel olarak test edilmiş yatırım bilgisi, kişinin kendi portföyünde ölçülerek
+gösterildi (A–G seçeneklerinin tamamı):
+
+- [x] **A · Bilim Rehberi:** 24 bulgu, kaynakça (DOI), kanıt düzeyi, “Portföyünde ölç” bağlantıları
+- [x] **B · Davranış Aynası:** yatkınlık etkisi, aldıkların/sattıkların, sattıktan sonra, zamanlama farkı, işlem sıklığı ve maliyet
+- [x] **C · Beceri mi şans mı?:** PSR, MinTRL, alpha t istatistiği
+- [x] **D · Portföy sağlığı:** riske katkı, çeşitlendirme oranı, etkin pozisyon, korelasyon matrisi
+- [x] **E · Yatırım planı:** hedef dağılım, bant, uyum, yeni parayla dengeleme, tek pozisyon sınırı, gözden geçirme takvimi
+- [x] **F · Hedef planlama:** Monte Carlo (reel TL), olasılık, yelpaze grafiği, %80 için gereken aylık tutar
+- [x] **G · Faktör analizi:** Fama–French 5 faktör + momentum (ABD hisseleri)
+
+**Bitiş kriteri:** Tüm ölçümler testli, kaynaklar doğrulandı ✅ ([bilim-paketi.md](test-raporu/bilim-paketi.md)).
+
 ## Faz 11: Yayına Hazırlık
 
 - [ ] Uygulama adı, ikon, açılış ekranı
@@ -279,7 +294,6 @@ Kilit ve ekran koruması telefonda APK ile doğrulanacak.
 - Ana ekran widget'ı
 - Temettü takvimi ve yıllık temettü geliri
 - Ek varlık türleri: gram altın, döviz, TEFAS fonları, mevduat, manuel fiyatlı özel varlık
-- Hedef dağılım ve dengeleme önerisi
 - Aracı kurum ekstresinden CSV içe aktarma
 - Yurt dışı hisse vergi beyan yardımcısı (FIFO + Yİ-ÜFE)
 - Uçtan uca şifreli bulut senkronizasyonu

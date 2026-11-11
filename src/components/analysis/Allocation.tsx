@@ -9,6 +9,8 @@ import { radius, space } from '@/theme/tokens';
 import { AllocationBar, Card, Money, SectionHeader, SegmentedControl, Text } from '@/ui';
 import { formatPercent } from '@/utils/format';
 
+import { FactorCard, HealthCards } from './ScienceCards';
+
 type Change = 'daily' | 'total';
 
 /**
@@ -76,6 +78,9 @@ export function Allocation() {
           BIST sektörleri İş Yatırım listesinden; ABD hisseleri GICS sektörüne göre.
         </Text>
       </Card>
+
+      <HealthCards />
+      <FactorCard />
     </View>
   );
 }

@@ -42,6 +42,12 @@ export interface MarketNeeds {
 
 /** Days of history kept for watchlist items (30-day change, mini charts). */
 const WATCH_DAYS = 40;
+/**
+ * Risk and factor analyses look back from today, before the first record: a year (and a bit)
+ * for every traded asset, three years for US stocks (Fama–French regression).
+ */
+export const RISK_LOOKBACK_DAYS = 400;
+export const FACTOR_LOOKBACK_DAYS = 1100;
 /** Recent closes are fetched again after this long (late corrections, missed days). */
 const REFRESH_MS = 6 * 3_600_000;
 /** After a failure, history is tried again after this long. */
@@ -79,8 +85,13 @@ export async function marketNeeds(db: SqlExecutor, now: Date): Promise<MarketNee
     if (!portfoliosStart || day < portfoliosStart) portfoliosStart = day;
     if (!r.asset_id) continue;
     const asset = assets.get(r.asset_id);
-    need(r.asset_id, day, true, asset?.name);
-    if (asset && asset.currency !== 'TRY') need(fxInstrumentId(asset.currency), day, true);
+    const back = addDays(
+      today,
+      -(asset?.market === 'US' ? FACTOR_LOOKBACK_DAYS : RISK_LOOKBACK_DAYS),
+    );
+    const from = back < day ? back : day;
+    need(r.asset_id, from, true, asset?.name);
+    if (asset && asset.currency !== 'TRY') need(fxInstrumentId(asset.currency), from, true);
   }
   // "Ya Olsaydı?" compares from the first record on; USD series also need USD/TRY.
   if (portfoliosStart) {

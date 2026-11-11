@@ -3,6 +3,7 @@ import { X } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 
+import { PlanSummary } from '@/components/plan/PlanSummary';
 import { EmptyPortfolio } from '@/components/EmptyPortfolio';
 import { PreviewNote } from '@/components/PreviewNote';
 import type { Holding } from '@/data/view/portfolioView';
@@ -254,6 +255,8 @@ function AccountBody() {
           </View>
         ) : null}
       </Card>
+
+      <PlanSummary />
 
       <Card>
         <SectionHeader title="DÖNEMSEL GETİRİ" style={{ marginBottom: space.xs }} />

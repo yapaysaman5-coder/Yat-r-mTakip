@@ -11,6 +11,7 @@ export * from './metrics';
 export * from './order';
 export * from './series';
 export * from './splits';
+export * from './stats';
 export * from './twr';
 export * from './types';
 export * from './validate';

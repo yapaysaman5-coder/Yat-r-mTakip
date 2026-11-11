@@ -1,14 +1,17 @@
-import { BarChart3, Sparkles } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { BarChart3, BookOpen, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 import { Allocation } from '@/components/analysis/Allocation';
+import { Behavior } from '@/components/analysis/Behavior';
 import { BenchmarkSheet } from '@/components/analysis/BenchmarkSheet';
 import {
   AssetResultsCard,
   ConcentrationCard,
   DrawdownCard,
 } from '@/components/analysis/PerformanceExtras';
+import { SkillCard } from '@/components/analysis/ScienceCards';
 import { WhatIfOptions } from '@/components/analysis/WhatIfOptions';
 import { MonthSheet } from '@/components/history/Statement';
 import { MetricInfoSheet, MetricTile } from '@/components/MetricTile';
@@ -36,6 +39,7 @@ import {
   ChangeBadge,
   Chip,
   EmptyState,
+  IconButton,
   Money,
   PressableScale,
   Screen,
@@ -56,7 +60,8 @@ import {
   MONTHS_TR,
 } from '@/utils/format';
 
-type Section = 'whatif' | 'performance' | 'allocation';
+type Section = 'whatif' | 'performance' | 'allocation' | 'davranis';
+const SECTIONS: Section[] = ['whatif', 'performance', 'allocation', 'davranis'];
 type Mode = 'value' | 'percent';
 
 const BENCHMARK_NAME = 'BIST 100';
@@ -74,21 +79,44 @@ const dec2 = (n: number | null) =>
   n === null ? '—' : formatNumber(n, { minDecimals: 2, maxDecimals: 2 });
 
 export default function AnalysisScreen() {
-  const [section, setSection] = useState<Section>('whatif');
+  const router = useRouter();
+  const { bolum } = useLocalSearchParams<{ bolum?: string }>();
+  const fromLink = (b?: string) =>
+    b && (SECTIONS as string[]).includes(b) ? (b as Section) : null;
+  const [section, setSection] = useState<Section>(fromLink(bolum) ?? 'whatif');
+  // Links from the science guide open a section ("?bolum=davranis").
+  const [linked, setLinked] = useState(bolum);
+  if (bolum !== linked) {
+    setLinked(bolum);
+    const s = fromLink(bolum);
+    if (s) setSection(s);
+  }
   const [info, setInfo] = useState<{ key: MetricKey; value: string } | null>(null);
   const open = (key: MetricKey, value: string) => setInfo({ key, value });
   const view = usePortfolioView();
+  const header = (
+    <TabHeader
+      title="Analiz"
+      right={
+        <IconButton
+          icon={BookOpen}
+          accessibilityLabel="Bilim Rehberi"
+          onPress={() => router.push('/rehber')}
+        />
+      }
+    />
+  );
 
   if (view.empty) {
     return (
-      <Screen withTabBar header={<TabHeader title="Analiz" />}>
+      <Screen withTabBar header={header}>
         <EmptyPortfolio message="Performans ve “Ya Olsaydı?” hesapları ilk kayıtlarınla başlar." />
       </Screen>
     );
   }
 
   return (
-    <Screen withTabBar header={<TabHeader title="Analiz" />}>
+    <Screen withTabBar header={header}>
       {view.isDemo ? <PreviewNote /> : null}
       <Scorecard onInfo={open} />
       <SegmentedControl
@@ -98,11 +126,13 @@ export default function AnalysisScreen() {
           { key: 'whatif', label: 'Ya Olsaydı?' },
           { key: 'performance', label: 'Performans' },
           { key: 'allocation', label: 'Dağılım' },
+          { key: 'davranis', label: 'Davranış' },
         ]}
       />
       {section === 'whatif' ? <WhatIf /> : null}
       {section === 'performance' ? <Performance onInfo={open} /> : null}
       {section === 'allocation' ? <Allocation /> : null}
+      {section === 'davranis' ? <Behavior /> : null}
       <MetricInfoSheet
         metric={info?.key ?? null}
         value={info?.value}
@@ -684,6 +714,7 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
         })}
       </Card>
 
+      <SkillCard />
       <DrawdownCard />
       <AssetResultsCard />
       <ConcentrationCard />

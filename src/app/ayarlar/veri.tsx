@@ -63,6 +63,12 @@ function settingsSnapshot() {
     privacyMode: s.privacyMode,
     hapticsEnabled: s.hapticsEnabled,
     changeDisplay: s.changeDisplay,
+    costMethod: s.costMethod,
+    fees: s.fees,
+    riskFree: s.riskFree,
+    depositRate: s.depositRate,
+    plans: s.plans,
+    goals: s.goals,
   };
 }
 

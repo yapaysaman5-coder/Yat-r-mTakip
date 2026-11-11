@@ -1,8 +1,10 @@
 import { useRouter } from 'expo-router';
 import {
   Bell,
+  BookOpen,
   Calculator,
   CircleDollarSign,
+  ClipboardList,
   Database,
   EyeOff,
   Info,
@@ -85,6 +87,23 @@ export default function SettingsScreen() {
           trailing={
             <Toggle value={haptics} onValueChange={setHaptics} accessibilityLabel="Titreşim" />
           }
+        />
+      </Group>
+
+      <Group title="YATIRIM BİLİMİ">
+        <ListRow
+          title="Bilim Rehberi"
+          subtitle="Araştırmalarla kanıtlanmış bulgular, kaynaklarıyla"
+          leading={icon(BookOpen, colors.accent, colors.accentSoft)}
+          showChevron
+          onPress={() => router.push('/rehber')}
+        />
+        <ListRow
+          title="Yatırım planı ve hedefler"
+          subtitle="Hedef dağılım, yeniden dengeleme, hedef olasılığı"
+          leading={icon(ClipboardList, colors.accent2, colors.accent2Soft)}
+          showChevron
+          onPress={() => router.push('/plan')}
         />
       </Group>
 

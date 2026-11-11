@@ -307,6 +307,23 @@ bıraktıktan 0,6 sn sonra) iki kaynağa sorulur:
 - **Mevduat:** Fiyat kaynağı yok. Kişinin Analiz › Ya Olsaydı'da girdiği yıllık net faizle (varsayılan %40)
   günlük bileşik seri olarak, portföy yüklenirken hesaplanır. Faiz değişince yeniden hesaplanır.
 
+### 6.6 Fama–French Faktörleri ve Bilim Verisi (11 Kasım 2026)
+
+- **Kaynak:** Kenneth R. French Data Library (`mba.tuck.dartmouth.edu`), herkese açık iki zip:
+  `F-F_Research_Data_5_Factors_2x3_daily_CSV.zip` ve `F-F_Momentum_Factor_daily_CSV.zip`. Telefon
+  dosyaları doğrudan indirir, `fflate` ile açar (`providers/french.ts`). Yüzde değerler ondalığa,
+  `YYYYMMDD` tarihler güne çevrilir; iki dosya ortak günlerde birleştirilir.
+- **Saklama:** Son 5 yıl, `price_daily` tablosunda `FACTOR:Mkt-RF`, `FACTOR:SMB`, … `FACTOR:RF`
+  kimlikleriyle (değer = o günün getirisi). İndirme durumu `price_sync`'te `FACTOR:FF` satırında.
+  Kütüphane ayda bir güncellendiği için haftada bir kontrol; hata olursa 6 saat sonra yeniden.
+- **Ne zaman:** Yalnızca Analiz › Dağılım açıldığında ve portföyde ABD hissesi varsa. Örnek
+  portföyde ve web önizlemesinde kurgusal faktörler kullanılır.
+- **Varlık geçmişi:** Risk ve faktör analizleri için fiyatlar ilk kayıttan geriye de indirilir:
+  her varlıkta bugünden 400 gün, ABD hisselerinde 1100 gün (`marketNeeds`). Ekranlar bu fiyatları
+  `useAssetHistory` ile bir kez yükler (portföy görünümü başına önbellek).
+- **Plan ve hedefler:** Ayarlar deposunda portföy başına (`plans`, `goals`); yedek dosyasına
+  hesaplama ayarlarıyla birlikte girer.
+
 ## 7. Canlı Güncelleme Mekanizması (Faz 4 ✅)
 
 | Pazar | Seans içinde | Seans dışında |
