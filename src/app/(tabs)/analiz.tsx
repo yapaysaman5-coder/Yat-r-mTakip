@@ -18,6 +18,8 @@ import { PreviewNote } from '@/components/PreviewNote';
 import {
   ANALYSIS_PERIODS,
   MIN_RISK_DAYS,
+  PERIOD_NAME,
+  periodGain,
   periodReturn,
   type AnalysisPeriod,
   type ComparedSeries,
@@ -250,13 +252,22 @@ function WhatIfBody() {
   }));
 
   const last = analysis.dates.length - 1;
-  const me = VALUES.me[last];
-  const ranked = [...BENCHMARKS].sort((a, b) => VALUES[b.key][last] - VALUES[a.key][last]);
+  const whole = range === 'Tümü';
+  const inception = analysis.periodInception[range];
+  // The league follows the chosen period: today's value for "Tümü", else what each option
+  // earned in the period (money put in or taken out during it removed).
+  const gain = (key: string) => periodGain(VALUES[key], NET_INVESTED, start, inception);
+  const periodPct = (key: string) =>
+    rebasePercent(VALUES[key], NET_INVESTED, start, inception).at(-1) ?? 0;
+  const score = (key: string) => (whole ? VALUES[key][last] : gain(key));
+  const me = score('me');
+  const ranked = [...BENCHMARKS].sort((a, b) => score(b.key) - score(a.key));
   const netInvested = NET_INVESTED[last];
-  const beaten = BENCHMARKS.filter((b) => b.key !== 'me' && VALUES[b.key][last] < me).length;
+  const beaten = BENCHMARKS.filter((b) => b.key !== 'me' && score(b.key) < me).length;
   const best = ranked.find((b) => b.key !== 'me')!;
   // Real return only makes sense against TL inflation.
-  const realReturn = VALUES.cpi && ccy === 'TRY' ? me / VALUES.cpi[last] - 1 : null;
+  const realReturn =
+    VALUES.cpi && ccy === 'TRY' && whole ? VALUES.me[last] / VALUES.cpi[last] - 1 : null;
 
   return (
     <View style={{ gap: space.lg }}>
@@ -376,13 +387,15 @@ function WhatIfBody() {
             paddingTop: space.sm,
             paddingBottom: space.xs,
           }}>
-          <SectionHeader title="LİG TABLOSU" />
+          <SectionHeader
+            title={whole ? 'LİG TABLOSU' : `LİG · ${PERIOD_NAME[range].toLocaleUpperCase('tr')}`}
+          />
           <Text variant="overline" tone="tertiary">
-            BUGÜNKÜ DEĞER
+            {whole ? 'BUGÜNKÜ DEĞER' : 'DÖNEMDE KAZANÇ'}
           </Text>
         </View>
         {ranked.map((b, i) => {
-          const value = VALUES[b.key][last];
+          const value = score(b.key);
           const isMe = b.key === 'me';
           return (
             <PressableScale
@@ -425,11 +438,20 @@ function WhatIfBody() {
                   {b.name}
                 </Text>
                 <Text variant="caption" tone="secondary">
-                  {pct(netInvested > 0 ? (value - netInvested) / netInvested : null)} getiri
+                  {whole
+                    ? `${pct(netInvested > 0 ? (value - netInvested) / netInvested : null)} getiri`
+                    : `${pct(periodPct(b.key), 2)} · değer ${formatMoney(VALUES[b.key][last], { decimals: 0, currency: ccy })}`}
                 </Text>
               </View>
               <View style={{ alignItems: 'flex-end', gap: 3 }}>
-                <Money value={value} variant="numM" decimals={0} currency={ccy} />
+                <Money
+                  value={value}
+                  variant="numM"
+                  decimals={0}
+                  currency={ccy}
+                  sign={whole ? 'auto' : 'always'}
+                  colorize={!whole}
+                />
                 {isMe ? (
                   <Text variant="caption" tone="accent">
                     SEN
@@ -468,13 +490,13 @@ function WhatIfBody() {
         </View>
         <View style={{ gap: space.sm }}>
           <Insight
-            text={`Portföyün ${BENCHMARKS.length - 1} seçenekten ${beaten} tanesini geride bıraktı.`}
+            text={`${whole ? '' : `${PERIOD_NAME[range]}: `}Portföyün ${BENCHMARKS.length - 1} seçenekten ${beaten} tanesini geride bıraktı.`}
           />
           <Insight
             text={
-              VALUES[best.key][last] > me
-                ? `En iyi seçenek ${best.name} olurdu: bugün ${formatMoney(VALUES[best.key][last] - me, { decimals: 0, currency: ccy })} daha fazla.`
-                : `Tüm seçeneklerden iyi gittin: en yakın ${best.name}, ${formatMoney(me - VALUES[best.key][last], { decimals: 0, currency: ccy })} geride.`
+              score(best.key) > me
+                ? `${whole ? 'En iyi seçenek' : `${PERIOD_NAME[range]} en iyisi`} ${best.name} olurdu: ${formatMoney(score(best.key) - me, { decimals: 0, currency: ccy })} daha fazla.`
+                : `${whole ? 'Tüm seçeneklerden' : `${PERIOD_NAME[range]} tüm seçeneklerden`} iyi gittin: en yakın ${best.name}, ${formatMoney(me - score(best.key), { decimals: 0, currency: ccy })} geride.`
             }
           />
           {realReturn !== null ? (

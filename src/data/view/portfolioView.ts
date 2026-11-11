@@ -324,7 +324,7 @@ export function buildPortfolioView(data: PortfolioData): PortfolioView {
   };
 }
 
-export type ChartRange = '1H' | '1A' | '3A' | '6A' | '1Y' | 'YB' | 'Tümü';
+export type ChartRange = '1G' | '1H' | '1A' | '3A' | '6A' | '1Y' | 'YB' | 'Tümü';
 
 /** Index of the day a period starts from (its base day, end-of-day convention). */
 /**
@@ -338,6 +338,8 @@ export function rangeFromInception(dates: readonly string[], range: ChartRange):
   switch (range) {
     case 'Tümü':
       return true;
+    case '1G':
+      return n <= 1;
     case '1H':
       return n <= 8;
     case 'YB':
@@ -358,6 +360,9 @@ export function rangeStartIndex(dates: readonly string[], range: ChartRange): nu
     return i === -1 ? n - 1 : i;
   };
   switch (range) {
+    case '1G':
+      // From yesterday's close.
+      return Math.max(0, n - 2);
     case '1H':
       return Math.max(0, n - 8);
     case '1A':

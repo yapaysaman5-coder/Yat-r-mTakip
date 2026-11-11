@@ -9,7 +9,7 @@ import { insertPortfolio } from '../repo/portfolios';
 import { upsertCloses } from '../repo/prices';
 import { loadPortfolioData } from '../service/load';
 import { saveTransaction } from '../service/transactions';
-import { buildAnalysis, periodReturn } from '../view/analysisView';
+import { buildAnalysis, periodGain, periodReturn } from '../view/analysisView';
 import { rebasePercent } from '@/ui/charts/scale';
 
 import { homeChart } from '../view/chart';
@@ -116,5 +116,17 @@ describe('returns since the first record include the first day', () => {
       null,
       null,
     ]);
+  });
+
+  it('short periods: today (from yesterday’s close) and the last week, money in removed', async () => {
+    const v = await view();
+    const a = buildAnalysis(v);
+    const n = a.dates.length;
+    expect(a.periodStart['1G']).toBe(n - 2);
+    expect(a.periodStart['1H']).toBe(n - 8);
+    // 10.11 is still at 95 (last close 07.11), 11.11 at 100: 100 × 5 = +₺500 today.
+    const me = a.series[0];
+    expect(periodGain(me.values, a.netInvested, a.periodStart['1G'], false)).toBeCloseTo(500, 6);
+    expect(periodGain(me.values, a.netInvested, 0, true)).toBeCloseTo(1000, 6);
   });
 });

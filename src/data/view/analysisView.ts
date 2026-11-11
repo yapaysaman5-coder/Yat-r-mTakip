@@ -22,8 +22,45 @@ import {
 import { MAIN_BENCHMARK } from '../benchmarks';
 import { rangeFromInception, rangeStartIndex, type PortfolioView } from './portfolioView';
 
-export type AnalysisPeriod = '1A' | '3A' | '6A' | 'YB' | '1Y' | 'Tümü';
-export const ANALYSIS_PERIODS: AnalysisPeriod[] = ['1A', '3A', '6A', 'YB', '1Y', 'Tümü'];
+export type AnalysisPeriod = '1G' | '1H' | '1A' | '3A' | '6A' | 'YB' | '1Y' | 'Tümü';
+export const ANALYSIS_PERIODS: AnalysisPeriod[] = [
+  '1G',
+  '1H',
+  '1A',
+  '3A',
+  '6A',
+  'YB',
+  '1Y',
+  'Tümü',
+];
+
+export const PERIOD_NAME: Record<AnalysisPeriod, string> = {
+  '1G': 'Bugün',
+  '1H': 'Son 1 hafta',
+  '1A': 'Son 1 ay',
+  '3A': 'Son 3 ay',
+  '6A': 'Son 6 ay',
+  YB: 'Yılbaşından beri',
+  '1Y': 'Son 1 yıl',
+  Tümü: 'Başlangıçtan beri',
+};
+
+/**
+ * What each line earned in a period with the money put in or taken out during it removed:
+ * value at the end − value at the start − net money in between. From the first record the
+ * start is zero (nothing yet), so it is simply the gain.
+ */
+export function periodGain(
+  values: readonly number[],
+  netInvested: readonly number[],
+  start: number,
+  inception: boolean,
+): number {
+  const last = values.length - 1;
+  const v0 = inception ? 0 : values[start];
+  const n0 = inception ? 0 : netInvested[start];
+  return values[last] - v0 - (netInvested[last] - n0);
+}
 
 export interface ComparedSeries {
   key: string;

@@ -96,9 +96,17 @@ export function ComparisonChart({
     : null;
 
   const spanDays = dates.length;
+  // Up to four date labels; with only a few days no label repeats or overlaps another.
   const labelKs =
     count > 1
-      ? [0, Math.round((count - 1) / 3), Math.round((2 * (count - 1)) / 3), count - 1]
+      ? [
+          ...new Set([
+            0,
+            Math.round((count - 1) / 3),
+            Math.round((2 * (count - 1)) / 3),
+            count - 1,
+          ]),
+        ].filter((k, i, all) => i === 0 || k - all[i - 1] >= (count - 1) / 4)
       : [0];
 
   // Gesture geometry lives in a shared value so the worklet always sees current sizes.
