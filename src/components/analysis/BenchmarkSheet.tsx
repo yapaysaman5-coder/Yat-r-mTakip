@@ -46,8 +46,11 @@ export function BenchmarkSheet({
     ],
     [
       `Getiri (${period}, zaman ağırlıklı)`,
-      formatPercent(periodReturn(series, start), { decimals: 1, sign: 'always' }),
-      periodReturn(series, start) >= 0 ? 'up' : 'down',
+      formatPercent(periodReturn(series, start, analysis.periodInception[period]), {
+        decimals: 1,
+        sign: 'always',
+      }),
+      periodReturn(series, start, analysis.periodInception[period]) >= 0 ? 'up' : 'down',
     ],
     [`En büyük düşüş (${period})`, formatPercent(dd, { decimals: 1 }), 'down'],
   ];

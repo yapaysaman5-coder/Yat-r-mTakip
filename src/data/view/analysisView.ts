@@ -20,7 +20,7 @@ import {
 } from '@/domain';
 
 import { MAIN_BENCHMARK } from '../benchmarks';
-import { rangeStartIndex, type PortfolioView } from './portfolioView';
+import { rangeFromInception, rangeStartIndex, type PortfolioView } from './portfolioView';
 
 export type AnalysisPeriod = '1A' | '3A' | '6A' | 'YB' | '1Y' | 'Tümü';
 export const ANALYSIS_PERIODS: AnalysisPeriod[] = ['1A', '3A', '6A', 'YB', '1Y', 'Tümü'];
@@ -75,6 +75,8 @@ export interface AnalysisView {
   dates: string[];
   netInvested: number[];
   periodStart: Record<AnalysisPeriod, number>;
+  /** The period reaches back to the first record (returns include the first day). */
+  periodInception: Record<AnalysisPeriod, boolean>;
   /** The portfolio first, then every benchmark with prices. */
   series: ComparedSeries[];
   mainBenchmark: ComparedSeries | null;
@@ -136,7 +138,12 @@ export function buildAnalysis(
     ANALYSIS_PERIODS.map((p) => [p, rangeStartIndex(dates, p)]),
   ) as Record<AnalysisPeriod, number>;
 
+  const periodInception = Object.fromEntries(
+    ANALYSIS_PERIODS.map((p) => [p, rangeFromInception(dates, p)]),
+  ) as Record<AnalysisPeriod, boolean>;
+
   return {
+    periodInception,
     options: { currency, basis: options.basis, riskFree: options.riskFree ?? 0 },
     usdAvailable,
     dates,
@@ -149,10 +156,15 @@ export function buildAnalysis(
   };
 }
 
-/** Time-weighted return of a price series over a period (from its start index). */
-export function periodReturn(s: ComparedSeries, start: number): number {
+/**
+ * Time-weighted return of a price series over a period (from its start index). From the first
+ * record, the portfolio's unit value starts at 1 before the first day, so that day's own gain
+ * counts; a comparison is bought at the first day's close.
+ */
+export function periodReturn(s: ComparedSeries, start: number, inception = false): number {
   const p = s.prices;
-  return p[start] > 0 ? p[p.length - 1] / p[start] - 1 : 0;
+  const base = inception && s.key === 'me' ? 1 : p[start];
+  return base > 0 ? p[p.length - 1] / base - 1 : 0;
 }
 
 function computeMetrics(
@@ -163,7 +175,8 @@ function computeMetrics(
   const { dates, values, flows, unitValues } = view.series;
   const last = dates.length - 1;
   const days = last;
-  const twr = unitValues[last] / unitValues[0] - 1;
+  // Unit values are 1 before the first day: the first day's own result is included.
+  const twr = unitValues[last] - 1;
   const twrAnnual = annualize(twr, days);
   const rMe = stepReturns(unitValues);
   const vol = volatility(rMe, 365);
@@ -191,7 +204,7 @@ function computeMetrics(
   if (monthEnds[monthEnds.length - 1] !== last) monthEnds.push(last);
   const months: MonthReturn[] = monthEnds.slice(1).map((end, k) => ({
     month: dates[end].slice(0, 7),
-    ratio: unitValues[end] / unitValues[monthEnds[k]] - 1,
+    ratio: unitValues[end] / (k === 0 ? 1 : unitValues[monthEnds[k]]) - 1,
   }));
   const pick = (better: (a: MonthReturn, b: MonthReturn) => boolean) =>
     months.length ? months.reduce((a, m) => (better(m, a) ? m : a)) : null;

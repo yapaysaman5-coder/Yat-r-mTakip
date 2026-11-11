@@ -58,3 +58,26 @@
 - **İskelet (yükleniyor) animasyonları:** Ekranlar telefondaki kayıtlı verilerden anında açıldığı için ayrıca eklenmedi.
 - **Ana para birimini dolar yapma, bildirimler, CSV'den içe aktarma, ekstreyi PDF olarak paylaşma:** Sonraki sürümler.
 - **Otomatik para girişi kapatılamıyor:** Geçmiş alışların tutarlılığı buna bağlı (karar 47).
+
+## Sonradan Bulunan Hata (11 Kasım 2026, kullanıcı bildirimi)
+
+**Belirti:** Gerçek portföyde ana ekranda Net K/Z %2,51 görünürken "Son 1 ay" %0,66 gösteriyordu. Portföyün
+geçmişi bir aydan kısa olduğu için ikisinin aynı olması gerekirdi.
+
+**Neden:**
+- Seçilen dönem ilk kayıttan önceye uzandığında, getiri ilk günün *kapanış* değerinden ölçülüyordu.
+- Alışlar gerçek işlem fiyatıyla girildiğinden, işlem fiyatı ile o günkü kapanış arasındaki kâr/zarar o
+  kapanışın içinde kalıyordu. Böylece ilk günün sonucu getiriden düşüyordu.
+- Aynı hata Analiz'deki TWR'de, dönemsel getiri tablosunda ve ilk ayın getirisinde de vardı.
+- Fon ekranındaki "Tümü" ve Aylık Ekstre zaten doğruydu.
+
+**Düzeltme:**
+- Dönem ilk kayda kadar uzanıyorsa, getiri ilk günden önceki durumdan ölçülüyor. Ana ekranda bu Net K/Z
+  oranına eşit; Analiz'de birim değer 1'den başlıyor.
+- İlk kayıttan sonra başlayan dönemler değişmedi: o günün kapanışından ölçülüyor.
+
+| Test (`inception.test.ts`) | Beklenen | Önce | Sonra |
+|---|---|---|---|
+| ₺10.000 yatır, 100 adet ₺90'dan al, kapanış ₺100: 1A, 3A, 1Y, YB, Tümü | %10 | %0 | %10 ✅ |
+| Analiz TWR, dönem tablosu (Tümü, 1A), ilk ay | %10 | %0 | %10 ✅ |
+| Geçmişin içinde başlayan 1H | o günün kapanışından | aynı | aynı ✅ |

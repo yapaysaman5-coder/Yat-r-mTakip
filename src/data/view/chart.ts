@@ -3,7 +3,12 @@ import { rebasePercent } from '@/ui/charts/scale';
 import { formatDate, formatTime } from '@/utils/format';
 
 import { bridge } from '../demo/market';
-import { rangeStartIndex, type ChartRange, type PortfolioView } from './portfolioView';
+import {
+  rangeFromInception,
+  rangeStartIndex,
+  type ChartRange,
+  type PortfolioView,
+} from './portfolioView';
 
 export type HomeRange = '1G' | ChartRange;
 
@@ -41,14 +46,23 @@ export function homeChart(view: PortfolioView, range: HomeRange, now = Date.now(
   }
   if (values.length === 0) return { values: [], labels: [], netInvested: [], changeRatio: null };
   const start = rangeStartIndex(dates, range);
-  const ratios = rebasePercent(values, netInvested, start);
+  const last = values.length - 1;
+  // Since the start: against what was put in (before the first day the value was zero), so the
+  // first day's own gain counts. Inside the history: from that day's close.
+  const changeRatio = rangeFromInception(dates, range)
+    ? netInvested[last] > 0
+      ? values[last] / netInvested[last] - 1
+      : null
+    : values[start] > 0
+      ? rebasePercent(values, netInvested, start).at(-1)!
+      : null;
   const showBaseline = range !== '1H' && range !== '1A';
   return {
     values: values.slice(start),
     labels: dates.slice(start).map((d) => formatDate(`${d}T12:00:00Z`)),
     netInvested: netInvested.slice(start),
     baseline: showBaseline ? netInvested.slice(start) : undefined,
-    changeRatio: values[start] > 0 ? ratios[ratios.length - 1] : null,
+    changeRatio,
   };
 }
 

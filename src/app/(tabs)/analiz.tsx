@@ -595,7 +595,7 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
         </View>
         {RANGES.map((r, i) => {
           const start = analysis.periodStart[r];
-          const a = periodReturn(me, start);
+          const a = periodReturn(me, start, analysis.periodInception[r]);
           const b = main ? periodReturn(main, start) : null;
           return (
             <View

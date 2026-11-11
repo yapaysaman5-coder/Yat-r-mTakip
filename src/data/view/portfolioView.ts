@@ -327,6 +327,28 @@ export function buildPortfolioView(data: PortfolioData): PortfolioView {
 export type ChartRange = '1H' | '1A' | '3A' | '6A' | '1Y' | 'YB' | 'Tümü';
 
 /** Index of the day a period starts from (its base day, end-of-day convention). */
+/**
+ * The range reaches back to (or before) the first record: its return is the return since the
+ * start, measured from before the first day (that day's own gain or loss included).
+ */
+export function rangeFromInception(dates: readonly string[], range: ChartRange): boolean {
+  const n = dates.length;
+  if (n === 0) return true;
+  const end = dates[n - 1];
+  switch (range) {
+    case 'Tümü':
+      return true;
+    case '1H':
+      return n <= 8;
+    case 'YB':
+      return `${Number(end.slice(0, 4)) - 1}-12-31` < dates[0];
+    default: {
+      const months = { '1A': 1, '3A': 3, '6A': 6, '1Y': 12 }[range];
+      return monthsBack(end, months) < dates[0];
+    }
+  }
+}
+
 export function rangeStartIndex(dates: readonly string[], range: ChartRange): number {
   const n = dates.length;
   if (n === 0) return 0;
