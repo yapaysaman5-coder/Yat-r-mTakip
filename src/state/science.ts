@@ -9,39 +9,67 @@ import { FACTOR_LOOKBACK_DAYS } from '@/data/service/market';
 import type { PortfolioView } from '@/data/view/portfolioView';
 import { addDays } from '@/domain';
 
+import { useMarketStore } from './market';
+
 /**
  * Data the science features read on demand: every asset's daily prices on one calendar
- * (behaviour, risk, factors) and the Fama–French factor returns. Loaded once per portfolio view.
+ * (behaviour, risk, factors) and the Fama–French factor returns.
+ *
+ * The portfolio view is rebuilt every few seconds while prices stream, but the daily history
+ * only changes with the records, the day and a history download. It is cached on those, and
+ * the previous history stays on screen while a new one loads.
  */
-const historyCache = new WeakMap<PortfolioView, Promise<AssetHistory>>();
+const historyCache = new Map<string, Promise<AssetHistory>>();
 
-function historyFor(view: PortfolioView): Promise<AssetHistory> {
-  let p = historyCache.get(view);
+function historyKey(view: PortfolioView, syncedAt: number): string {
+  let h = 0;
+  for (const t of view.data.txns) {
+    const s = `${t.id}|${t.ts}|${t.quantity ?? ''}|${t.price ?? ''}|${t.splitRatio ?? ''}`;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  }
+  return `${view.portfolio.id}:${view.today}:${view.data.txns.length}:${h}:${syncedAt}`;
+}
+
+function historyFor(view: PortfolioView, key: string): Promise<AssetHistory> {
+  let p = historyCache.get(key);
   if (!p) {
     const back = addDays(view.today, -FACTOR_LOOKBACK_DAYS);
     const first = view.series.dates[0] ?? view.today;
     p = getDatabase().then((db) =>
       loadAssetHistory(db, view, { from: back < first ? back : first }),
     );
-    historyCache.set(view, p);
+    historyCache.set(key, p);
+    // Keep the last few only.
+    while (historyCache.size > 4) historyCache.delete(historyCache.keys().next().value!);
   }
   return p;
 }
 
-/** The view's asset price history (null while loading). */
+/** The view's asset price history (null while the first one loads). */
 export function useAssetHistory(view: PortfolioView): AssetHistory | null {
-  const [state, setState] = useState<{ view: PortfolioView; history: AssetHistory } | null>(null);
+  const syncedAt = useMarketStore((s) => s.lastSync?.at ?? 0);
+  const key = historyKey(view, syncedAt);
+  const [state, setState] = useState<{
+    key: string;
+    portfolio: string;
+    history: AssetHistory;
+  } | null>(null);
   useEffect(() => {
     let live = true;
-    historyFor(view).then(
-      (history) => live && setState({ view, history }),
-      () => live && setState(null),
+    // Same key: the cached promise, and the state stays the same object (no re-render).
+    historyFor(view, key).then(
+      (history) =>
+        live &&
+        setState((prev) =>
+          prev?.key === key ? prev : { key, portfolio: view.portfolio.id, history },
+        ),
+      () => undefined,
     );
     return () => {
       live = false;
     };
-  }, [view]);
-  return state && state.view === view ? state.history : null;
+  }, [view, key]);
+  return state && state.portfolio === view.portfolio.id ? state.history : null;
 }
 
 export interface FactorState {
