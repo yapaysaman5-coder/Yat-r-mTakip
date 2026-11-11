@@ -17,6 +17,7 @@ import { EmptyPortfolio } from '@/components/EmptyPortfolio';
 import { PreviewNote } from '@/components/PreviewNote';
 import {
   ANALYSIS_PERIODS,
+  MIN_RISK_DAYS,
   periodReturn,
   type AnalysisPeriod,
   type ComparedSeries,
@@ -146,24 +147,42 @@ function Scorecard({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) {
           label="TWR"
           value={pct(m?.twr ?? null)}
           tone={tone(m?.twr ?? null)}
-          sub={m ? `yıllık ${pct(m.twrAnnual)}` : 'en az 2 gün gerekir'}
+          sub={
+            !m
+              ? 'en az 2 gün gerekir'
+              : m.twrAnnual !== null
+                ? `yıllık ${pct(m.twrAnnual)}`
+                : `${m.days} gün · yıllık oran 1 yılda`
+          }
           onPress={() => onInfo('twr', pct(m?.twr ?? null))}
         />
+        {m && !m.annualized ? (
+          <MetricTile
+            label="Para ağırlıklı"
+            value={pct(m.mwr)}
+            tone={tone(m.mwr)}
+            sub="dönem · XIRR 1 yılda"
+            onPress={() => onInfo('xirr', pct(m.mwr))}
+          />
+        ) : (
+          <MetricTile
+            label="XIRR (yıllık)"
+            value={pct(m?.xirr ?? null)}
+            tone={tone(m?.xirr ?? null)}
+            sub="nakit akışına göre"
+            onPress={() => onInfo('xirr', pct(m?.xirr ?? null))}
+          />
+        )}
         <MetricTile
-          label="XIRR (yıllık)"
-          value={pct(m?.xirr ?? null)}
-          tone={tone(m?.xirr ?? null)}
-          sub="nakit akışına göre"
-          onPress={() => onInfo('xirr', pct(m?.xirr ?? null))}
-        />
-        <MetricTile
-          label="Alpha (yıllık)"
+          label={m && !m.annualized ? 'Alpha (dönem)' : 'Alpha (yıllık)'}
           value={pct(m?.alpha ?? null)}
           tone={tone(m?.alpha ?? null)}
           sub={
             m?.beta != null
-              ? `${BENCHMARK_NAME}’e göre · β ${dec2(m.beta)}`
-              : 'ölçüt fiyatı bekleniyor'
+              ? `${BENCHMARK_NAME} · β ${dec2(m.beta)}`
+              : m && m.days < MIN_RISK_DAYS + 1
+                ? `en az ${MIN_RISK_DAYS} gün gerekir`
+                : 'ölçüt fiyatı bekleniyor'
           }
           onPress={() => onInfo('alpha', pct(m?.alpha ?? null))}
         />
@@ -227,7 +246,7 @@ function WhatIfBody() {
     values:
       mode === 'value'
         ? VALUES[b.key].slice(start)
-        : rebasePercent(VALUES[b.key], NET_INVESTED, start),
+        : rebasePercent(VALUES[b.key], NET_INVESTED, start, analysis.periodInception[range]),
   }));
 
   const last = analysis.dates.length - 1;
@@ -525,14 +544,29 @@ function Performance({ onInfo }: { onInfo: (k: MetricKey, v: string) => void }) 
           <MetricTile
             label="Beta"
             value={dec2(m.beta)}
-            sub={main ? `${BENCHMARK_NAME}’e göre` : 'ölçüt fiyatı yok'}
+            sub={
+              m.volatility === null
+                ? `en az ${MIN_RISK_DAYS} gün gerekir`
+                : main
+                  ? `${BENCHMARK_NAME}’e göre`
+                  : 'ölçüt fiyatı yok'
+            }
             onPress={() => onInfo('beta', dec2(m.beta))}
           />
           <MetricTile
             label="Volatilite (yıllık)"
-            value={formatPercent(m.volatility, { decimals: 1 })}
-            sub={`Risk seviyesi ${m.riskLevel} / 7`}
-            onPress={() => onInfo('volatility', formatPercent(m.volatility, { decimals: 1 }))}
+            value={m.volatility === null ? '—' : formatPercent(m.volatility, { decimals: 1 })}
+            sub={
+              m.riskLevel === null
+                ? `en az ${MIN_RISK_DAYS} gün gerekir`
+                : `Risk seviyesi ${m.riskLevel} / 7`
+            }
+            onPress={() =>
+              onInfo(
+                'volatility',
+                m.volatility === null ? '—' : formatPercent(m.volatility, { decimals: 1 }),
+              )
+            }
           />
           <MetricTile
             label="Sharpe"

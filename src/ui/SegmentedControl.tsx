@@ -107,7 +107,12 @@ export function SegmentedControl<K extends string>({
               }
             }}
             style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Text variant={size === 'lg' ? 'bodyStrong' : 'subhead'} color={textColor}>
+            <Text
+              variant={size === 'lg' ? 'bodyStrong' : 'subhead'}
+              color={textColor}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}>
               {option.label}
             </Text>
           </Pressable>

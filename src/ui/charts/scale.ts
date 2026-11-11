@@ -51,11 +51,17 @@ export function downsampleIndices(length: number, max: number): number[] {
  * Cumulative return of a cash-flow-driven value series inside a window, so lines that
  * received the same deposits can be compared in %:
  *   r(t) = V(t) / (V(start) + netFlows(start → t)) − 1
- * At the very start of the history this is simply V / netInvested − 1.
+ * From before the first record (`fromStart`) this is simply V / netInvested − 1.
  */
-export function rebasePercent(values: number[], netInvested: number[], start = 0): number[] {
-  const v0 = values[start];
-  const n0 = netInvested[start];
+export function rebasePercent(
+  values: number[],
+  netInvested: number[],
+  start = 0,
+  /** From before the first record (value and money in both 0): the first day's result counts. */
+  fromStart = false,
+): number[] {
+  const v0 = fromStart ? 0 : values[start];
+  const n0 = fromStart ? 0 : netInvested[start];
   return values.slice(start).map((v, k) => {
     const base = v0 + (netInvested[start + k] - n0);
     return base > 0 ? v / base - 1 : 0;

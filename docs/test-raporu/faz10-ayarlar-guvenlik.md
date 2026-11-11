@@ -81,3 +81,24 @@ geçmişi bir aydan kısa olduğu için ikisinin aynı olması gerekirdi.
 | ₺10.000 yatır, 100 adet ₺90'dan al, kapanış ₺100: 1A, 3A, 1Y, YB, Tümü | %10 | %0 | %10 ✅ |
 | Analiz TWR, dönem tablosu (Tümü, 1A), ilk ay | %10 | %0 | %10 ✅ |
 | Geçmişin içinde başlayan 1H | o günün kapanışından | aynı | aynı ✅ |
+
+## Kısa Geçmişte Yıllık Oranlar (11 Kasım 2026, kullanıcı bildirimi)
+
+**Belirti:** İki günlük portföyde Analiz "TWR +%0,7 · yıllık +%1.041,8" ve "Alpha (yıllık) +%1.041,8" gösterdi.
+
+**Neden:** Birkaç günlük getiri yıllığa çevriliyordu: %0,7, yılın 365 gününe bileşik yayılınca dev bir sayı oluyor.
+
+**Düzeltme:** Fon performans standartlarındaki (GIPS) kural uygulandı:
+- **1 yıldan kısa geçmiş:** Yıllık oran gösterilmez.
+  - TWR'nin altında "N gün · yıllık oran 1 yılda" yazar.
+  - XIRR'in yerinde dönemin para ağırlıklı getirisi gösterilir. Bu oran XIRR'den hesaplanır, yıllığa çevrilmez.
+  - Alpha dönem için hesaplanır ve etiketi "Alpha (dönem)" olur.
+- **Risk ölçüleri** (beta, oynaklık, Sharpe, Sortino, risk seviyesi, Alpha): En az 20 günlük hareket gerekir; o zamana kadar "—" ve "en az 20 gün gerekir".
+- **1 yıldan kısa geçmişte Sharpe ve Sortino:** Günlük ortalama getiri × 365 kullanılır; kısa ve şanslı bir dönem bileşik olarak yıllığa şişirilmez.
+
+**Aynı incelemede:** "Ya Olsaydı?" grafiğinin "% Getiri" modunda da portföy çizgisi ilk günün kapanışından ölçülüyordu; o da düzeltildi. Ayrıca "Para giriş/çıkışı" düğme etiketi sığmıyordu; "Giriş/çıkış" yapıldı, düğme yazıları artık taşmıyor.
+
+| Test (`inception.test.ts`) | Beklenen | Sonuç |
+|---|---|---|
+| 9 günlük geçmiş | Yıllık TWR ve XIRR yok; para ağırlıklı dönem getirisi %10; risk ölçülerinin hepsi boş | ✅ |
+| "% Getiri" grafiği, Tümü | Portföy çizgisi %10'da biter | ✅ |

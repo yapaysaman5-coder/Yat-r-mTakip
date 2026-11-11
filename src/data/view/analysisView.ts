@@ -39,19 +39,36 @@ export interface MonthReturn {
   ratio: number;
 }
 
+/**
+ * Short histories (docs/02-HESAPLAMA-MOTORU.md §10): yearly figures are shown only after a
+ * year (a few days' return turned into a yearly rate means nothing), and risk statistics need
+ * a few weeks of daily moves.
+ */
+export const ANNUALIZE_AFTER_DAYS = 365;
+export const MIN_RISK_DAYS = 20;
+
 export interface Metrics {
+  /** Days the history covers (first record day included). */
+  days: number;
+  /** The history is at least a year: yearly figures are meaningful. */
+  annualized: boolean;
   twr: number;
-  twrAnnual: number;
+  /** null under a year. */
+  twrAnnual: number | null;
+  /** Yearly money-weighted return (XIRR); null under a year or when it cannot be solved. */
   xirr: number | null;
-  /** null without benchmark prices. */
+  /** Money-weighted return over the whole history (not yearly). */
+  mwr: number | null;
+  /** Yearly when `annualized`, else over the history; null without benchmark or enough days. */
   alpha: number | null;
   beta: number | null;
   excessReturn: number | null;
-  volatility: number;
-  sharpe: number;
-  sortino: number;
+  /** null with fewer than MIN_RISK_DAYS daily moves. */
+  volatility: number | null;
+  sharpe: number | null;
+  sortino: number | null;
   maxDrawdown: number;
-  riskLevel: number;
+  riskLevel: number | null;
   bestMonth: MonthReturn | null;
   worstMonth: MonthReturn | null;
   months: MonthReturn[];
@@ -174,12 +191,19 @@ function computeMetrics(
 ): Metrics {
   const { dates, values, flows, unitValues } = view.series;
   const last = dates.length - 1;
-  const days = last;
+  // Calendar days covered, the first record day included.
+  const days = last + 1;
+  const annualized = days >= ANNUALIZE_AFTER_DAYS;
   // Unit values are 1 before the first day: the first day's own result is included.
   const twr = unitValues[last] - 1;
-  const twrAnnual = annualize(twr, days);
+  const twrAnnual = annualized ? annualize(twr, days) : null;
   const rMe = stepReturns(unitValues);
-  const vol = volatility(rMe, 365);
+  const enough = rMe.length >= MIN_RISK_DAYS;
+  const vol = enough ? volatility(rMe, 365) : null;
+  // Sharpe and Sortino under a year: the average daily return times 365 (no compounding of a
+  // short, lucky run into a huge yearly number).
+  const meanDaily = rMe.length ? rMe.reduce((a, r) => a + r, 0) / rMe.length : 0;
+  const yearlyReturn = twrAnnual ?? meanDaily * 365;
 
   const cashFlows: CashFlow[] = flows.flatMap((amount, i) =>
     amount !== 0 ? [{ date: dates[i], amount: -amount }] : [],
@@ -191,10 +215,17 @@ function computeMetrics(
   let excess: number | null = null;
   if (main) {
     const benchTotal = main.prices[last] / main.prices[0] - 1;
-    b = beta(rMe, stepReturns(main.prices));
-    alpha = jensenAlpha(twrAnnual, annualize(benchTotal, days), b, riskFree);
     excess = twr - benchTotal;
+    if (enough) {
+      b = beta(rMe, stepReturns(main.prices));
+      alpha = annualized
+        ? jensenAlpha(twrAnnual!, annualize(benchTotal, days), b, riskFree)
+        : // Over the history: the same formula with the period's returns and risk-free rate.
+          jensenAlpha(twr, benchTotal, b, (1 + riskFree) ** (days / 365) - 1);
+    }
   }
+  const yearlyMwr = cashFlows.length >= 2 ? xirr(cashFlows) : null;
+  const netIn = view.series.netInvested[last];
 
   // Month-end to month-end returns (the first month from the first day).
   const monthEnds: number[] = [0];
@@ -210,17 +241,28 @@ function computeMetrics(
     months.length ? months.reduce((a, m) => (better(m, a) ? m : a)) : null;
 
   return {
+    days,
+    annualized,
     twr,
     twrAnnual,
-    xirr: cashFlows.length >= 2 ? xirr(cashFlows) : null,
+    xirr: annualized ? yearlyMwr : null,
+    // XIRR's own span: from the first cash flow to today.
+    mwr:
+      yearlyMwr !== null
+        ? (1 + yearlyMwr) **
+            ((Date.parse(dates[last]) - new Date(cashFlows[0].date).getTime()) / 86_400_000 / 365) -
+          1
+        : netIn > 0
+          ? values[last] / netIn - 1
+          : null,
     alpha,
     beta: b,
     excessReturn: excess,
     volatility: vol,
-    sharpe: sharpe(twrAnnual, riskFree, vol),
-    sortino: sortino(rMe, twrAnnual, riskFree, 365),
+    sharpe: vol !== null ? sharpe(yearlyReturn, riskFree, vol) : null,
+    sortino: enough ? sortino(rMe, yearlyReturn, riskFree, 365) : null,
     maxDrawdown: maxDrawdown(unitValues),
-    riskLevel: riskLevel(vol),
+    riskLevel: vol !== null ? riskLevel(vol) : null,
     bestMonth: pick((m, a) => m.ratio > a.ratio),
     worstMonth: pick((m, a) => m.ratio < a.ratio),
     months,

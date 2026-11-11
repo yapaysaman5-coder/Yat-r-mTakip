@@ -33,7 +33,7 @@ export function WhatIfOptions({ analysis }: { analysis: AnalysisView }) {
         backgroundColor: colors.surfaceAlt,
       }}>
       <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
-        <Text variant="caption" tone="secondary" style={{ width: 92 }}>
+        <Text variant="caption" tone="secondary" style={{ width: 76 }}>
           Para birimi
         </Text>
         <SegmentedControl
@@ -54,7 +54,7 @@ export function WhatIfOptions({ analysis }: { analysis: AnalysisView }) {
         />
       </View>
       <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
-        <Text variant="caption" tone="secondary" style={{ width: 92 }}>
+        <Text variant="caption" tone="secondary" style={{ width: 76 }}>
           Karşılaştır
         </Text>
         <SegmentedControl
@@ -63,15 +63,15 @@ export function WhatIfOptions({ analysis }: { analysis: AnalysisView }) {
           onChange={setBasis}
           style={{ flex: 1 }}
           options={[
-            { key: 'flows', label: 'Para giriş/çıkışı' },
-            { key: 'trades', label: 'Alım/satımlar' },
+            { key: 'flows', label: 'Giriş/çıkış' },
+            { key: 'trades', label: 'Alım/satım' },
           ]}
         />
       </View>
       {hasDeposit ? (
         <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
-          <Text variant="caption" tone="secondary" style={{ width: 92 }}>
-            Mevduat faizi
+          <Text variant="caption" tone="secondary" style={{ width: 76 }}>
+            Mevduat
           </Text>
           <Chip
             size="sm"

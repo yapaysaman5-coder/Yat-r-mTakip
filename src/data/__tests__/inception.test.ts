@@ -10,6 +10,8 @@ import { upsertCloses } from '../repo/prices';
 import { loadPortfolioData } from '../service/load';
 import { saveTransaction } from '../service/transactions';
 import { buildAnalysis, periodReturn } from '../view/analysisView';
+import { rebasePercent } from '@/ui/charts/scale';
+
 import { homeChart } from '../view/chart';
 import { buildPortfolioView } from '../view/portfolioView';
 
@@ -89,5 +91,30 @@ describe('returns since the first record include the first day', () => {
     );
     expect(a.metrics!.months).toEqual([{ month: '2026-11', ratio: expect.any(Number) }]);
     expect(a.metrics!.months[0].ratio).toBeCloseTo(0.1, 10);
+  });
+
+  it('Ya Olsaydı in %: the portfolio line since the start includes the first day', async () => {
+    const v = await view();
+    const a = buildAnalysis(v);
+    const me = rebasePercent(a.series[0].values, a.netInvested, 0, a.periodInception['Tümü']);
+    expect(me.at(-1)).toBeCloseTo(0.1, 10);
+  });
+
+  it('short history: no yearly figures and no risk statistics yet', async () => {
+    const m = buildAnalysis(await view()).metrics!;
+    expect(m.days).toBe(9);
+    expect(m.annualized).toBe(false);
+    expect(m.twrAnnual).toBeNull();
+    expect(m.xirr).toBeNull();
+    // All the money came in on the first day: money-weighted = time-weighted = %10.
+    expect(m.mwr).toBeCloseTo(0.1, 6);
+    expect([m.volatility, m.sharpe, m.sortino, m.riskLevel, m.beta, m.alpha]).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
   });
 });
